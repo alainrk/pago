@@ -141,7 +141,8 @@ TELEGRAM_BOT_API_TOKEN='XXXXXXXXXX:AAAA_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
 DATABASE_URL='postgres://postgres:postgres@localhost:5432/postgres'
 OPENAI_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 OPENAI_BASE_URL='https://api.deepseek.com/v1'
-LLM_MODEL='deepseek-chat'
+LLM_MODEL='deepseek-v4-flash'
+LLM_DISABLE_THINKING='true'
 RUN_MODE='webhook' # webhook or polling
 WEBHOOK_DOMAIN=''
 WEBHOOK_SECRET=''
@@ -335,7 +336,8 @@ Any OpenAI compatible API LLM can be used:
 ```env
 OPENAI_API_KEY='sk-xxx'
 OPENAI_BASE_URL='https://api.deepseek.com/v1'
-LLM_MODEL='deepseek-chat'
+LLM_MODEL='deepseek-v4-flash'
+LLM_DISABLE_THINKING='true'
 ```
 
 **Example with OpenAI:**

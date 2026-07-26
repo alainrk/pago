@@ -3,7 +3,6 @@ package ai
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,11 +14,26 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	llmRequestTimeout = 60 * time.Second
+
+	// Budgets are generous on purpose: reasoning models bill their thinking
+	// tokens against max_tokens and truncate the answer when it runs out.
+	extractionMaxTokens     = 2000
+	classificationMaxTokens = 1000
+)
+
 type LLM struct {
 	APIKey   string
 	Endpoint string
 	Model    string
 	Logger   *logrus.Logger
+
+	// DisableThinking asks the provider to skip the reasoning phase. Reasoning
+	// models spend the completion budget on thinking tokens and can return an
+	// empty or truncated answer, which is useless for our JSON-only prompts.
+	// Only sent when true, so providers that don't know the field are unaffected.
+	DisableThinking bool
 }
 
 type ExtractedTransaction struct {
@@ -55,6 +69,114 @@ type ClassifiedIntent struct {
 	Confidence float64 `json:"confidence"`
 }
 
+// chatCompletion sends a single-turn prompt to the OpenAI-compatible endpoint
+// and returns the assistant message content.
+func (llm *LLM) chatCompletion(prompt string, maxTokens int) (string, error) {
+	payload := map[string]any{
+		"model": llm.Model,
+		"messages": []map[string]string{
+			{
+				"role":    "user",
+				"content": prompt,
+			},
+		},
+		"max_tokens": maxTokens,
+	}
+	if llm.DisableThinking {
+		payload["thinking"] = map[string]string{"type": "disabled"}
+	}
+
+	requestBody, err := json.Marshal(payload)
+	if err != nil {
+		llm.Logger.Errorf("Error creating request body: %v\n", err)
+		return "", err
+	}
+
+	req, err := http.NewRequest("POST", llm.Endpoint, bytes.NewBuffer(requestBody))
+	if err != nil {
+		llm.Logger.Errorf("Error creating request: %v\n", err)
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+llm.APIKey)
+
+	client := &http.Client{Timeout: llmRequestTimeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		llm.Logger.Errorf("Error sending request: %v\n", err)
+		return "", err
+	}
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			llm.Logger.Errorf("Error closing response body: %v\n", cerr)
+		}
+	}()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		llm.Logger.Errorf("Error reading response: %v\n", err)
+		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		llm.Logger.Errorf("LLM API returned status %d: %s\n", resp.StatusCode, string(body))
+		return "", fmt.Errorf("llm api status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var result struct {
+		Choices []struct {
+			FinishReason string `json:"finish_reason"`
+			Message      struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		llm.Logger.Errorf("Error parsing response: %v, raw response: %s\n", err, string(body))
+		return "", err
+	}
+
+	if len(result.Choices) == 0 {
+		llm.Logger.Errorf("No choices in LLM response, raw response: %s\n", string(body))
+		return "", fmt.Errorf("invalid response format")
+	}
+
+	content := result.Choices[0].Message.Content
+	if content == "" {
+		llm.Logger.Errorf("Empty content in LLM response (finish_reason: %s), raw response: %s\n",
+			result.Choices[0].FinishReason, string(body))
+		return "", fmt.Errorf("empty llm response (finish_reason: %s)", result.Choices[0].FinishReason)
+	}
+
+	return content, nil
+}
+
+// extractJSONObject trims anything surrounding the outermost JSON object, since
+// the llm sometimes wraps the answer in ```json``` markdown despite being asked not to.
+func extractJSONObject(content string) string {
+	start := 0
+	end := len(content)
+	// Start parsing char by char until a "{" is found
+	for i, char := range content {
+		if char == '{' {
+			start = i
+			break
+		}
+	}
+	// Starting from the end do the same until a "}" is found
+	for i := len(content) - 1; i >= 0; i-- {
+		if content[i] == '}' {
+			end = i + 1
+			break
+		}
+	}
+	if start >= end {
+		return content
+	}
+	return content[start:end]
+}
+
 func (llm *LLM) ExtractTransaction(userText string, transactionType model.TransactionType) (ExtractedTransaction, error) {
 	transaction := ExtractedTransaction{
 		Type: transactionType,
@@ -72,92 +194,13 @@ func (llm *LLM) ExtractTransaction(userText string, transactionType model.Transa
 		return transaction, err
 	}
 
-	// Request payload
-	requestBody, err := json.Marshal(map[string]any{
-		"model": llm.Model,
-		"messages": []map[string]string{
-			{
-				"role":    "user",
-				"content": prompt,
-			},
-		},
-		"max_tokens": 250,
-	})
+	content, err := llm.chatCompletion(prompt, extractionMaxTokens)
 	if err != nil {
-		llm.Logger.Errorf("Error creating request: %v\n", err)
 		return transaction, err
 	}
+	llm.Logger.Debugln("LLM Message", content)
 
-	// Create request
-	req, err := http.NewRequest("POST", llm.Endpoint, bytes.NewBuffer(requestBody))
-	if err != nil {
-		llm.Logger.Errorf("Error creating request: %v\n", err)
-		return transaction, err
-	}
-
-	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+llm.APIKey)
-
-	// Send request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		llm.Logger.Errorf("Error sending request: %v\n", err)
-		return transaction, err
-	}
-	defer func() {
-		err = errors.Join(err, resp.Body.Close())
-	}()
-
-	// Read response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		llm.Logger.Errorf("Error reading response: %v\n", err)
-		return transaction, err
-	}
-
-	// Parse response
-	var result map[string]any
-	if err := json.Unmarshal(body, &result); err != nil {
-		llm.Logger.Errorf("Error parsing response: %v\n", err)
-		llm.Logger.Errorln("Raw response", body)
-		return transaction, err
-	}
-
-	// Extract and print the message content
-	var content string
-	if choices, ok := result["choices"].([]any); ok && len(choices) > 0 {
-		if choice, ok := choices[0].(map[string]any); ok {
-			if message, ok := choice["message"].(map[string]any); ok {
-				llm.Logger.Debugln("LLM Message", message)
-				content = fmt.Sprintf("%v", message["content"])
-			}
-		}
-	} else {
-		llm.Logger.Errorln("Raw response", body)
-		return transaction, fmt.Errorf("invalid response format")
-	}
-
-	// Sometimes the llm returns the ```json``` markdown format, despite being asked no to, so we need to clean it up
-	jsonStart := 0
-	jsonEnd := len(content)
-	// Start parsing char by char until a "{" is found
-	for i, char := range content {
-		if char == '{' {
-			jsonStart = i
-			break
-		}
-	}
-	// Starting from the end do the same until a "}" is found
-	for i := len(content) - 1; i >= 0; i-- {
-		if content[i] == '}' {
-			jsonEnd = i + 1
-			break
-		}
-	}
-	// Remove the markdown
-	content = content[jsonStart:jsonEnd]
+	content = extractJSONObject(content)
 
 	// ExtractExpense from the LLM Response text
 	// Parse the LLM JSON response
@@ -205,89 +248,13 @@ func (llm *LLM) ClassifyIntent(userText string) (ClassifiedIntent, error) {
 		return result, err
 	}
 
-	// Request payload
-	requestBody, err := json.Marshal(map[string]any{
-		"model": llm.Model,
-		"messages": []map[string]string{
-			{
-				"role":    "user",
-				"content": prompt,
-			},
-		},
-		"max_tokens": 100,
-	})
+	content, err := llm.chatCompletion(prompt, classificationMaxTokens)
 	if err != nil {
-		llm.Logger.Errorf("Error creating request: %v\n", err)
 		return result, err
 	}
+	llm.Logger.Debugln("LLM Intent Classification Message", content)
 
-	// Create request
-	req, err := http.NewRequest("POST", llm.Endpoint, bytes.NewBuffer(requestBody))
-	if err != nil {
-		llm.Logger.Errorf("Error creating request: %v\n", err)
-		return result, err
-	}
-
-	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+llm.APIKey)
-
-	// Send request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		llm.Logger.Errorf("Error sending request: %v\n", err)
-		return result, err
-	}
-	defer func() {
-		err = errors.Join(err, resp.Body.Close())
-	}()
-
-	// Read response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		llm.Logger.Errorf("Error reading response: %v\n", err)
-		return result, err
-	}
-
-	// Parse response
-	var apiResponse map[string]any
-	if err := json.Unmarshal(body, &apiResponse); err != nil {
-		llm.Logger.Errorf("Error parsing response: %v\n", err)
-		llm.Logger.Errorln("Raw response", body)
-		return result, err
-	}
-
-	// Extract the message content
-	var content string
-	if choices, ok := apiResponse["choices"].([]any); ok && len(choices) > 0 {
-		if choice, ok := choices[0].(map[string]any); ok {
-			if message, ok := choice["message"].(map[string]any); ok {
-				llm.Logger.Debugln("LLM Intent Classification Message", message)
-				content = fmt.Sprintf("%v", message["content"])
-			}
-		}
-	} else {
-		llm.Logger.Errorln("Raw response", body)
-		return result, fmt.Errorf("invalid response format")
-	}
-
-	// Clean up markdown if present
-	jsonStart := 0
-	jsonEnd := len(content)
-	for i, char := range content {
-		if char == '{' {
-			jsonStart = i
-			break
-		}
-	}
-	for i := len(content) - 1; i >= 0; i-- {
-		if content[i] == '}' {
-			jsonEnd = i + 1
-			break
-		}
-	}
-	content = content[jsonStart:jsonEnd]
+	content = extractJSONObject(content)
 
 	// Parse the JSON response
 	if err := json.Unmarshal([]byte(content), &result); err != nil {

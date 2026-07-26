@@ -52,10 +52,11 @@ func main() {
 
 	// OpenAI API Compatible LLM Setup
 	llm := ai.LLM{
-		Logger:   logger,
-		APIKey:   os.Getenv("OPENAI_API_KEY"),
-		Model:    os.Getenv("LLM_MODEL"),
-		Endpoint: fmt.Sprintf("%s/chat/completions", os.Getenv("OPENAI_BASE_URL")),
+		Logger:          logger,
+		APIKey:          os.Getenv("OPENAI_API_KEY"),
+		Model:           os.Getenv("LLM_MODEL"),
+		Endpoint:        fmt.Sprintf("%s/chat/completions", os.Getenv("OPENAI_BASE_URL")),
+		DisableThinking: os.Getenv("LLM_DISABLE_THINKING") == "true",
 	}
 
 	// Initialize database
