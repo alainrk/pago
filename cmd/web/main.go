@@ -26,10 +26,16 @@ func main() {
 
 	logger := logging.GetLogger(os.Getenv("LOG_LEVEL"))
 
-	// Initialize email service
-	emailService, err := email.NewEmailService(os.Getenv("BREVO_API_KEY"), os.Getenv("EMAIL_FROM_NAME"), os.Getenv("EMAIL_FROM_ADDRESS"))
-	if err != nil {
-		logger.Fatalf("Failed to initialize email service: %s\n", err.Error())
+	// Initialize email service (optional: without BREVO_API_KEY the email
+	// login method is disabled and everything else keeps working).
+	var emailService *email.EmailService
+	if key := os.Getenv("BREVO_API_KEY"); key != "" {
+		emailService, err = email.NewEmailService(key, os.Getenv("EMAIL_FROM_NAME"), os.Getenv("EMAIL_FROM_ADDRESS"))
+		if err != nil {
+			logger.Fatalf("Failed to initialize email service: %s\n", err.Error())
+		}
+	} else {
+		logger.Warnln("BREVO_API_KEY is empty: email login is disabled")
 	}
 
 	// Get token from the environment variable
@@ -112,7 +118,7 @@ func main() {
 
 	webPort := os.Getenv("WEB_PORT")
 	if webPort == "" {
-		webPort = "8081"
+		webPort = "8091"
 	}
 
 	addr := fmt.Sprintf("%s:%s", webHost, webPort)

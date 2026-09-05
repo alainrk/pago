@@ -45,12 +45,14 @@ Cashout is an intelligent Telegram bot that leverages AI to make expense trackin
 - **Visual Feedback**: Progress bars and clear status when you are close to or over budget.
 - **Web-Managed**: Create, edit, and delete budgets directly from the dashboard.
 
-### Web Dashboard
+### Web App
 
+- **Responsive SPA** (`frontend/`): desktop sidebar layout and a mobile layout with bottom tabs.
+- **AI quick add**: type "irish pub 12.50 yesterday", review the parsed fields, confirm. Warns about likely duplicates.
 - **Multiple Authentication Methods**:
+  - Passkey/WebAuthn sign-in, usernameless (the browser picks the passkey).
   - Telegram-based login with verification codes.
-  - Email-based passwordless authentication.
-  - Passkey/WebAuthn support for passwordless biometric login.
+  - Email-based passwordless authentication (API only).
 - **Transaction Management**:
   - Add new transactions directly from the web interface, with auto-save on creation.
   - Edit and delete existing transactions inline.
@@ -138,7 +140,7 @@ Copy the example `.env` file in the project root (or set environment variables) 
 
 ```env
 TELEGRAM_BOT_API_TOKEN='XXXXXXXXXX:AAAA_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
-DATABASE_URL='postgres://postgres:postgres@localhost:5432/postgres'
+DATABASE_URL='postgres://postgres:postgres@localhost:5433/postgres'
 OPENAI_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 OPENAI_BASE_URL='https://api.deepseek.com/v1'
 LLM_MODEL='deepseek-v4-flash'
@@ -155,10 +157,13 @@ ALLOWED_USERS=''
 SEED_USER_TG_ID=''
 # Web Server Configuration
 WEB_HOST=localhost
-WEB_PORT=8081
+WEB_PORT=8091
 # Session Configuration (optional)
 SESSION_SECRET=your-random-session-secret-here
-SESSION_DURATION=24h
+SESSION_DURATION_MIN=43200
+# Browser app served from another origin (see "Web App" below)
+WEB_CORS_ORIGINS=http://localhost:5174
+WEB_COOKIE_SAMESITE=lax
 # Email Service Configuration (for passwordless email login)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -166,9 +171,10 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 EMAIL_FROM=your-email@gmail.com
 # WebAuthn Configuration (for passkey support)
-WEBAUTHN_RP_NAME=Cashout
+# RP ID is the domain passkeys are bound to. RP origin is the exact origin of
+# the page that runs the passkey prompt, so it is the frontend origin.
 WEBAUTHN_RP_ID=localhost
-WEBAUTHN_ORIGIN=http://localhost:8081
+WEBAUTHN_RP_ORIGIN=http://localhost:5174
 ```
 
 Spin up local infrastructure:
@@ -237,6 +243,27 @@ make run-web
 make run/live-web
 ```
 
+#### Web App (frontend/)
+
+The `frontend/` folder holds the single page app (Vite + React + TypeScript).
+It talks to the web server API under `/web/api/*` and is what you deploy for
+users; the Go web server only serves the API (and the legacy templates).
+
+```bash
+# Install dependencies once (Node 22 or newer)
+make fe/install
+
+# Start the dev server on http://localhost:5174.
+# It proxies /web to the Go web server on localhost:8091, so run `make run-web` too.
+make fe/dev
+
+# Typecheck and run unit tests
+make fe/check
+```
+
+For passkeys to work in development set `WEBAUTHN_RP_ID=localhost` and
+`WEBAUTHN_RP_ORIGIN=http://localhost:5174` in `.env`.
+
 #### Both Services
 
 ```bash
@@ -290,10 +317,51 @@ docker compose down
 
 This will start:
 
-- PostgreSQL database on port 5432
+- PostgreSQL database on port 5433 (5432 inside the container)
 - Telegram bot (webhook mode on port 8080)
-- Web dashboard on port 8081
+- Web dashboard on port 8091
 - Automatic database migrations
+
+### Web App on Cloudflare
+
+The SPA is a static build, so any static host works. The repo ships a generic
+config for Cloudflare Workers static assets (`frontend/wrangler.jsonc`).
+
+1. Point the app at your API. Create `frontend/.env.production.local`
+   (it is git-ignored) with the public URL of your Go web server:
+
+   ```env
+   VITE_API_URL=https://api.your-domain.example
+   ```
+
+2. Log in to Cloudflare once with `npx wrangler login` (inside `frontend/`).
+
+3. Build and upload:
+
+   ```bash
+   make fe/deploy
+   ```
+
+4. Attach your domain to the `cashout-web` worker in the Cloudflare dashboard
+   (Workers & Pages, Settings, Domains & Routes). Nothing about your domain or
+   account needs to be committed to this repository.
+
+5. Configure the Go web server for the browser app:
+
+   ```env
+   WEB_CORS_ORIGINS=https://app.your-domain.example
+   WEB_COOKIE_SAMESITE=lax
+   WEBAUTHN_RP_ID=your-domain.example
+   WEBAUTHN_RP_ORIGIN=https://app.your-domain.example
+   ```
+
+   Keep the app and the API under the same parent domain (for example
+   `app.example.com` and `api.example.com`) so the session cookie works with
+   `SameSite=Lax`. If they are on unrelated domains set
+   `WEB_COOKIE_SAMESITE=none` (HTTPS only).
+
+The build also writes a `_headers` file with a Content-Security-Policy that
+only allows API calls to the `VITE_API_URL` origin.
 
 ### Manual Deployment
 
@@ -322,7 +390,7 @@ The web server runs independently and can be configured:
 
 ```env
 WEB_HOST=0.0.0.0  # For production
-WEB_PORT=8081
+WEB_PORT=8091
 SESSION_SECRET=your-random-session-secret-here
 SESSION_DURATION=24h
 ```
@@ -371,7 +439,7 @@ The web dashboard supports three authentication methods:
 
 ### Dashboard Features
 
-1. **Access**: Navigate to `http://localhost:8081` (or your configured domain).
+1. **Access**: Navigate to `http://localhost:8091` (or your configured domain).
 2. **Login**: Choose your preferred authentication method.
 3. **Dashboard**: View your financial data with month navigation.
 4. **Statistics**: See real-time balance, income, expenses, and transaction counts.
@@ -417,7 +485,7 @@ Optional `expires_at` is supported; leave NULL for non-expiring tokens.
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-     "http://localhost:8081/web/api/stats?month=2026-05"
+     "http://localhost:8091/web/api/stats?month=2026-05"
 ```
 
 ### OpenAPI spec & generated SDKs
@@ -477,7 +545,7 @@ import cashout_sdk
 from cashout_sdk.api.transactions_api import TransactionsApi
 
 cfg = cashout_sdk.Configuration(
-    host="http://localhost:8081/web",
+    host="http://localhost:8091/web",
     access_token="cshk_...",
 )
 with cashout_sdk.ApiClient(cfg) as client:
@@ -502,7 +570,7 @@ import (
 
 func main() {
     cfg := cashout.NewConfiguration()
-    cfg.Servers = cashout.ServerConfigurations{{URL: "http://localhost:8081/web"}}
+    cfg.Servers = cashout.ServerConfigurations{{URL: "http://localhost:8091/web"}}
     cfg.DefaultHeader["Authorization"] = "Bearer cshk_..."
     client := cashout.NewAPIClient(cfg)
 

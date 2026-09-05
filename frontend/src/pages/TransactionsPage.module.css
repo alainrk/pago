@@ -1,0 +1,303 @@
+/* Desktop filters row */
+.filtersRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.select36 {
+  width: auto;
+  --h: 36px;
+}
+.searchBox {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  padding: 0 12px;
+  background: var(--surface);
+  color: var(--faint);
+}
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  padding: 0;
+  font-size: 13.5px;
+  color: var(--text);
+}
+.netText {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Desktop table */
+.tableCard {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.headerRow,
+.row {
+  display: grid;
+  grid-template-columns: 88px 1fr 170px 130px 76px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 20px;
+}
+.headerRow {
+  padding: 9px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.body {
+  flex: 1;
+}
+.row {
+  border-bottom: 1px solid var(--divider);
+  font-size: 13px;
+}
+@media (hover: hover) {
+  .row:hover {
+    background: var(--surface-2);
+  }
+}
+.cellDate {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.cellDesc {
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cellAmount {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+.income {
+  color: var(--income);
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  color: var(--faint);
+}
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 3px;
+  color: inherit;
+}
+@media (hover: hover) {
+  .iconBtn:hover {
+    color: var(--text-2);
+  }
+}
+
+
+/* Inline edit row (desktop) */
+.editRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--brand-soft);
+}
+.editDesc {
+  width: 200px;
+  height: 32px;
+  border: 1px solid var(--brand);
+  border-radius: var(--r-sm);
+  padding: 0 10px;
+  font-size: 13px;
+  background: var(--surface);
+  outline: none;
+}
+.editAmount {
+  width: 96px;
+  height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  padding: 0 10px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  background: var(--surface);
+  outline: none;
+}
+.editCategory {
+  --h: 32px;
+  width: 150px;
+}
+.editDate {
+  width: 130px;
+  height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  padding: 0 10px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  background: var(--surface);
+  outline: none;
+}
+.editActions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+
+/* End of the list: spinner, Load more, or the "all done" note */
+.listEnd {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 52px;
+  padding: 12px 20px;
+}
+.listEndText {
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.tableCard .listEnd {
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+/* Mobile filter tools (rendered inside MobileHeader) */
+.mToolsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mSearchRow {
+  display: flex;
+  gap: 8px;
+}
+.mSearchBox {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  padding: 0 12px;
+  background: var(--surface);
+  color: var(--faint);
+}
+.mSearchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+.mFilterBtn {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mFilterBtnActive {
+  color: var(--brand-dark);
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.mCount {
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.mFiltersRow {
+  display: flex;
+  gap: 8px;
+}
+.mFiltersRow .select36 {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Mobile list */
+.mList {
+  margin: 0 -20px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+.dayHeader {
+  padding: 10px 20px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--divider);
+}
+.mRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--divider);
+}
+.mRow:active {
+  background: var(--surface-2);
+}
+.mRowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.mRowDesc {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mRowCat {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.mRowAmount {
+  font-size: 13.5px;
+  font-weight: 500;
+  flex-shrink: 0;
+}

@@ -78,6 +78,25 @@ definitions:
       id:
         type: integer
     type: object
+  web.DuplicateCheckRequest:
+    properties:
+      amount:
+        example: 12.5
+        type: number
+      date:
+        example: "2026-09-03"
+        type: string
+      description:
+        example: Irish pub with Laura
+        type: string
+    type: object
+  web.DuplicateCheckResponse:
+    properties:
+      duplicates:
+        items:
+          $ref: '#/definitions/web.TransactionDTO'
+        type: array
+    type: object
   web.EditTransactionRequest:
     properties:
       amount:
@@ -99,6 +118,23 @@ definitions:
   web.ErrorResponse:
     properties:
       error:
+        type: string
+    type: object
+  web.MeResponse:
+    properties:
+      currency:
+        type: string
+      email:
+        type: string
+      hasEmail:
+        description: HasEmail tells the client whether passkey registration is possible.
+        type: boolean
+      initials:
+        description: Initials is a short label for avatars, for example "AR".
+        type: string
+      name:
+        type: string
+      username:
         type: string
     type: object
   web.MessageResponse:
@@ -129,6 +165,34 @@ definitions:
         type: number
       totalIncome:
         type: number
+    type: object
+  web.ParseTransactionRequest:
+    properties:
+      text:
+        example: irish pub with laura 12.50 yesterday
+        type: string
+    type: object
+  web.ParseTransactionResponse:
+    properties:
+      amount:
+        example: 12.5
+        type: number
+      category:
+        example: EatingOut
+        type: string
+      date:
+        example: "2026-09-03"
+        type: string
+      description:
+        example: Irish pub with Laura
+        type: string
+      duplicates:
+        items:
+          $ref: '#/definitions/web.TransactionDTO'
+        type: array
+      type:
+        example: Expense
+        type: string
     type: object
   web.SearchTransactionsRequest:
     properties:
@@ -567,6 +631,24 @@ paths:
       summary: List categories
       tags:
       - transactions
+  /api/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.MeResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Current user
+      tags:
+      - account
   /api/stats:
     get:
       parameters:
@@ -736,6 +818,43 @@ paths:
       summary: Delete transaction
       tags:
       - transactions
+  /api/transactions/duplicates:
+    post:
+      consumes:
+      - application/json
+      description: Returns recent transactions (last 60 days before the given date)
+        with the same amount and a matching description.
+      parameters:
+      - description: Candidate transaction
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/web.DuplicateCheckRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.DuplicateCheckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Find possible duplicates
+      tags:
+      - transactions
   /api/transactions/edit:
     patch:
       consumes:
@@ -839,6 +958,48 @@ paths:
       summary: Export transactions as CSV
       tags:
       - transactions
+  /api/transactions/parse:
+    post:
+      consumes:
+      - application/json
+      description: Uses the configured LLM to extract type, amount, category, description
+        and date from a short sentence. Nothing is saved. Also returns recent transactions
+        that look like duplicates.
+      parameters:
+      - description: Free text
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/web.ParseTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.ParseTransactionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Parse free text into a transaction (AI)
+      tags:
+      - transactions
   /api/transactions/search:
     post:
       consumes:
@@ -876,6 +1037,18 @@ paths:
       summary: Search transactions
       tags:
       - transactions
+  /logout:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.MessageResponse'
+      summary: Sign out
+      tags:
+      - auth
 securityDefinitions:
   BearerAuth:
     description: 'Provide the value as: Bearer <token>'

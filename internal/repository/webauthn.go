@@ -406,6 +406,95 @@ func (r *WebAuthn) FinishLogin(user *model.User, sessionID string, response *htt
 		return nil, err
 	}
 
+	return r.recordLogin(user, credential)
+}
+
+// BeginDiscoverableLogin starts a usernameless passkey ceremony. The browser
+// picks a credential for our RP ID and we learn who the user is when the
+// assertion comes back. The session is stored with TgID 0 until then.
+func (r *WebAuthn) BeginDiscoverableLogin() (*protocol.CredentialAssertion, string, error) {
+	sessionID, err := generateSessionID()
+	if err != nil {
+		return nil, "", err
+	}
+
+	assertion, sessionData, err := r.webAuthn.BeginDiscoverableLogin()
+	if err != nil {
+		return nil, "", err
+	}
+
+	session := &model.WebAuthnSession{
+		ID:               sessionID,
+		TgID:             0,
+		Challenge:        sessionData.Challenge,
+		UserVerification: string(sessionData.UserVerification),
+		CeremonyType:     "authentication",
+		ExpiresAt:        time.Now().UTC().Add(5 * time.Minute),
+	}
+	if err := r.DB.CreateWebAuthnSession(session); err != nil {
+		return nil, "", err
+	}
+
+	return assertion, sessionID, nil
+}
+
+// FinishDiscoverableLogin completes a usernameless ceremony started with
+// BeginDiscoverableLogin and returns the user that owns the credential.
+func (r *WebAuthn) FinishDiscoverableLogin(sessionID string, response *http.Request) (*model.User, *model.WebAuthnCredential, error) {
+	session, err := r.DB.GetWebAuthnSession(sessionID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Single use: delete before validating so a replay can never succeed.
+	if err := r.DB.DeleteWebAuthnSession(sessionID); err != nil {
+		r.Logger.Warnf("Failed to delete WebAuthn session %s: %v", sessionID, err)
+	}
+
+	if !session.IsValid() || session.CeremonyType != "authentication" || session.TgID != 0 {
+		return nil, nil, ErrInvalidSession
+	}
+
+	sessionData := webauthn.SessionData{
+		Challenge:        session.Challenge,
+		UserVerification: protocol.UserVerificationRequirement(session.UserVerification),
+	}
+
+	// The library calls this with the credential the browser used; we map it
+	// back to the owning user and hand over that user's credentials.
+	var owner *model.User
+	handler := func(rawID, _ []byte) (webauthn.User, error) {
+		dbCred, err := r.DB.GetWebAuthnCredential(rawID)
+		if err != nil {
+			return nil, err
+		}
+		u, err := r.DB.GetUserWithWebAuthnCredentials(dbCred.TgID)
+		if err != nil {
+			return nil, err
+		}
+		owner = u
+		return u, nil
+	}
+
+	credential, err := r.webAuthn.FinishDiscoverableLogin(handler, sessionData, response)
+	if err != nil || owner == nil {
+		r.Logger.Warnf("Discoverable authentication failed: %v", err)
+		if err == nil {
+			err = errors.New("credential owner not resolved")
+		}
+		return nil, nil, err
+	}
+
+	dbCred, err := r.recordLogin(owner, credential)
+	if err != nil {
+		return nil, nil, err
+	}
+	return owner, dbCred, nil
+}
+
+// recordLogin verifies the credential belongs to the user, checks the sign
+// counter for cloning and stores the updated counters and last-used time.
+func (r *WebAuthn) recordLogin(user *model.User, credential *webauthn.Credential) (*model.WebAuthnCredential, error) {
 	// Get the credential from database
 	dbCred, err := r.DB.GetWebAuthnCredential(credential.ID)
 	if err != nil {

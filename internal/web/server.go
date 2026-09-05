@@ -64,6 +64,22 @@ func (s *Server) getLimiter(key string) *rate.Limiter {
 	return limiter
 }
 
+// getLimiterWithRate is like getLimiter but with a caller-chosen rate. Keys
+// should be prefixed (for example "parse:<user>") so they never collide with
+// the login limiter, which is keyed by remote address.
+func (s *Server) getLimiterWithRate(key string, every time.Duration, burst int) *rate.Limiter {
+	s.loginLimiterMu.Lock()
+	defer s.loginLimiterMu.Unlock()
+
+	limiter, exists := s.loginLimiter[key]
+	if !exists {
+		limiter = rate.NewLimiter(rate.Every(every), burst)
+		s.loginLimiter[key] = limiter
+	}
+
+	return limiter
+}
+
 // Middleware to log requests
 func (s *Server) loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

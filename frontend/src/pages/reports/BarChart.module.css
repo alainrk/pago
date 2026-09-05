@@ -1,0 +1,72 @@
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.avg {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.avgValue {
+  font-weight: 600;
+  color: var(--text-2);
+}
+.bars {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  padding: 0 8px 4px;
+}
+.col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.bar {
+  width: 100%;
+  max-width: 44px;
+  border-radius: 6px 6px 3px 3px;
+  background: var(--border-strong);
+  transition: height 300ms ease;
+}
+.barHighlight {
+  background: var(--brand);
+}
+.value {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--brand-dark);
+}
+.label {
+  font-size: 11.5px;
+  color: var(--faint);
+}
+.labelHighlight {
+  color: var(--brand-dark);
+  font-weight: 600;
+}
+@media (max-width: 767px) {
+  .card {
+    flex: none;
+  }
+  /* Fixed height: the tallest bar (150px) plus its value and label rows. */
+  .bars {
+    flex: none;
+    height: 208px;
+    gap: 12px;
+    padding: 0 4px;
+  }
+  .bar {
+    max-width: 28px;
+    border-radius: 5px 5px 2px 2px;
+  }
+  .value,
+  .label {
+    font-size: 10px;
+  }
+}

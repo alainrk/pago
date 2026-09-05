@@ -504,6 +504,36 @@
                 }
             }
         },
+        "/api/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "account"
+                ],
+                "summary": "Current user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.MeResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/stats": {
             "get": {
                 "security": [
@@ -773,6 +803,63 @@
                 }
             }
         },
+        "/api/transactions/duplicates": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns recent transactions (last 60 days before the given date) with the same amount and a matching description.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Find possible duplicates",
+                "parameters": [
+                    {
+                        "description": "Candidate transaction",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/web.DuplicateCheckRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.DuplicateCheckResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/transactions/edit": {
             "patch": {
                 "security": [
@@ -929,6 +1016,69 @@
                 }
             }
         },
+        "/api/transactions/parse": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uses the configured LLM to extract type, amount, category, description and date from a short sentence. Nothing is saved. Also returns recent transactions that look like duplicates.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Parse free text into a transaction (AI)",
+                "parameters": [
+                    {
+                        "description": "Free text",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/web.ParseTransactionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.ParseTransactionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/transactions/search": {
             "post": {
                 "security": [
@@ -981,6 +1131,25 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Sign out",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.MessageResponse"
                         }
                     }
                 }
@@ -1106,6 +1275,34 @@
                 }
             }
         },
+        "web.DuplicateCheckRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 12.5
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2026-09-03"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Irish pub with Laura"
+                }
+            }
+        },
+        "web.DuplicateCheckResponse": {
+            "type": "object",
+            "properties": {
+                "duplicates": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.TransactionDTO"
+                    }
+                }
+            }
+        },
         "web.EditTransactionRequest": {
             "type": "object",
             "properties": {
@@ -1135,6 +1332,31 @@
             "type": "object",
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.MeResponse": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "hasEmail": {
+                    "description": "HasEmail tells the client whether passkey registration is possible.",
+                    "type": "boolean"
+                },
+                "initials": {
+                    "description": "Initials is a short label for avatars, for example \"AR\".",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1181,6 +1403,46 @@
                 },
                 "totalIncome": {
                     "type": "number"
+                }
+            }
+        },
+        "web.ParseTransactionRequest": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "example": "irish pub with laura 12.50 yesterday"
+                }
+            }
+        },
+        "web.ParseTransactionResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 12.5
+                },
+                "category": {
+                    "type": "string",
+                    "example": "EatingOut"
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2026-09-03"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Irish pub with Laura"
+                },
+                "duplicates": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.TransactionDTO"
+                    }
+                },
+                "type": {
+                    "type": "string",
+                    "example": "Expense"
                 }
             }
         },

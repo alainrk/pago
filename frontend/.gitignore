@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.wrangler/
+# Local env files carry deployment specific values (API URL). Never commit them.
+.env
+.env.*
+!.env.example

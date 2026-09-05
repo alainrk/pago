@@ -1,0 +1,28 @@
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 12px;
+  min-width: 140px;
+  text-align: center;
+}
+.sm {
+  gap: 6px;
+}
+.sm .title {
+  font-size: 13px;
+  min-width: 0;
+  padding: 0 4px;
+}
+.center {
+  justify-content: center;
+  gap: 8px;
+}
+.center .title {
+  font-size: 14.5px;
+  min-width: 130px;
+}

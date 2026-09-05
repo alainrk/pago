@@ -46,6 +46,9 @@ func Router(s *Server) http.Handler {
 	mux.HandleFunc(basePath+"/api/analytics/monthly", s.requireAuth(s.handleAPIAnalyticsMonthly))
 	mux.HandleFunc(basePath+"/api/analytics/trend", s.requireAuth(s.handleAPIAnalyticsTrend))
 	mux.HandleFunc(basePath+"/api/analytics/year", s.requireAuth(s.handleAPIAnalyticsYear))
+	mux.HandleFunc(basePath+"/api/me", s.requireAuth(s.handleAPIMe))
+	mux.HandleFunc(basePath+"/api/transactions/parse", s.requireAuth(s.handleAPIParseTransaction))
+	mux.HandleFunc(basePath+"/api/transactions/duplicates", s.requireAuth(s.handleAPIDuplicateCheck))
 
 	// WebAuthn/Passkey management (protected)
 	mux.HandleFunc(basePath+"/api/passkey/begin-register", s.requireAuth(s.handlePasskeyBeginRegister))
@@ -53,7 +56,8 @@ func Router(s *Server) http.Handler {
 	mux.HandleFunc(basePath+"/api/passkey/list", s.requireAuth(s.handlePasskeyList))
 	mux.HandleFunc(basePath+"/api/passkey/delete", s.requireAuth(s.handlePasskeyDelete))
 
-	return s.securityHeadersMiddleware(s.loggingMiddleware(mux))
+	// CORS runs first so preflight requests are answered before anything else.
+	return s.corsMiddleware(s.securityHeadersMiddleware(s.loggingMiddleware(mux)))
 }
 
 // noDirFileSystem wraps http.FileSystem to disable directory listing

@@ -1,0 +1,247 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+}
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px 20px;
+  color: inherit;
+}
+@media (hover: hover) {
+  .brand:hover {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+@media (hover: hover) {
+  .item:hover {
+    background: var(--surface-muted);
+    text-decoration: none;
+    color: var(--text-3);
+  }
+}
+@media (hover: hover) {
+  .item.active,
+  .item.active:hover {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    font-weight: 600;
+  }
+}
+.user {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--border);
+  color: inherit;
+}
+@media (hover: hover) {
+  .user:hover {
+    text-decoration: none;
+    color: inherit;
+    background: var(--surface-muted);
+  }
+}
+.userText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.userName {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.userMeta {
+  font-size: 11.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.content {
+  flex: 1;
+  padding: 36px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: calc(var(--content-max) + 96px);
+  width: 100%;
+}
+
+/* Mobile */
+.bottomNav {
+  display: none;
+}
+@media (max-width: 767px) {
+  .sidebar {
+    display: none;
+  }
+  .content {
+    padding: 20px;
+    padding-bottom: calc(var(--mobile-nav-h) + 20px);
+    gap: 16px;
+  }
+  .bottomNav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 8px 8px calc(12px + env(safe-area-inset-bottom, 8px));
+    z-index: 20;
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 0;
+    color: var(--faint);
+    font-size: 10.5px;
+    font-weight: 500;
+    background: none;
+    border: none;
+  }
+  @media (hover: hover) {
+    .tab:hover {
+      text-decoration: none;
+      color: var(--faint);
+    }
+  }
+  @media (hover: hover) {
+    .tab.active,
+    .tab.active:hover {
+      color: var(--brand-dark);
+      font-weight: 600;
+    }
+  }
+  .fabWrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fab {
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-fab);
+    border: none;
+  }
+  @media (hover: hover) {
+    .fab:hover {
+      color: var(--on-brand);
+      text-decoration: none;
+    }
+  }
+  .fab.active {
+    background: var(--brand-hover);
+  }
+  /* The add page hides the nav while the keyboard is up, so the composer can
+     sit right above the keyboard. */
+  :global(:root[data-keyboard="open"]) .bottomNav {
+    display: none;
+  }
+}
+
+/* Mobile page header bar */
+.mHeader {
+  display: none;
+}
+@media (max-width: 767px) {
+  .mHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .mHeader.withTools {
+    padding-bottom: 14px;
+  }
+  .mRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 30px;
+  }
+  .mTitleWrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .mTitle {
+    font-size: 18px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mTitleSm {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .mBack {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text);
+  }
+}

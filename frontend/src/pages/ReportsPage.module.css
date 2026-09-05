@@ -1,0 +1,24 @@
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+@media (max-width: 767px) {
+  .stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: none;
+  }
+}

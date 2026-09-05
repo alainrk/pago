@@ -140,14 +140,14 @@ func FormatBudgetSuffix(p *BudgetProgress) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("\n\n📊 Budget: %.2f / %.2f € (%d%%)", p.Spent, p.Limit, p.Pct))
+	fmt.Fprintf(&b, "\n\n📊 Budget: %.2f / %.2f € (%d%%)", p.Spent, p.Limit, p.Pct)
 	for _, t := range p.NewAlerts {
 		switch t {
 		case 80:
 			b.WriteString("\n⚠️ Approaching monthly budget (80% used)")
 		case 100:
 			over := p.Spent - p.Limit
-			b.WriteString(fmt.Sprintf("\n🚨 Over budget by %.2f €", over))
+			fmt.Fprintf(&b, "\n🚨 Over budget by %.2f €", over)
 		}
 	}
 	return b.String()

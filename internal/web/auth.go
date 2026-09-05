@@ -80,6 +80,12 @@ func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if email != "" && s.emailService == nil {
+		// Independent of whether the user exists, so it leaks nothing.
+		s.sendJSONError(w, "Email sign-in is not available on this server", http.StatusServiceUnavailable)
+		return
+	}
+
 	// Generic success message to prevent user enumeration
 	const genericSuccessMsg = "If an account exists with these credentials, a verification code has been sent"
 
@@ -179,16 +185,7 @@ func (s *Server) handleAuthVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set session cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    session.ID,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   r.TLS != nil, // Set to true in production with HTTPS
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   2592000, // 1 month
-	})
+	setSessionCookie(w, r, session.ID)
 
 	s.sendJSONSuccess(w, map[string]any{
 		"message":  "Login successful",
@@ -196,9 +193,18 @@ func (s *Server) handleAuthVerify(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleLogout handles user logout
+// handleLogout handles user logout.
+//
+// Browser navigations (GET) are redirected to the login page. API clients
+// (POST, or an Accept: application/json header) get a JSON reply instead.
+//
+//	@Summary		Sign out
+//	@Tags			auth
+//	@Produce		json
+//	@Success		200	{object}	MessageResponse
+//	@Router			/logout [post]
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_id")
+	cookie, err := r.Cookie(sessionCookieName)
 	if err == nil {
 		// Delete session from database
 		err = errors.Join(err, s.repositories.Auth.DeleteWebSession(cookie.Value))
@@ -207,15 +213,12 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Clear cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		MaxAge:   -1,
-	})
+	clearSessionCookie(w, r)
 
+	if r.Method == http.MethodPost || isAPIRequest(r) {
+		s.sendJSONSuccess(w, MessageResponse{Message: "Signed out"})
+		return
+	}
 	http.Redirect(w, r, basePath+"/login", http.StatusSeeOther)
 }
 

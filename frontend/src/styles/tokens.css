@@ -1,0 +1,83 @@
+/* Design tokens for the Cashout web app: "Dark mint". A dark, calm fintech
+   look. Teal is for action, green and red only mark the money direction. */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #0a0f0e;
+  --surface: #111917;
+  --surface-2: #0d1412;
+  --surface-muted: #12312b;
+
+  /* Borders */
+  --border: #20302c;
+  --border-strong: #2a3d38;
+  --divider: #182320;
+
+  /* Text */
+  --text: #e6edeb;
+  --text-2: #d0dad6;
+  --text-3: #b2bfba;
+  --muted: #84948f;
+  --faint: #5f6f6a;
+
+  /* Accent (teal) */
+  --brand: #2dd4bf;
+  --brand-dark: #2dd4bf;
+  --brand-darker: #5eead4;
+  --brand-hover: #5eead4;
+  --on-brand: #04211c;
+  --brand-soft: #12312b;
+  --brand-tint: #17423a;
+  --brand-border: #1f5a50;
+  --brand-ring: rgba(45, 212, 191, 0.25);
+  --brand-shadow: rgba(45, 212, 191, 0.33);
+
+  /* Income (green) */
+  --income: #4ade80;
+  --income-text: #4ade80;
+  --income-bg: #10291c;
+
+  /* Expense / danger (red) */
+  --expense-text: #f87171;
+  --danger: #f87171;
+  --danger-text: #fca5a5;
+  --danger-border: #5a2c2c;
+  --danger-bg: #2a1616;
+
+  /* Warning (amber) */
+  --warn: #fbbf24;
+  --warn-text: #fbbf24;
+  --warn-deep: #fde68a;
+  --warn-bg: #2a2211;
+  --warn-border: #4d3a12;
+
+  /* Type */
+  --font-sans: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 11px;
+  --r-xl: 12px;
+  --r-2xl: 12px;
+  --r-card: 18px;
+  --r-card-lg: 18px;
+  --r-pill: 999px;
+
+  /* Shadows: only the accent FAB casts one. */
+  --shadow-card: none;
+  --shadow-seg: none;
+  --shadow-fab: 0 4px 14px var(--brand-shadow);
+  --ring: 0 0 0 3px var(--brand-ring);
+
+  /* Overlays */
+  --backdrop: rgba(0, 0, 0, 0.6);
+  --shadow-pop: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  /* Layout */
+  --sidebar-w: 216px;
+  --content-max: 1176px;
+  --mobile-nav-h: 74px;
+}

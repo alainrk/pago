@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"cashout/internal/client"
+	"cashout/internal/model"
 	"cashout/internal/repository"
 )
 
@@ -95,7 +96,18 @@ func (s *Server) handlePasskeyBeginLogin(w http.ResponseWriter, r *http.Request)
 
 	email := strings.TrimSpace(strings.ToLower(req.Email))
 	if email == "" {
-		s.sendJSONError(w, "Email is required", http.StatusBadRequest)
+		// No email: usernameless (discoverable) flow. The browser shows the
+		// passkeys it holds for this site and we learn the user at finish time.
+		assertion, sessionID, err := s.repositories.WebAuthn.BeginDiscoverableLogin()
+		if err != nil {
+			s.logger.Errorf("Failed to begin discoverable passkey login: %v", err)
+			s.sendJSONError(w, "Failed to start passkey login", http.StatusInternalServerError)
+			return
+		}
+		setWebAuthnCookie(w, r, sessionID)
+		s.sendJSONSuccess(w, map[string]any{
+			"options": assertion,
+		})
 		return
 	}
 
@@ -128,15 +140,7 @@ func (s *Server) handlePasskeyBeginLogin(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Store session ID in cookie for finish step
-	http.SetCookie(w, &http.Cookie{
-		Name:     "webauthn_session",
-		Value:    sessionID,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   isSecureRequest(r),
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   300, // 5 minutes
-	})
+	setWebAuthnCookie(w, r, sessionID)
 
 	s.sendJSONSuccess(w, map[string]any{
 		"options": assertion,
@@ -171,19 +175,30 @@ func (s *Server) handlePasskeyFinishLogin(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Get user with credentials
-	user, err := s.repositories.WebAuthn.DB.GetUserWithWebAuthnCredentials(waSession.TgID)
-	if err != nil {
-		s.sendJSONError(w, "User not found", http.StatusNotFound)
-		return
-	}
+	var user *model.User
+	if waSession.TgID == 0 {
+		// Discoverable flow: the credential tells us who the user is.
+		user, _, err = s.repositories.WebAuthn.FinishDiscoverableLogin(sessionID, r)
+		if err != nil {
+			s.logger.Errorf("Failed to finish discoverable passkey login: %v", err)
+			s.sendJSONError(w, "Authentication failed", http.StatusUnauthorized)
+			return
+		}
+	} else {
+		// Get user with credentials
+		user, err = s.repositories.WebAuthn.DB.GetUserWithWebAuthnCredentials(waSession.TgID)
+		if err != nil {
+			s.sendJSONError(w, "User not found", http.StatusNotFound)
+			return
+		}
 
-	// Finish login using secure library method
-	_, err = s.repositories.WebAuthn.FinishLogin(user, sessionID, r)
-	if err != nil {
-		s.logger.Errorf("Failed to finish passkey login: %v", err)
-		s.sendJSONError(w, "Authentication failed", http.StatusUnauthorized)
-		return
+		// Finish login using secure library method
+		_, err = s.repositories.WebAuthn.FinishLogin(user, sessionID, r)
+		if err != nil {
+			s.logger.Errorf("Failed to finish passkey login: %v", err)
+			s.sendJSONError(w, "Authentication failed", http.StatusUnauthorized)
+			return
+		}
 	}
 
 	// Create web session (same as code auth)
@@ -195,24 +210,10 @@ func (s *Server) handlePasskeyFinishLogin(w http.ResponseWriter, r *http.Request
 	}
 
 	// Clear webauthn session cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "webauthn_session",
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		MaxAge:   -1,
-	})
+	clearWebAuthnCookie(w, r)
 
 	// Set session cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    session.ID,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   isSecureRequest(r),
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   2592000, // 30 days
-	})
+	setSessionCookie(w, r, session.ID)
 
 	s.sendJSONSuccess(w, map[string]any{
 		"message":  "Login successful",
@@ -257,15 +258,7 @@ func (s *Server) handlePasskeyBeginRegister(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Store session ID in cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "webauthn_session",
-		Value:    sessionID,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   isSecureRequest(r),
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   300, // 5 minutes
-	})
+	setWebAuthnCookie(w, r, sessionID)
 
 	s.sendJSONSuccess(w, map[string]any{
 		"options": creation,
@@ -324,13 +317,7 @@ func (s *Server) handlePasskeyFinishRegister(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Clear webauthn session cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "webauthn_session",
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		MaxAge:   -1,
-	})
+	clearWebAuthnCookie(w, r)
 
 	s.sendJSONSuccess(w, map[string]any{
 		"message": "Passkey registered successfully",

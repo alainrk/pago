@@ -245,3 +245,32 @@ sdk-ts:
 ## sdks: regenerate the OpenAPI spec and all SDKs
 .PHONY: sdks
 sdks: openapi sdk-python sdk-go sdk-ts
+
+# ==================================================================================== #
+# FRONTEND (frontend/, Vite + React SPA)
+# ==================================================================================== #
+
+## fe/install: install frontend dependencies
+.PHONY: fe/install
+fe/install:
+	cd frontend && npm ci
+
+## fe/dev: run the frontend dev server (proxies /web to localhost:8091)
+.PHONY: fe/dev
+fe/dev:
+	cd frontend && npm run dev
+
+## fe/check: typecheck and unit test the frontend
+.PHONY: fe/check
+fe/check:
+	cd frontend && npm run typecheck && npm test
+
+## fe/build: production build into frontend/dist (reads frontend/.env.production.local)
+.PHONY: fe/build
+fe/build:
+	cd frontend && npm run build
+
+## fe/deploy: build and upload frontend/dist to Cloudflare (needs `npx wrangler login` once)
+.PHONY: fe/deploy
+fe/deploy:
+	cd frontend && npm run deploy
