@@ -36,8 +36,11 @@ func main() {
 		panic("DATABASE_URL environment variable is empty")
 	}
 
-	// Connect to the database directly with GORM
-	conn, err := gorm.Open(postgres.Open(postgresURL), &gorm.Config{})
+	// Connect to the database directly with GORM. The simple protocol skips
+	// server-side prepared statements, so the tool also works through a
+	// transaction-mode connection pooler (for example Supabase on port 6543),
+	// where cached prepared statements fail with "already exists".
+	conn, err := gorm.Open(postgres.New(postgres.Config{DSN: postgresURL, PreferSimpleProtocol: true}), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

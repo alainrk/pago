@@ -18,3 +18,8 @@ LICENSE
 go.work
 *.test
 *.out
+
+# Not needed inside the Go images.
+frontend
+deploy-runbook.md
+sdks.bak
