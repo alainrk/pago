@@ -9,7 +9,6 @@ tmp
 docker-compose.yml
 Caddyfile
 assets
-favicon
 Dockerfile*
 README.md
 LICENSE

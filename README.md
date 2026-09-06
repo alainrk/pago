@@ -1,6 +1,6 @@
-# Pago AI
+# Pago
 
-Telegram **AI Agent** for Income and Expense Management with a comprehensive **Web Dashboard** featuring **Passkey/WebAuthn** support for secure, passwordless authentication.
+**AI Agent** and **App** for Income and Expense Management.
 
 You can self-host it following the Developer section down below.
 
@@ -26,7 +26,7 @@ Pago is an intelligent Telegram bot that leverages AI to make expense tracking e
 - **Quick Entry**: Add expenses and income with a single message.
 - **Inline Editing**: Modify amount, category, description, or date before confirming.
 - **Bulk Operations**: Edit or delete existing transactions with paginated navigation.
-- **Transaction Types**: Track both expenses (18 categories) and income (2 categories).
+- **Transaction Types**: Track both expenses (17 categories) and income (2 categories).
 - **Search and Full Listing**: Find transactions by full text search and category or full listing.
 - **Export Functionality**: Download all your transactions as CSV files.
 
@@ -80,15 +80,18 @@ Pago is an intelligent Telegram bot that leverages AI to make expense tracking e
 
 ### Available Commands
 
-- `/start` - Initialize the bot and see the main menu
+- `/start` or `/new` - Show the main menu
 - `/edit` - Edit an existing transaction
 - `/delete` - Delete a transaction
+- `/clone` - Copy an existing transaction to a new date
 - `/list` - View all transactions (paginated)
 - `/search` - Search transactions by description
 - `/week` - Get current week's financial summary
 - `/month` - Get current month's financial summary
 - `/year` - Get current year's financial summary
+- `/budget` - View and manage monthly budgets
 - `/export` - Export all transactions to CSV
+- `/cancel` - Cancel the current operation
 
 ### User Experience
 
@@ -112,7 +115,8 @@ Pago is an intelligent Telegram bot that leverages AI to make expense tracking e
 ### Prerequisites
 
 - Go 1.26 or higher
-- PostgreSQL Database
+- PostgreSQL Database (or Docker, to run one locally)
+- Node 22 or higher, only for the web app in `frontend/`
 - Access to an OpenAI-compatible API model, with its API Key and Endpoint (e.g. DeepSeek, OpenAI, etc.)
 
 ### Installation
@@ -136,7 +140,8 @@ go mod download
 cp .env.example .env
 ```
 
-Copy the example `.env` file in the project root (or set environment variables) and edit it accordingly:
+Then edit `.env`. The full list with comments is in `.env.example`. The main
+settings are:
 
 ```env
 TELEGRAM_BOT_API_TOKEN='XXXXXXXXXX:AAAA_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
@@ -145,42 +150,43 @@ OPENAI_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 OPENAI_BASE_URL='https://api.deepseek.com/v1'
 LLM_MODEL='deepseek-v4-flash'
 LLM_DISABLE_THINKING='true'
-RUN_MODE='webhook' # webhook or polling
+RUN_MODE='polling' # webhook or polling
 WEBHOOK_DOMAIN=''
 WEBHOOK_SECRET=''
 WEBHOOK_HOST='localhost'
 WEBHOOK_PORT='8080'
 LOG_LEVEL='info'
-# Dev purpose, comma separated. Keep it empty to allow all
+# Dev purpose, comma separated Telegram usernames. Keep it empty to allow all
 ALLOWED_USERS=''
 # Seed purpose - set the Telegram ID of the user to seed transactions for
 SEED_USER_TG_ID=''
-# Web Server Configuration
-WEB_HOST=localhost
+# Web server (API and legacy dashboard)
+WEB_HOST=127.0.0.1
 WEB_PORT=8091
-# Session Configuration (optional)
-SESSION_SECRET=your-random-session-secret-here
+WEB_DASHBOARD_URL='http://localhost:8091/web/dashboard'
+SESSION_SECRET='your-random-session-secret-here'
 SESSION_DURATION_MIN=43200
 # Browser app served from another origin (see "Web App" below)
-WEB_CORS_ORIGINS=http://localhost:5174
-WEB_COOKIE_SAMESITE=lax
-# Email Service Configuration (for passwordless email login)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-EMAIL_FROM=your-email@gmail.com
-# WebAuthn Configuration (for passkey support)
-# RP ID is the domain passkeys are bound to. RP origin is the exact origin of
-# the page that runs the passkey prompt, so it is the frontend origin.
-WEBAUTHN_RP_ID=localhost
-WEBAUTHN_RP_ORIGIN=http://localhost:5174
+WEB_CORS_ORIGINS='http://localhost:5174'
+WEB_COOKIE_SAMESITE='lax'
+# Passkeys. RP ID is the domain, RP origin is the exact frontend origin
+WEBAUTHN_RP_ID='localhost'
+WEBAUTHN_RP_ORIGIN='http://localhost:5174'
+# Email login codes are sent through Brevo. Leave the key empty to disable email login
+BREVO_API_KEY=''
+EMAIL_FROM_NAME='Pago App'
+EMAIL_FROM_ADDRESS='noreply@your-domain.com'
+# Bot health check endpoint
+HEALTH_CHECK_TOKEN='your-secret-token'
+HEALTH_CHECK_PORT=8082
 ```
 
-Spin up local infrastructure:
+Start a local PostgreSQL (the `docker-compose.yml` in the repo root only
+holds the database, mapped to port 5433), then apply the migrations:
 
 ```bash
 docker compose up -d
+go run ./cmd/migrate/main.go -command up
 ```
 
 ## Database Management
@@ -280,10 +286,12 @@ make build-linux-all
 
 ### Database Seeding
 
-The Dev DB Seeder generates test transaction data for development:
+The Dev DB Seeder generates test transaction data for development. The user
+must already exist: send `/start` to your bot once, or insert a row in the
+`users` table by hand.
 
 ```bash
-# Set the user's Telegram ID you want to seed data for
+# Set the user's Telegram ID you want to seed data for (or put it in .env)
 export SEED_USER_TG_ID=123456789
 
 # Seed the database with random transactions
@@ -297,30 +305,32 @@ The seeder will:
 - Distribute transactions across all categories.
 - Ensure at least one salary per month.
 - Delete existing transactions before seeding (idempotent).
+- Leave budgets untouched. Create those from the web app or the `/budget` command.
 
 ## Deployment
 
-### Docker Compose (Recommended)
+### Docker Images
 
-The project includes a complete Docker Compose setup:
+The repo ships two images, one per process:
+
+- `Dockerfile` builds the Telegram bot (`/app/pago`). It listens on 8080 for
+  the webhook and on 8082 for the health check.
+- `Dockerfile.web` builds the web server (`/app/pago-web`). It serves the API
+  and the legacy dashboard on 8081 (set `WEB_HOST=0.0.0.0` and `WEB_PORT=8081`).
 
 ```bash
-# Start all services (database, bot, web server)
-docker compose up -d
-
-# View logs
-docker compose logs -f
-
-# Stop all services
-docker compose down
+docker build -t pago -f Dockerfile .
+docker build -t pago-web -f Dockerfile.web .
 ```
 
-This will start:
+Run them with your own compose file or orchestrator behind a reverse proxy
+that terminates TLS. Point `/health*` at the bot's health port, `/web/*` at
+the web server, and everything else at the bot's webhook port. Migrations are
+not run by the images: run `go run ./cmd/migrate/main.go -command up` against
+the database before the first start and after each upgrade.
 
-- PostgreSQL database on port 5433 (5432 inside the container)
-- Telegram bot (webhook mode on port 8080)
-- Web dashboard on port 8091
-- Automatic database migrations
+The `docker-compose.yml` in the repo root is for local development only. It
+starts just PostgreSQL.
 
 ### Web App on Cloudflare
 
@@ -392,7 +402,10 @@ The web server runs independently and can be configured:
 WEB_HOST=0.0.0.0  # For production
 WEB_PORT=8091
 SESSION_SECRET=your-random-session-secret-here
-SESSION_DURATION=24h
+SESSION_DURATION_MIN=43200  # 30 days
+WEB_CORS_ORIGINS=https://app.your-domain.example
+WEBAUTHN_RP_ID=your-domain.example
+WEBAUTHN_RP_ORIGIN=https://app.your-domain.example
 ```
 
 ### LLM Setup
@@ -416,11 +429,11 @@ OPENAI_BASE_URL='https://api.openai.com/v1'
 LLM_MODEL='gpt-4'
 ```
 
-## Web Dashboard Usage
+## Web App Usage
 
 ### Authentication Options
 
-The web dashboard supports three authentication methods:
+The web app supports three authentication methods:
 
 1. **Telegram Login** (code-based):
    - Enter your Telegram username.
@@ -437,19 +450,22 @@ The web dashboard supports three authentication methods:
    - Use biometric authentication (fingerprint, face recognition) on subsequent logins.
    - No codes needed - instant secure access.
 
-### Dashboard Features
+### App Features
 
-1. **Access**: Navigate to `http://localhost:8091` (or your configured domain).
+1. **Access**: Open `http://localhost:5174` in development (`make fe/dev`) or the
+   domain where you deployed `frontend/`. The older server-rendered dashboard is
+   still available from the Go web server at `http://localhost:8091/web/dashboard`.
 2. **Login**: Choose your preferred authentication method.
 3. **Dashboard**: View your financial data with month navigation.
 4. **Statistics**: See real-time balance, income, expenses, and transaction counts.
 5. **Transactions**:
-   - Add new transactions directly from the web interface.
+   - Add new transactions directly from the web interface, with AI quick add.
    - Browse detailed transaction history with search and filtering.
    - View transactions by category.
-6. **Passkey Management**: Register, view, and delete passkeys for your account.
+6. **Budgets**: Set monthly limits per category and follow the progress.
+7. **Settings**: Register, view, and delete passkeys. Export your data as CSV.
 
-The web dashboard provides a complementary interface to the Telegram bot, offering:
+The web app provides a complementary interface to the Telegram bot, offering:
 
 - Better visualization for large datasets.
 - Month-by-month navigation.
@@ -470,7 +486,7 @@ hex digest is stored.
 
 ```bash
 # Generate locally:
-TOKEN="cshk_$(openssl rand -base64 24 | tr -d '=+/' | head -c 32)"
+TOKEN="pago_$(openssl rand -base64 24 | tr -d '=+/' | head -c 32)"
 HASH=$(printf %s "$TOKEN" | shasum -a 256 | awk '{print $1}')
 echo "token=$TOKEN"
 
@@ -511,7 +527,7 @@ proper consumer install path is **on standby** until there's a concrete need.
 
 Unlike pip and Go, npm has no first-class way to install a package from a
 subdirectory of a git repo, so shipping this SDK to external consumers requires
-extra work — either publishing to npm under a real scope, or distributing
+extra work: either publishing to npm under a real scope, or distributing
 packed tarballs. That will be wired up when the first consumer needs it; for
 now the generated code sits in the repo as a starting point and is kept in
 sync with the OpenAPI spec by `make sdk-ts`.
@@ -546,7 +562,7 @@ from pago_sdk.api.transactions_api import TransactionsApi
 
 cfg = pago_sdk.Configuration(
     host="http://localhost:8091/web",
-    access_token="cshk_...",
+    access_token="pago_...",
 )
 with pago_sdk.ApiClient(cfg) as client:
     stats = TransactionsApi(client).api_stats_get(month="2026-05")
@@ -571,7 +587,7 @@ import (
 func main() {
     cfg := pago.NewConfiguration()
     cfg.Servers = pago.ServerConfigurations{{URL: "http://localhost:8091/web"}}
-    cfg.DefaultHeader["Authorization"] = "Bearer cshk_..."
+    cfg.DefaultHeader["Authorization"] = "Bearer pago_..."
     client := pago.NewAPIClient(cfg)
 
     stats, _, err := client.TransactionsAPI.
