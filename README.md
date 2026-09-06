@@ -5,9 +5,18 @@
 You can self-host it following the Developer section down below.
 
 <p align="center">
-  <img src="/assets/demo-tg.gif" alt="Demo" height="550px">
-  <img src="/assets/demo-web.gif" alt="Demo" height="550px">
+  <img src="/assets/demo.gif" alt="Pago demo" width="420">
 </p>
+
+## Screenshots
+
+| Add a transaction in plain words | Filter by month and category |
+| :---: | :---: |
+| ![Add transaction](/assets/screenshots/add-transaction.png) | ![Transactions with filters](/assets/screenshots/transactions-filters.png) |
+| **Full text search across years** | **Monthly report** |
+| ![Transactions search](/assets/screenshots/transactions-search.png) | ![Monthly report](/assets/screenshots/reports-month.png) |
+| **Yearly report** | **Settings: budget, passkeys, export** |
+| ![Yearly report](/assets/screenshots/reports-year.png) | ![Settings](/assets/screenshots/settings.png) |
 
 ## Features
 
@@ -38,12 +47,11 @@ Pago is an intelligent Telegram bot that leverages AI to make expense tracking e
 - **Balance Tracking**: Instant calculation of income vs expenses for any period.
 - **Category Analysis**: Understand where your money goes with percentage breakdowns.
 
-### Monthly Budgets
+### Monthly Budget
 
-- **Per-Category Budgets**: Set monthly spending limits for any expense category.
-- **Live Tracking**: See current month progress against each budget at a glance.
-- **Visual Feedback**: Progress bars and clear status when you are close to or over budget.
-- **Web-Managed**: Create, edit, and delete budgets directly from the dashboard.
+- **One Monthly Limit**: Set a total spending limit that applies to every month.
+- **Telegram Alerts**: The bot warns you once as spending gets close to the limit, and again when you go over it.
+- **Managed Anywhere**: Set, change or remove the budget from the web app settings or with `/budget` in the bot.
 
 ### Web App
 
@@ -63,8 +71,7 @@ Pago is an intelligent Telegram bot that leverages AI to make expense tracking e
   - Interactive charts for category breakdowns and monthly trends.
   - Transaction counts and summaries.
 - **Budget Management**:
-  - Configure monthly budgets per category from the dashboard.
-  - Track usage in real time with progress indicators.
+  - Set or remove the monthly spending limit from the settings page.
 - **Security Features**:
   - Rate-limited authentication endpoints.
   - Secure session management with configurable duration.
@@ -89,7 +96,7 @@ Pago is an intelligent Telegram bot that leverages AI to make expense tracking e
 - `/week` - Get current week's financial summary
 - `/month` - Get current month's financial summary
 - `/year` - Get current year's financial summary
-- `/budget` - View and manage monthly budgets
+- `/budget` - View or change the monthly spending limit
 - `/export` - Export all transactions to CSV
 - `/cancel` - Cancel the current operation
 
@@ -462,8 +469,8 @@ The web app supports three authentication methods:
    - Add new transactions directly from the web interface, with AI quick add.
    - Browse detailed transaction history with search and filtering.
    - View transactions by category.
-6. **Budgets**: Set monthly limits per category and follow the progress.
-7. **Settings**: Register, view, and delete passkeys. Export your data as CSV.
+6. **Settings**: Set the monthly budget, register and delete passkeys, export
+   your data as CSV.
 
 The web app provides a complementary interface to the Telegram bot, offering:
 
