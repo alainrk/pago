@@ -593,10 +593,10 @@ async function loadMonthlyCharts(month) {
     try {
         const data = await Analytics.fetchMonthly(month);
         const expenses = (data.byCategory && data.byCategory.Expense) || [];
-        CashoutCharts.renderCategoryDonut(donutCanvas, expenses, {
+        PagoCharts.renderCategoryDonut(donutCanvas, expenses, {
             onSliceClick: (cat) => setCategoryFilter(cat),
         });
-        CashoutCharts.renderIncomeExpenseBar(barCanvas, data.totalIncome, data.totalExpenses);
+        PagoCharts.renderIncomeExpenseBar(barCanvas, data.totalIncome, data.totalExpenses);
         if (caption) {
             const sign = data.balance >= 0 ? '+' : '-';
             caption.textContent = 'Balance: ' + sign + formatCurrency(Math.abs(data.balance));
@@ -620,7 +620,7 @@ async function loadTrend() {
     const months = sel ? parseInt(sel.value, 10) : 12;
     try {
         const data = await Analytics.fetchTrend(months);
-        CashoutCharts.renderTrendLine(canvas, data.points, {
+        PagoCharts.renderTrendLine(canvas, data.points, {
             onPointClick: (ym) => {
                 window.location = '/web/dashboard?month=' + encodeURIComponent(ym);
             },
@@ -673,9 +673,9 @@ async function loadYear() {
                 </div>
             `;
         }
-        CashoutCharts.renderYearStacked(stacked, data.byMonth);
+        PagoCharts.renderYearStacked(stacked, data.byMonth);
         const expenses = (data.byCategory && data.byCategory.Expense) || [];
-        CashoutCharts.renderCategoryDonut(donut, expenses, {});
+        PagoCharts.renderCategoryDonut(donut, expenses, {});
     } catch (e) {
         if (stats) stats.innerHTML = '<div class="error">Failed to load: ' + e.message + '</div>';
     }

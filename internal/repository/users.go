@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"cashout/internal/model"
+	"pago/internal/model"
 
 	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"gorm.io/gorm"

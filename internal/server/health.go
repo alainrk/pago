@@ -1,7 +1,7 @@
 package server
 
 import (
-	"cashout/internal/db"
+	"pago/internal/db"
 	"encoding/json"
 	"net/http"
 	"os"

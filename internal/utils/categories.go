@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"cashout/internal/model"
+	"pago/internal/model"
 	"regexp"
 	"strings"
 )

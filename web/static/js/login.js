@@ -21,21 +21,21 @@ function showMessage(text, type) {
 // Save credentials to sessionStorage
 function saveCredentials(username, email, passkeyEmail) {
   if (username) {
-    sessionStorage.setItem("cashout_telegram_username", username);
+    sessionStorage.setItem("pago_telegram_username", username);
   }
   if (email) {
-    sessionStorage.setItem("cashout_email", email);
+    sessionStorage.setItem("pago_email", email);
   }
   if (passkeyEmail) {
-    sessionStorage.setItem("cashout_passkey_email", passkeyEmail);
+    sessionStorage.setItem("pago_passkey_email", passkeyEmail);
   }
 }
 
 // Load persisted credentials from sessionStorage
 function loadPersistedCredentials() {
-  const savedUsername = sessionStorage.getItem("cashout_telegram_username");
-  const savedEmail = sessionStorage.getItem("cashout_email");
-  const savedPasskeyEmail = sessionStorage.getItem("cashout_passkey_email");
+  const savedUsername = sessionStorage.getItem("pago_telegram_username");
+  const savedEmail = sessionStorage.getItem("pago_email");
+  const savedPasskeyEmail = sessionStorage.getItem("pago_passkey_email");
 
   if (savedUsername) {
     document.getElementById("username").value = savedUsername;

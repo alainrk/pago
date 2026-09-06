@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Cashout API
+    Pago API
 
     Personal finance tracking API. All /api/* endpoints require either a session cookie (browser) or an Authorization: Bearer <token> header (machine clients).
 
@@ -14,7 +14,7 @@
 
 import unittest
 
-from cashout_sdk.models.web_category_breakdown import WebCategoryBreakdown
+from pago_sdk.models.web_category_breakdown import WebCategoryBreakdown
 
 class TestWebCategoryBreakdown(unittest.TestCase):
     """WebCategoryBreakdown unit test stubs"""
@@ -36,14 +36,14 @@ class TestWebCategoryBreakdown(unittest.TestCase):
         if include_optional:
             return WebCategoryBreakdown(
                 expense = [
-                    cashout_sdk.models.web/category_entry.web.CategoryEntry(
+                    pago_sdk.models.web/category_entry.web.CategoryEntry(
                         amount = 1.337, 
                         category = '', 
                         count = 56, 
                         pct = 1.337, )
                     ],
                 income = [
-                    cashout_sdk.models.web/category_entry.web.CategoryEntry(
+                    pago_sdk.models.web/category_entry.web.CategoryEntry(
                         amount = 1.337, 
                         category = '', 
                         count = 56, 

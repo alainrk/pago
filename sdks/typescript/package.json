@@ -1,11 +1,11 @@
 {
-  "name": "@cashout/sdk",
+  "name": "@pago/sdk",
   "version": "1.0.0",
-  "description": "OpenAPI client for @cashout/sdk",
+  "description": "OpenAPI client for @pago/sdk",
   "author": "OpenAPI-Generator",
   "repository": {
     "type": "git",
-    "url": "https://github.com/alainrk/cashout.git"
+    "url": "https://github.com/alainrk/pago.git"
   },
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",

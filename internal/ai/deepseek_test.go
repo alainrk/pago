@@ -1,7 +1,7 @@
 package ai
 
 import (
-	"cashout/internal/model"
+	"pago/internal/model"
 	"encoding/json"
 	"testing"
 	"time"

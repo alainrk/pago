@@ -1,6 +1,6 @@
 {
-  "name": "Cashout",
-  "short_name": "Cashout",
+  "name": "Pago",
+  "short_name": "Pago",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0f0e",

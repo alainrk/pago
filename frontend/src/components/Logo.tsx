@@ -1,11 +1,11 @@
-// Logo renders the Cashout mark (a teal ledger receipt) with the lowercase
+// Logo renders the Pago mark (a teal ledger receipt) with the lowercase
 // wordmark. size is the height of the mark in px; the wordmark and the gap
 // scale with it (gap is about 0.35x the mark height, per the brand notes).
 export function Logo({ size = 26, wordmark = true, fontSize }: { size?: number; wordmark?: boolean; fontSize?: number }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: Math.round(size * 0.35) }}>
       <LogoMark size={size} />
-      {wordmark && <div style={{ fontSize: fontSize ?? Math.round(size * 0.75), fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1 }}>cashout</div>}
+      {wordmark && <div style={{ fontSize: fontSize ?? Math.round(size * 0.75), fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1 }}>pago</div>}
     </div>
   );
 }

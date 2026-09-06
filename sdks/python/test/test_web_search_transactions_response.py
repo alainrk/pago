@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Cashout API
+    Pago API
 
     Personal finance tracking API. All /api/* endpoints require either a session cookie (browser) or an Authorization: Bearer <token> header (machine clients).
 
@@ -14,7 +14,7 @@
 
 import unittest
 
-from cashout_sdk.models.web_search_transactions_response import WebSearchTransactionsResponse
+from pago_sdk.models.web_search_transactions_response import WebSearchTransactionsResponse
 
 class TestWebSearchTransactionsResponse(unittest.TestCase):
     """WebSearchTransactionsResponse unit test stubs"""
@@ -39,7 +39,7 @@ class TestWebSearchTransactionsResponse(unittest.TestCase):
                 offset = 56,
                 total = 56,
                 transactions = [
-                    cashout_sdk.models.web/transaction_dto.web.TransactionDTO(
+                    pago_sdk.models.web/transaction_dto.web.TransactionDTO(
                         amount = 1.337, 
                         category = '', 
                         date = '', 

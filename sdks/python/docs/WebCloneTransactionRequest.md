@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from cashout_sdk.models.web_clone_transaction_request import WebCloneTransactionRequest
+from pago_sdk.models.web_clone_transaction_request import WebCloneTransactionRequest
 
 # TODO update the JSON string below
 json = "{}"

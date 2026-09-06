@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"cashout/internal/ai"
-	"cashout/internal/model"
-	"cashout/internal/utils"
+	"pago/internal/ai"
+	"pago/internal/model"
+	"pago/internal/utils"
 
 	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"

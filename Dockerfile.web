@@ -19,7 +19,7 @@ COPY . .
 # Build the web server
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \
-    -o cashout-web \
+    -o pago-web \
     ./cmd/web/main.go
 
 # Final stage
@@ -29,26 +29,26 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates tzdata
 
 # Create non-root user
-RUN addgroup -g 1000 -S cashout && \
-    adduser -u 1000 -S cashout -G cashout
+RUN addgroup -g 1000 -S pago && \
+    adduser -u 1000 -S pago -G pago
 
 # Set working directory
 WORKDIR /app
 
 # Copy binaries from builder
-COPY --from=builder /app/cashout-web /app/cashout-web
+COPY --from=builder /app/pago-web /app/pago-web
 
 # Copy web assets (templates and static files)
 COPY web/ ./web/
 
 # Change ownership
-RUN chown -R cashout:cashout /app
+RUN chown -R pago:pago /app
 
 # Switch to non-root user
-USER cashout
+USER pago
 
 # Expose port 8081 (web)
 EXPOSE 8081
 
 # Set entrypoint
-ENTRYPOINT ["/app/cashout-web"]
+ENTRYPOINT ["/app/pago-web"]

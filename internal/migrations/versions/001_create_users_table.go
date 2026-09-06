@@ -2,7 +2,7 @@
 package versions
 
 import (
-	"cashout/internal/migrations"
+	"pago/internal/migrations"
 
 	"gorm.io/gorm"
 )

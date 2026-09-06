@@ -2,7 +2,7 @@
 package repository
 
 import (
-	"cashout/internal/db"
+	"pago/internal/db"
 
 	"github.com/sirupsen/logrus"
 )

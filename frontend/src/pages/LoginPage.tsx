@@ -10,7 +10,7 @@ import { useAuth } from "../auth/AuthContext";
 
 type Step = "start" | "code";
 
-const USERNAME_KEY = "cashout.telegram-username";
+const USERNAME_KEY = "pago.telegram-username";
 
 function readSavedUsername(): string {
   try {
@@ -93,7 +93,7 @@ export function LoginPage() {
       await auth.requestCode(clean);
       saveUsername(clean);
       setStep("code");
-      setNotice("If that username has a Cashout account, a code is on its way on Telegram.");
+      setNotice("If that username has a Pago account, a code is on its way on Telegram.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not send the code. Try again.");
     } finally {

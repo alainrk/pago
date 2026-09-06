@@ -1,7 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Cashout API
+ * Pago API
  * Personal finance tracking API. All /api/_* endpoints require either a session cookie (browser) or an Authorization: Bearer <token> header (machine clients).
  *
  * The version of the OpenAPI document: 1.0

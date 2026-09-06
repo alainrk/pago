@@ -1,4 +1,4 @@
-// Icon markup from the Cashout design handoff (16x16 viewBox, currentColor). Generated once, edit by hand if needed.
+// Icon markup from the Pago design handoff (16x16 viewBox, currentColor). Generated once, edit by hand if needed.
 
 // Icons drawn on a grid other than 16x16 declare their own viewBox here.
 export const ICON_VIEWBOX: Partial<Record<string, string>> = {

@@ -100,7 +100,7 @@ export function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename || "cashout-transactions.csv";
+      a.download = filename || "pago-transactions.csv";
       document.body.appendChild(a);
       a.click();
       a.remove();

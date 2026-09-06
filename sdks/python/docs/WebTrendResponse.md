@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from cashout_sdk.models.web_trend_response import WebTrendResponse
+from pago_sdk.models.web_trend_response import WebTrendResponse
 
 # TODO update the JSON string below
 json = "{}"

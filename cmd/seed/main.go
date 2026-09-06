@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cashout/internal/db"
+	"pago/internal/db"
 	"errors"
 	"flag"
 	"fmt"

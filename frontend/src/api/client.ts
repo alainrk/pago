@@ -1,4 +1,4 @@
-// Small fetch wrapper for the Cashout API.
+// Small fetch wrapper for the Pago API.
 //
 // The API lives under /web on the Go server. In development the Vite proxy
 // forwards /web to the local backend so VITE_API_URL stays empty. In

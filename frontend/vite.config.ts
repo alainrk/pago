@@ -29,7 +29,7 @@ function cloudflareHeaders(apiOrigin: string): Plugin {
     "",
   ].join("\n");
   return {
-    name: "cashout-cloudflare-headers",
+    name: "pago-cloudflare-headers",
     apply: "build",
     generateBundle() {
       this.emitFile({ type: "asset", fileName: "_headers", source: headers });
@@ -55,10 +55,10 @@ export default defineConfig(({ mode }) => {
       port: 5174,
       host: true,
       // In development the API is reached through this proxy so cookies are
-      // first-party. Set CASHOUT_API_PROXY to point at a different backend.
+      // first-party. Set PAGO_API_PROXY to point at a different backend.
       proxy: {
         "/web": {
-          target: process.env.CASHOUT_API_PROXY ?? "http://localhost:8091",
+          target: process.env.PAGO_API_PROXY ?? "http://localhost:8091",
           changeOrigin: false,
         },
       },

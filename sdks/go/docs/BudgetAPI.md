@@ -38,7 +38,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -102,7 +102,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -166,7 +166,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -230,7 +230,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -294,7 +294,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -358,7 +358,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -422,7 +422,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -486,7 +486,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -550,7 +550,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -614,7 +614,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -678,7 +678,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -742,7 +742,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -806,7 +806,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -870,7 +870,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -934,7 +934,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {
@@ -998,7 +998,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/alainrk/cashout/cashout"
+	openapiclient "github.com/alainrk/pago/pago"
 )
 
 func main() {

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"cashout/internal/model"
-	"cashout/internal/utils"
+	"pago/internal/model"
+	"pago/internal/utils"
 
 	"github.com/sirupsen/logrus"
 )

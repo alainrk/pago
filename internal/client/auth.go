@@ -3,7 +3,7 @@ package client
 import (
 	"fmt"
 
-	"cashout/internal/model"
+	"pago/internal/model"
 
 	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"

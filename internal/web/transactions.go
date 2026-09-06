@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"cashout/internal/client"
-	"cashout/internal/model"
-	"cashout/internal/repository"
+	"pago/internal/client"
+	"pago/internal/model"
+	"pago/internal/repository"
 )
 
 const dateLayout = "2006-01-02"
@@ -408,7 +408,7 @@ func (s *Server) handleAPIExportTransactions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	filename := fmt.Sprintf("cashout_export_%s.csv", time.Now().Format(dateLayout))
+	filename := fmt.Sprintf("pago_export_%s.csv", time.Now().Format(dateLayout))
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
 

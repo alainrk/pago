@@ -109,7 +109,7 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          output_name="cashout"
+          output_name="pago"
           go build -ldflags="-w -s -X main.version=${{ github.ref_name }}" \
             -o=bin/${output_name} \
             ./cmd/server/main.go
@@ -117,7 +117,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: cashout
+          name: pago
           path: bin/*
           retention-days: 7
 

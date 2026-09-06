@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Cashout API
+    Pago API
 
     Personal finance tracking API. All /api/* endpoints require either a session cookie (browser) or an Authorization: Bearer <token> header (machine clients).
 
@@ -20,7 +20,7 @@ from setuptools import setup, find_packages  # noqa: H301
 #
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
-NAME = "cashout-sdk"
+NAME = "pago-sdk"
 VERSION = "1.0.0"
 PYTHON_REQUIRES = ">= 3.9"
 REQUIRES = [
@@ -33,11 +33,11 @@ REQUIRES = [
 setup(
     name=NAME,
     version=VERSION,
-    description="Cashout API",
+    description="Pago API",
     author="OpenAPI Generator community",
     author_email="team@openapitools.org",
     url="",
-    keywords=["OpenAPI", "OpenAPI-Generator", "Cashout API"],
+    keywords=["OpenAPI", "OpenAPI-Generator", "Pago API"],
     install_requires=REQUIRES,
     packages=find_packages(exclude=["test", "tests"]),
     include_package_data=True,
@@ -45,5 +45,5 @@ setup(
     long_description="""\
     Personal finance tracking API. All /api/* endpoints require either a session cookie (browser) or an Authorization: Bearer &lt;token&gt; header (machine clients).
     """,  # noqa: E501
-    package_data={"cashout_sdk": ["py.typed"]},
+    package_data={"pago_sdk": ["py.typed"]},
 )

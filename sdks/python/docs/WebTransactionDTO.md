@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from cashout_sdk.models.web_transaction_dto import WebTransactionDTO
+from pago_sdk.models.web_transaction_dto import WebTransactionDTO
 
 # TODO update the JSON string below
 json = "{}"

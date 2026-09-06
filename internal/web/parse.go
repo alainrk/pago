@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"cashout/internal/ai"
-	"cashout/internal/client"
-	"cashout/internal/model"
-	"cashout/internal/repository"
+	"pago/internal/ai"
+	"pago/internal/client"
+	"pago/internal/model"
+	"pago/internal/repository"
 )
 
 const (

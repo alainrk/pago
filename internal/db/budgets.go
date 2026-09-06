@@ -3,7 +3,7 @@ package db
 import (
 	"time"
 
-	"cashout/internal/model"
+	"pago/internal/model"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

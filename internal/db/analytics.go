@@ -1,7 +1,7 @@
 package db
 
 import (
-	"cashout/internal/model"
+	"pago/internal/model"
 	"time"
 )
 

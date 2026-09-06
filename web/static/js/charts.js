@@ -177,7 +177,7 @@
         });
     }
 
-    global.CashoutCharts = {
+    global.PagoCharts = {
         renderCategoryDonut,
         renderIncomeExpenseBar,
         renderTrendLine,

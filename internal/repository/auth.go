@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"cashout/internal/model"
+	"pago/internal/model"
 )
 
 var ErrInvalidToken = errors.New("invalid or expired token")

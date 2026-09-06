@@ -74,7 +74,7 @@ func (c *Client) ExportTransactions(b *gotgbot.Bot, ctx *ext.Context) error {
 	}
 
 	// Generate filename with current date
-	filename := fmt.Sprintf("cashout_export_%s.csv", time.Now().Format("2006-01-02"))
+	filename := fmt.Sprintf("pago_export_%s.csv", time.Now().Format("2006-01-02"))
 
 	// Send the CSV file
 	_, err = b.SendDocument(ctx.EffectiveSender.ChatId, gotgbot.InputFileByReader(filename, bytes.NewReader(buf.Bytes())), &gotgbot.SendDocumentOpts{

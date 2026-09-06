@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"cashout/internal/model"
+	"pago/internal/model"
 
 	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 )
@@ -125,15 +125,15 @@ func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 	// Send code via email or Telegram based on login method
 	if email != "" {
 		// Send code via email
-		subject := "Your Cashout Login Code"
-		textContent := fmt.Sprintf("🔐 Your Cashout login code is:\n\n%s\n\nThis code will expire in 5 minutes.", authToken.Token)
+		subject := "Your Pago Login Code"
+		textContent := fmt.Sprintf("🔐 Your Pago login code is:\n\n%s\n\nThis code will expire in 5 minutes.", authToken.Token)
 		err = s.emailService.SendTransacEmail(email, subject, textContent)
 		if err != nil {
 			s.logger.Errorf("Failed to send auth code via email: %v", err)
 		}
 	} else {
 		// Send code via Telegram
-		message := fmt.Sprintf("🔐 Your Cashout login code is:\n\n<code>%s</code>\n\nThis code will expire in 5 minutes.", authToken.Token)
+		message := fmt.Sprintf("🔐 Your Pago login code is:\n\n<code>%s</code>\n\nThis code will expire in 5 minutes.", authToken.Token)
 		_, err = s.bot.SendMessage(user.TgID, message, &gotgbot.SendMessageOpts{
 			ParseMode: "HTML",
 		})

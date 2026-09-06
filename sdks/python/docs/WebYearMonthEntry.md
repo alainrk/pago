@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from cashout_sdk.models.web_year_month_entry import WebYearMonthEntry
+from pago_sdk.models.web_year_month_entry import WebYearMonthEntry
 
 # TODO update the JSON string below
 json = "{}"

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"cashout/internal/client"
-	"cashout/internal/model"
-	"cashout/internal/repository"
+	"pago/internal/client"
+	"pago/internal/model"
+	"pago/internal/repository"
 )
 
 // isSecureRequest checks if the request is over HTTPS, accounting for reverse proxies

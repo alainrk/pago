@@ -7,12 +7,12 @@ import (
 	"os"
 	"time"
 
-	"cashout/internal/ai"
-	"cashout/internal/db"
-	"cashout/internal/email"
-	"cashout/internal/logging"
-	"cashout/internal/repository"
-	"cashout/internal/web"
+	"pago/internal/ai"
+	"pago/internal/db"
+	"pago/internal/email"
+	"pago/internal/logging"
+	"pago/internal/repository"
+	"pago/internal/web"
 
 	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/joho/godotenv"

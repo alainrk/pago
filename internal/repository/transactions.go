@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"cashout/internal/db"
-	"cashout/internal/model"
+	"pago/internal/db"
+	"pago/internal/model"
 	"time"
 )
 

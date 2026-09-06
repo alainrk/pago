@@ -1,6 +1,6 @@
 package repository
 
-import "cashout/internal/model"
+import "pago/internal/model"
 
 type Budgets struct {
 	Repository

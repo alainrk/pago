@@ -1,13 +1,13 @@
 [project]
-name = "cashout_sdk"
+name = "pago_sdk"
 version = "1.0.0"
-description = "Cashout API"
+description = "Pago API"
 authors = [
   {name = "OpenAPI Generator Community",email = "team@openapitools.org"},
 ]
 license = { text = "NoLicense" }
 readme = "README.md"
-keywords = ["OpenAPI", "OpenAPI-Generator", "Cashout API"]
+keywords = ["OpenAPI", "OpenAPI-Generator", "Pago API"]
 requires-python = ">=3.9"
 
 dependencies = [
@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/alainrk/cashout"
+Repository = "https://github.com/alainrk/pago"
 
 [tool.poetry]
 requires-poetry = ">=2.0"
@@ -41,7 +41,7 @@ extension-pkg-whitelist = "pydantic"
 
 [tool.mypy]
 files = [
-  "cashout_sdk",
+  "pago_sdk",
   #"test",  # auto-generated tests
   "tests", # hand-written tests
 ]
@@ -79,7 +79,7 @@ disallow_any_generics = true
 
 [[tool.mypy.overrides]]
 module = [
-  "cashout_sdk.configuration",
+  "pago_sdk.configuration",
 ]
 warn_unused_ignores = true
 strict_equality = true

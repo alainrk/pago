@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from cashout_sdk.models.web_create_transaction_request import WebCreateTransactionRequest
+from pago_sdk.models.web_create_transaction_request import WebCreateTransactionRequest
 
 # TODO update the JSON string below
 json = "{}"

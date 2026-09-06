@@ -1,6 +1,6 @@
 package db
 
-import "cashout/internal/model"
+import "pago/internal/model"
 
 // GetUser retrieves a user by their Telegram ID
 func (db *DB) GetUser(tgID int64) (*model.User, error) {

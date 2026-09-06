@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from cashout_sdk.models.web_category_entry import WebCategoryEntry
+from pago_sdk.models.web_category_entry import WebCategoryEntry
 
 # TODO update the JSON string below
 json = "{}"

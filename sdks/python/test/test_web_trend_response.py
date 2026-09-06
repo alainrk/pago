@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Cashout API
+    Pago API
 
     Personal finance tracking API. All /api/* endpoints require either a session cookie (browser) or an Authorization: Bearer <token> header (machine clients).
 
@@ -14,7 +14,7 @@
 
 import unittest
 
-from cashout_sdk.models.web_trend_response import WebTrendResponse
+from pago_sdk.models.web_trend_response import WebTrendResponse
 
 class TestWebTrendResponse(unittest.TestCase):
     """WebTrendResponse unit test stubs"""
@@ -37,7 +37,7 @@ class TestWebTrendResponse(unittest.TestCase):
             return WebTrendResponse(
                 var_from = '',
                 points = [
-                    cashout_sdk.models.web/month_point.web.MonthPoint(
+                    pago_sdk.models.web/month_point.web.MonthPoint(
                         balance = 1.337, 
                         expense = 1.337, 
                         income = 1.337, 

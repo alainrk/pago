@@ -1,4 +1,4 @@
-# cashout_sdk.AnalyticsApi
+# pago_sdk.AnalyticsApi
 
 All URIs are relative to */web*
 
@@ -21,14 +21,14 @@ Returns total income/expenses and per-category aggregates for a given month.
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_monthly_analytics_response import WebMonthlyAnalyticsResponse
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_monthly_analytics_response import WebMonthlyAnalyticsResponse
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -44,9 +44,9 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.AnalyticsApi(api_client)
+    api_instance = pago_sdk.AnalyticsApi(api_client)
     month = 'month_example' # str | Month in YYYY-MM (defaults to current month) (optional)
 
     try:
@@ -100,14 +100,14 @@ Monthly trend over the trailing N months
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_trend_response import WebTrendResponse
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_trend_response import WebTrendResponse
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -123,9 +123,9 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.AnalyticsApi(api_client)
+    api_instance = pago_sdk.AnalyticsApi(api_client)
     months = 56 # int | Number of trailing months (1..60, default 12) (optional)
 
     try:
@@ -179,14 +179,14 @@ Annual breakdown by month and category
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_year_analytics_response import WebYearAnalyticsResponse
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_year_analytics_response import WebYearAnalyticsResponse
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -202,9 +202,9 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.AnalyticsApi(api_client)
+    api_instance = pago_sdk.AnalyticsApi(api_client)
     year = 56 # int | 4-digit year (defaults to current year) (optional)
 
     try:

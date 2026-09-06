@@ -2,10 +2,10 @@
 // `npm run deploy` builds the app and uploads dist/ as static assets.
 //
 // This file is intentionally generic. Attach your own custom domain in the
-// Cloudflare dashboard (Workers & Pages > cashout-web > Settings > Domains & Routes)
+// Cloudflare dashboard (Workers & Pages > pago-web > Settings > Domains & Routes)
 // or via a local, untracked copy passed with `wrangler deploy --config`.
 {
-  "name": "cashout-web",
+  "name": "pago-web",
   "compatibility_date": "2026-08-22",
   "assets": {
     "directory": "./dist",

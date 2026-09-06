@@ -1,4 +1,4 @@
-# cashout_sdk.TransactionsApi
+# pago_sdk.TransactionsApi
 
 All URIs are relative to */web*
 
@@ -25,14 +25,14 @@ List categories
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_categories_response import WebCategoriesResponse
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_categories_response import WebCategoriesResponse
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -48,9 +48,9 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.TransactionsApi(api_client)
+    api_instance = pago_sdk.TransactionsApi(api_client)
     type = 'type_example' # str | Transaction type: Income or Expense
 
     try:
@@ -104,14 +104,14 @@ Monthly stats
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_stats_response import WebStatsResponse
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_stats_response import WebStatsResponse
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -127,9 +127,9 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.TransactionsApi(api_client)
+    api_instance = pago_sdk.TransactionsApi(api_client)
     month = 'month_example' # str | Month in YYYY-MM (defaults to current month) (optional)
 
     try:
@@ -185,15 +185,15 @@ Duplicate an existing transaction; the new transaction copies type, category, am
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_clone_transaction_request import WebCloneTransactionRequest
-from cashout_sdk.models.web_transaction_dto import WebTransactionDTO
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_clone_transaction_request import WebCloneTransactionRequest
+from pago_sdk.models.web_transaction_dto import WebTransactionDTO
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -209,10 +209,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.TransactionsApi(api_client)
-    body = cashout_sdk.WebCloneTransactionRequest() # WebCloneTransactionRequest | ID of the transaction to clone
+    api_instance = pago_sdk.TransactionsApi(api_client)
+    body = pago_sdk.WebCloneTransactionRequest() # WebCloneTransactionRequest | ID of the transaction to clone
 
     try:
         # Clone transaction
@@ -268,15 +268,15 @@ Create transaction
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_create_transaction_request import WebCreateTransactionRequest
-from cashout_sdk.models.web_message_response import WebMessageResponse
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_create_transaction_request import WebCreateTransactionRequest
+from pago_sdk.models.web_message_response import WebMessageResponse
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -292,10 +292,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.TransactionsApi(api_client)
-    body = cashout_sdk.WebCreateTransactionRequest() # WebCreateTransactionRequest | Transaction payload
+    api_instance = pago_sdk.TransactionsApi(api_client)
+    body = pago_sdk.WebCreateTransactionRequest() # WebCreateTransactionRequest | Transaction payload
 
     try:
         # Create transaction
@@ -349,15 +349,15 @@ Delete transaction
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_delete_transaction_request import WebDeleteTransactionRequest
-from cashout_sdk.models.web_message_response import WebMessageResponse
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_delete_transaction_request import WebDeleteTransactionRequest
+from pago_sdk.models.web_message_response import WebMessageResponse
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -373,10 +373,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.TransactionsApi(api_client)
-    body = cashout_sdk.WebDeleteTransactionRequest() # WebDeleteTransactionRequest | Transaction ID payload
+    api_instance = pago_sdk.TransactionsApi(api_client)
+    body = pago_sdk.WebDeleteTransactionRequest() # WebDeleteTransactionRequest | Transaction ID payload
 
     try:
         # Delete transaction
@@ -432,15 +432,15 @@ Update one or more fields of an existing transaction. Type cannot be changed; ca
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_edit_transaction_request import WebEditTransactionRequest
-from cashout_sdk.models.web_transaction_dto import WebTransactionDTO
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_edit_transaction_request import WebEditTransactionRequest
+from pago_sdk.models.web_transaction_dto import WebTransactionDTO
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -456,10 +456,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.TransactionsApi(api_client)
-    body = cashout_sdk.WebEditTransactionRequest() # WebEditTransactionRequest | Fields to update; only non-null fields are applied
+    api_instance = pago_sdk.TransactionsApi(api_client)
+    body = pago_sdk.WebEditTransactionRequest() # WebEditTransactionRequest | Fields to update; only non-null fields are applied
 
     try:
         # Edit transaction (partial)
@@ -517,13 +517,13 @@ Stream a CSV containing all transactions matching the optional filter set. Colum
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -539,9 +539,9 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.TransactionsApi(api_client)
+    api_instance = pago_sdk.TransactionsApi(api_client)
     query = 'query_example' # str | Substring match on description (case-insensitive) (optional)
     category = 'category_example' # str | Category filter (\\ (optional)
     type = 'type_example' # str | Transaction type: Income or Expense (optional)
@@ -608,14 +608,14 @@ List transactions for a month
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_transactions_response import WebTransactionsResponse
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_transactions_response import WebTransactionsResponse
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -631,9 +631,9 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.TransactionsApi(api_client)
+    api_instance = pago_sdk.TransactionsApi(api_client)
     month = 'month_example' # str | Month in YYYY-MM (defaults to current month) (optional)
 
     try:
@@ -689,15 +689,15 @@ Search a user's transactions by any combination of text, category, type, date ra
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_search_transactions_request import WebSearchTransactionsRequest
-from cashout_sdk.models.web_search_transactions_response import WebSearchTransactionsResponse
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_search_transactions_request import WebSearchTransactionsRequest
+from pago_sdk.models.web_search_transactions_response import WebSearchTransactionsResponse
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -713,10 +713,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.TransactionsApi(api_client)
-    body = cashout_sdk.WebSearchTransactionsRequest() # WebSearchTransactionsRequest | Filter set
+    api_instance = pago_sdk.TransactionsApi(api_client)
+    body = pago_sdk.WebSearchTransactionsRequest() # WebSearchTransactionsRequest | Filter set
 
     try:
         # Search transactions

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"cashout/internal/db"
-	"cashout/internal/model"
+	"pago/internal/db"
+	"pago/internal/model"
 	"fmt"
 	"math/rand"
 	"time"

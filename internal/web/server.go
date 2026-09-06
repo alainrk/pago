@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"cashout/internal/ai"
-	"cashout/internal/client"
-	"cashout/internal/email"
-	"cashout/internal/model"
-	"cashout/internal/repository"
+	"pago/internal/ai"
+	"pago/internal/client"
+	"pago/internal/email"
+	"pago/internal/model"
+	"pago/internal/repository"
 
 	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/sirupsen/logrus"

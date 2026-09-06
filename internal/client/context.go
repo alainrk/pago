@@ -1,7 +1,7 @@
 package client
 
 import (
-	"cashout/internal/model"
+	"pago/internal/model"
 	"context"
 )
 

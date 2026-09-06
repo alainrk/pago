@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"cashout/internal/model"
+	"pago/internal/model"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -63,7 +63,7 @@ func NewWebAuthn(repo Repository) (*WebAuthn, error) {
 
 	wconfig := &webauthn.Config{
 		RPID:          rpID,               // Domain for passkey (e.g., "example.com")
-		RPDisplayName: "Cashout",          // Display name shown to users
+		RPDisplayName: "Pago",          // Display name shown to users
 		RPOrigins:     []string{rpOrigin}, // Allowed origins (must match exactly)
 		Timeouts: webauthn.TimeoutsConfig{
 			Login: webauthn.TimeoutConfig{

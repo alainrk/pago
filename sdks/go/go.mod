@@ -1,4 +1,4 @@
-module github.com/alainrk/cashout/sdks/go
+module github.com/alainrk/pago/sdks/go
 
 go 1.18
 

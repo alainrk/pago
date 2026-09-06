@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"cashout/internal/client"
-	"cashout/internal/model"
+	"pago/internal/client"
+	"pago/internal/model"
 )
 
 // MeResponse is the body of GET /api/me.

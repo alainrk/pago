@@ -1,13 +1,13 @@
 package main
 
 import (
-	"cashout/internal/migrations"
+	"pago/internal/migrations"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 
-	_ "cashout/internal/migrations/versions" // Import all migrations
+	_ "pago/internal/migrations/versions" // Import all migrations
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"

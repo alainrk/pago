@@ -19,7 +19,7 @@ COPY . .
 # Build the Telegram bot
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \
-    -o cashout \
+    -o pago \
     ./cmd/server/main.go
 
 # Build the migration tool
@@ -35,24 +35,24 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates tzdata
 
 # Create non-root user
-RUN addgroup -g 1000 -S cashout && \
-    adduser -u 1000 -S cashout -G cashout
+RUN addgroup -g 1000 -S pago && \
+    adduser -u 1000 -S pago -G pago
 
 # Set working directory
 WORKDIR /app
 
 # Copy binaries from builder
-COPY --from=builder /app/cashout /app/cashout
+COPY --from=builder /app/pago /app/pago
 COPY --from=builder /app/migrate /app/migrate
 
 # Change ownership
-RUN chown -R cashout:cashout /app
+RUN chown -R pago:pago /app
 
 # Switch to non-root user
-USER cashout
+USER pago
 
 # Expose ports: 8080 (webhook), 8082 (health)
 EXPOSE 8080 8082
 
 # Set entrypoint
-ENTRYPOINT ["/app/cashout"]
+ENTRYPOINT ["/app/pago"]

@@ -3,7 +3,7 @@ package web
 import (
 	"testing"
 
-	"cashout/internal/model"
+	"pago/internal/model"
 )
 
 func TestDescriptionsMatch(t *testing.T) {

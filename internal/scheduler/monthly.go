@@ -1,8 +1,8 @@
 package scheduler
 
 import (
-	"cashout/internal/model"
-	"cashout/internal/utils"
+	"pago/internal/model"
+	"pago/internal/utils"
 	"errors"
 	"fmt"
 	"math"

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"cashout/internal/client"
-	"cashout/internal/model"
+	"pago/internal/client"
+	"pago/internal/model"
 )
 
 const (

@@ -1,8 +1,8 @@
 package client
 
 import (
-	"cashout/internal/model"
-	"cashout/internal/utils"
+	"pago/internal/model"
+	"pago/internal/utils"
 	"fmt"
 	"strconv"
 	"strings"

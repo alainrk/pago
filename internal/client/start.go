@@ -17,7 +17,7 @@ func (c *Client) Start(b *gotgbot.Bot, ctx *ext.Context) error {
 		return errors.Join(err, errm)
 	}
 
-	msg := fmt.Sprintf("Welcome to Cashout, %s!\nWhat can I do for you?", user.Name)
+	msg := fmt.Sprintf("Welcome to Pago, %s!\nWhat can I do for you?", user.Name)
 
 	err = c.SendHomeKeyboard(b, ctx, msg)
 

@@ -4,9 +4,9 @@ import (
 	"os"
 	"strings"
 
-	"cashout/internal/ai"
-	"cashout/internal/db"
-	"cashout/internal/repository"
+	"pago/internal/ai"
+	"pago/internal/db"
+	"pago/internal/repository"
 
 	"github.com/sirupsen/logrus"
 )

@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from cashout_sdk.models.web_monthly_analytics_response import WebMonthlyAnalyticsResponse
+from pago_sdk.models.web_monthly_analytics_response import WebMonthlyAnalyticsResponse
 
 # TODO update the JSON string below
 json = "{}"

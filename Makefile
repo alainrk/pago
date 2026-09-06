@@ -3,8 +3,8 @@ web_package_path = ./cmd/web/main.go
 
 migrate_package_path = ./cmd/migrate/main.go
 seed_package_path = ./cmd/seed/*.go
-binary_name = cashout
-web_binary_name = cashout-web
+binary_name = pago
+web_binary_name = pago-web
 linux_binary_name = ${binary_name}-linux
 linux_web_binary_name = ${web_binary_name}-linux
 
@@ -195,7 +195,7 @@ OPENAPI_GEN := OPENAPI_GENERATOR_VERSION=$(OPENAPI_GEN_JAR) npx --yes $(OPENAPI_
 # Module identity used by the Go SDK so it resolves under `go get`.
 # Must match the actual GitHub owner/repo.
 SDK_GIT_USER := alainrk
-SDK_GIT_REPO := cashout
+SDK_GIT_REPO := pago
 
 ## openapi: generate api/swagger.{yaml,json} from swag annotations
 .PHONY: openapi
@@ -213,7 +213,7 @@ sdk-python:
 	  -i api/swagger.yaml -g python \
 	  -o sdks/python \
 	  --git-user-id=$(SDK_GIT_USER) --git-repo-id=$(SDK_GIT_REPO) \
-	  --additional-properties=packageName=cashout_sdk,projectName=cashout-sdk
+	  --additional-properties=packageName=pago_sdk,projectName=pago-sdk
 	# The generator emits `license = "NoLicense"`, a bare string that setuptools
 	# validates as an SPDX expression and rejects (it is not valid SPDX), breaking
 	# `pip`/`uv` installs. Rewrite it to the table form, which installs cleanly.
@@ -227,7 +227,7 @@ sdk-go:
 	  -i api/swagger.yaml -g go \
 	  -o sdks/go \
 	  --git-user-id=$(SDK_GIT_USER) --git-repo-id=$(SDK_GIT_REPO) \
-	  --additional-properties=packageName=cashout,isGoSubmodule=true
+	  --additional-properties=packageName=pago,isGoSubmodule=true
 	# The Go generator hard-codes the module path to {gitUserId}/{gitRepoId}/{packageName}
 	# which does not match our on-disk layout (sdks/go). Rewrite the module path so
 	# `go get github.com/$(SDK_GIT_USER)/$(SDK_GIT_REPO)/sdks/go` resolves correctly.
@@ -240,7 +240,7 @@ sdk-ts:
 	  -i api/swagger.yaml -g typescript-fetch \
 	  -o sdks/typescript \
 	  --git-user-id=$(SDK_GIT_USER) --git-repo-id=$(SDK_GIT_REPO) \
-	  --additional-properties=npmName=@cashout/sdk,npmVersion=1.0.0,supportsES6=true
+	  --additional-properties=npmName=@pago/sdk,npmVersion=1.0.0,supportsES6=true
 
 ## sdks: regenerate the OpenAPI spec and all SDKs
 .PHONY: sdks

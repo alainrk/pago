@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from cashout_sdk.models.web_delete_transaction_request import WebDeleteTransactionRequest
+from pago_sdk.models.web_delete_transaction_request import WebDeleteTransactionRequest
 
 # TODO update the JSON string below
 json = "{}"

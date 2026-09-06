@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"cashout/internal/client"
-	"cashout/internal/db"
-	"cashout/internal/model"
+	"pago/internal/client"
+	"pago/internal/db"
+	"pago/internal/model"
 )
 
 // handleAPIAnalyticsMonthly returns category breakdown + totals for a month.

@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "Personal finance tracking API. All /api/* endpoints require either a session cookie (browser) or an Authorization: Bearer \u003ctoken\u003e header (machine clients).",
-        "title": "Cashout API",
+        "title": "Pago API",
         "contact": {},
         "version": "1.0"
     },

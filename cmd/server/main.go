@@ -1,6 +1,6 @@
-// Package main is the cashout server entrypoint.
+// Package main is the pago server entrypoint.
 //
-//	@title			Cashout API
+//	@title			Pago API
 //	@version		1.0
 //	@description	Personal finance tracking API. All /api/* endpoints require either a session cookie (browser) or an Authorization: Bearer <token> header (machine clients).
 //	@BasePath		/web
@@ -19,12 +19,12 @@ import (
 	"strings"
 	"time"
 
-	"cashout/internal/ai"
-	"cashout/internal/client"
-	"cashout/internal/db"
-	"cashout/internal/logging"
-	"cashout/internal/scheduler"
-	server_health "cashout/internal/server"
+	"pago/internal/ai"
+	"pago/internal/client"
+	"pago/internal/db"
+	"pago/internal/logging"
+	"pago/internal/scheduler"
+	server_health "pago/internal/server"
 
 	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
@@ -156,7 +156,7 @@ func main() {
 		// The bot's urlPath can be anything.
 		// It's a good idea to contain the bot token, as that makes it very difficult for outside
 		// parties to find the update endpoint (which would allow them to inject their own updates).
-		err = updater.StartWebhook(b, "cashout/"+token, webhookOpts)
+		err = updater.StartWebhook(b, "pago/"+token, webhookOpts)
 		if err != nil {
 			panic("failed to start webhook: " + err.Error())
 		}

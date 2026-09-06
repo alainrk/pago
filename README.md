@@ -1,4 +1,4 @@
-# Cashout AI
+# Pago AI
 
 Telegram **AI Agent** for Income and Expense Management with a comprehensive **Web Dashboard** featuring **Passkey/WebAuthn** support for secure, passwordless authentication.
 
@@ -11,7 +11,7 @@ You can self-host it following the Developer section down below.
 
 ## Features
 
-Cashout is an intelligent Telegram bot that leverages AI to make expense tracking effortless. Simply send a message in natural language, and the bot will understand and categorize your transactions automatically.
+Pago is an intelligent Telegram bot that leverages AI to make expense tracking effortless. Simply send a message in natural language, and the bot will understand and categorize your transactions automatically.
 
 ### AI-Powered Transaction Processing
 
@@ -120,8 +120,8 @@ Cashout is an intelligent Telegram bot that leverages AI to make expense trackin
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/alainrk/cashout.git
-cd cashout
+git clone https://github.com/alainrk/pago.git
+cd pago
 ```
 
 2. Install dependencies:
@@ -185,7 +185,7 @@ docker compose up -d
 
 ## Database Management
 
-Cashout uses a version-based migration system to manage database schema changes.
+Pago uses a version-based migration system to manage database schema changes.
 
 Use the following commands to manage database migrations:
 
@@ -342,7 +342,7 @@ config for Cloudflare Workers static assets (`frontend/wrangler.jsonc`).
    make fe/deploy
    ```
 
-4. Attach your domain to the `cashout-web` worker in the Cloudflare dashboard
+4. Attach your domain to the `pago-web` worker in the Cloudflare dashboard
    (Workers & Pages, Settings, Domains & Routes). Nothing about your domain or
    account needs to be committed to this repository.
 
@@ -523,32 +523,32 @@ pip can install it directly from this repo using the `subdirectory` fragment:
 
 ```bash
 # Add it to a uv-managed project
-uv add "git+https://github.com/alainrk/cashout.git#subdirectory=sdks/python"
+uv add "git+https://github.com/alainrk/pago.git#subdirectory=sdks/python"
 
 # Or one-off into the current environment
-uv pip install "git+https://github.com/alainrk/cashout.git#subdirectory=sdks/python"
+uv pip install "git+https://github.com/alainrk/pago.git#subdirectory=sdks/python"
 
 # Plain pip works too
-pip install "git+https://github.com/alainrk/cashout.git#subdirectory=sdks/python"
+pip install "git+https://github.com/alainrk/pago.git#subdirectory=sdks/python"
 ```
 
 To pin to a specific commit or tag, append `@<ref>` before the `#`:
 
 ```bash
-uv add "git+https://github.com/alainrk/cashout.git@v0.1.0#subdirectory=sdks/python"
+uv add "git+https://github.com/alainrk/pago.git@v0.1.0#subdirectory=sdks/python"
 ```
 
 Usage:
 
 ```python
-import cashout_sdk
-from cashout_sdk.api.transactions_api import TransactionsApi
+import pago_sdk
+from pago_sdk.api.transactions_api import TransactionsApi
 
-cfg = cashout_sdk.Configuration(
+cfg = pago_sdk.Configuration(
     host="http://localhost:8091/web",
     access_token="cshk_...",
 )
-with cashout_sdk.ApiClient(cfg) as client:
+with pago_sdk.ApiClient(cfg) as client:
     stats = TransactionsApi(client).api_stats_get(month="2026-05")
     print(stats)
 ```
@@ -559,20 +559,20 @@ The Go SDK is a Go submodule rooted at `sdks/go/`. Its module path matches its
 on-disk location, so it is `go get`-able directly from this repo:
 
 ```bash
-go get github.com/alainrk/cashout/sdks/go@latest
+go get github.com/alainrk/pago/sdks/go@latest
 ```
 
 ```go
 import (
     "context"
-    cashout "github.com/alainrk/cashout/sdks/go"
+    pago "github.com/alainrk/pago/sdks/go"
 )
 
 func main() {
-    cfg := cashout.NewConfiguration()
-    cfg.Servers = cashout.ServerConfigurations{{URL: "http://localhost:8091/web"}}
+    cfg := pago.NewConfiguration()
+    cfg.Servers = pago.ServerConfigurations{{URL: "http://localhost:8091/web"}}
     cfg.DefaultHeader["Authorization"] = "Bearer cshk_..."
-    client := cashout.NewAPIClient(cfg)
+    client := pago.NewAPIClient(cfg)
 
     stats, _, err := client.TransactionsAPI.
         ApiStatsGet(context.Background()).
@@ -593,7 +593,7 @@ git push origin sdks/go/v0.1.0
 Consumers then pin via:
 
 ```bash
-go get github.com/alainrk/cashout/sdks/go@v0.1.0
+go get github.com/alainrk/pago/sdks/go@v0.1.0
 ```
 
 Until a `sdks/go/vX.Y.Z` tag exists, `@latest` resolves to a pseudo-version

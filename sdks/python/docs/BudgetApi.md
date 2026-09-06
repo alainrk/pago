@@ -1,4 +1,4 @@
-# cashout_sdk.BudgetApi
+# pago_sdk.BudgetApi
 
 All URIs are relative to */web*
 
@@ -32,15 +32,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -56,10 +56,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -113,15 +113,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -137,10 +137,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -194,15 +194,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -218,10 +218,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -275,15 +275,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -299,10 +299,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -356,15 +356,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -380,10 +380,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -437,15 +437,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -461,10 +461,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -518,15 +518,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -542,10 +542,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -599,15 +599,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -623,10 +623,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -680,15 +680,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -704,10 +704,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -761,15 +761,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -785,10 +785,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -842,15 +842,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -866,10 +866,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -923,15 +923,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -947,10 +947,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -1004,15 +1004,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -1028,10 +1028,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -1085,15 +1085,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -1109,10 +1109,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -1166,15 +1166,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -1190,10 +1190,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget
@@ -1247,15 +1247,15 @@ Delete the monthly budget
 * Api Key Authentication (BearerAuth):
 
 ```python
-import cashout_sdk
-from cashout_sdk.models.web_budget_response import WebBudgetResponse
-from cashout_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
-from cashout_sdk.rest import ApiException
+import pago_sdk
+from pago_sdk.models.web_budget_response import WebBudgetResponse
+from pago_sdk.models.web_budget_upsert_request import WebBudgetUpsertRequest
+from pago_sdk.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to /web
 # See configuration.py for a list of all supported configuration parameters.
-configuration = cashout_sdk.Configuration(
+configuration = pago_sdk.Configuration(
     host = "/web"
 )
 
@@ -1271,10 +1271,10 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 # configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with cashout_sdk.ApiClient(configuration) as api_client:
+with pago_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = cashout_sdk.BudgetApi(api_client)
-    body = cashout_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
+    api_instance = pago_sdk.BudgetApi(api_client)
+    body = pago_sdk.WebBudgetUpsertRequest() # WebBudgetUpsertRequest | Budget amount
 
     try:
         # Delete the monthly budget

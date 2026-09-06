@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"cashout/internal/model"
+	"pago/internal/model"
 )
 
 func TestIsIncomeCategory(t *testing.T) {

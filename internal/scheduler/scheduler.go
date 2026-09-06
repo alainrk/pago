@@ -1,7 +1,7 @@
 package scheduler
 
 import (
-	"cashout/internal/client"
+	"pago/internal/client"
 	"time"
 
 	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"

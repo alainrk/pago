@@ -1,4 +1,4 @@
-module cashout
+module pago
 
 go 1.26
 
