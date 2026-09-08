@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { PageLoading } from "../components/Spinner";
+import { returnPath } from "../lib/returnPath";
 
 export function RequireAuth() {
   const { user, loading } = useAuth();
@@ -13,7 +14,7 @@ export function RequireAuth() {
     );
   }
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/login" replace state={{ from: returnPath(location) }} />;
   }
   return <Outlet />;
 }

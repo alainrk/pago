@@ -21,7 +21,9 @@ export function parseMonthKey(key: MonthKey): { year: number; month: number } {
   return { year: Number(m[1]), month: Number(m[2]) };
 }
 
-export function isValidMonthKey(key: string | null | undefined): key is MonthKey {
+export function isValidMonthKey(
+  key: string | null | undefined,
+): key is MonthKey {
   if (!key) return false;
   const m = /^(\d{4})-(\d{2})$/.exec(key);
   if (!m) return false;
@@ -45,7 +47,11 @@ export function monthName(key: MonthKey): string {
 }
 
 // monthRange returns the first and last day of the month as YYYY-MM-DD.
-export function monthRange(key: MonthKey): { from: string; to: string; days: number } {
+export function monthRange(key: MonthKey): {
+  from: string;
+  to: string;
+  days: number;
+} {
   const { year, month } = parseMonthKey(key);
   const first = new Date(year, month - 1, 1);
   const last = new Date(year, month, 0);
