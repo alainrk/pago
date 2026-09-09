@@ -2,6 +2,7 @@ import styles from "./BarChart.module.css";
 import { Card, CardTitle } from "../../components/Card";
 import { useIsMobile } from "../../lib/useMediaQuery";
 import { formatMoney } from "../../lib/format";
+import { usePrivacy } from "../../lib/privacy";
 
 export interface BarPoint {
   label: string;
@@ -14,6 +15,7 @@ export interface BarPoint {
 // colour and shows its value above the bar.
 export function BarChart({ title, bars, currency }: { title: string; bars: BarPoint[]; currency: string }) {
   const mobile = useIsMobile();
+  const { hidden } = usePrivacy();
   const max = Math.max(1, ...bars.map((b) => b.value));
   const avg = bars.length ? bars.reduce((sum, b) => sum + b.value, 0) / bars.length : 0;
 
@@ -22,7 +24,7 @@ export function BarChart({ title, bars, currency }: { title: string; bars: BarPo
       <div className={styles.head}>
         <CardTitle>{title}</CardTitle>
         <div className={styles.avg}>
-          avg <span className={`mono ${styles.avgValue}`}>{formatMoney(avg, currency, { decimals: false })}</span>
+          avg <span className={`mono ${styles.avgValue}`}>{formatMoney(avg, currency, { decimals: false, hidden })}</span>
         </div>
       </div>
       <div className={styles.bars}>
@@ -32,8 +34,8 @@ export function BarChart({ title, bars, currency }: { title: string; bars: BarPo
           // Months with nothing still get a 3px stub so the row reads as six months.
           const height = `${Math.max(3, (b.value / max) * (mobile ? 150 : 246))}px`;
           return (
-            <div key={`${b.label}-${i}`} className={styles.col} title={`${b.label}: ${formatMoney(b.value, currency)}`}>
-              {b.highlight && <div className={`mono ${styles.value}`}>{formatMoney(b.value, currency, { decimals: false })}</div>}
+            <div key={`${b.label}-${i}`} className={styles.col} title={`${b.label}: ${formatMoney(b.value, currency, { hidden })}`}>
+              {b.highlight && <div className={`mono ${styles.value}`}>{formatMoney(b.value, currency, { decimals: false, hidden })}</div>}
               <div className={barCls} style={{ height }} />
               <div className={labelCls}>{b.label}</div>
             </div>

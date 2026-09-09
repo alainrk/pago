@@ -2,6 +2,7 @@ import styles from "./CategoryBars.module.css";
 import { ProgressBar } from "../../components/ProgressBar";
 import { useIsMobile } from "../../lib/useMediaQuery";
 import { formatMoney } from "../../lib/format";
+import { usePrivacy } from "../../lib/privacy";
 
 export interface CategoryRow {
   key: string;
@@ -17,6 +18,7 @@ export interface CategoryRow {
 // on mobile.
 export function CategoryBars({ rows, currency }: { rows: CategoryRow[]; currency: string }) {
   const mobile = useIsMobile();
+  const { hidden } = usePrivacy();
   const max = Math.max(1, ...rows.map((r) => r.amount));
   return (
     <div className={styles.rows}>
@@ -26,7 +28,7 @@ export function CategoryBars({ rows, currency }: { rows: CategoryRow[]; currency
           <div key={r.key} className={styles.row}>
             <div className={labelCls}>{r.label}</div>
             <ProgressBar pct={(r.amount / max) * 100} tone={i === 0 && !r.muted ? "brand" : "faint"} height={mobile ? 7 : 8} label={`${r.label} ${r.pct}%`} />
-            <div className={`mono ${styles.amount}`}>{formatMoney(r.amount, currency)}</div>
+            <div className={`mono ${styles.amount}`}>{formatMoney(r.amount, currency, { hidden })}</div>
             <div className={`mono ${styles.pct}`}>{r.pct}%</div>
           </div>
         );

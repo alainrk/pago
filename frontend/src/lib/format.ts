@@ -28,23 +28,28 @@ export function currencySymbol(code: string): string {
 const numberFmt = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const numberFmt0 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
+// MASKED_DIGITS replaces the digits when privacy mode hides amounts: "€••••".
+export const MASKED_DIGITS = "••••";
+
 // formatMoney renders an absolute amount with a currency symbol: "€1,732.45".
-export function formatMoney(amount: number, currency = "EUR", opts: { decimals?: boolean } = {}): string {
+// With hidden: true the digits are replaced by dots but the symbol stays.
+export function formatMoney(amount: number, currency = "EUR", opts: { decimals?: boolean; hidden?: boolean } = {}): string {
+  if (opts.hidden) return `${currencySymbol(currency)}${MASKED_DIGITS}`;
   const abs = Math.abs(amount);
   const n = opts.decimals === false ? numberFmt0.format(abs) : numberFmt.format(abs);
   return `${currencySymbol(currency)}${n}`;
 }
 
 // formatSigned adds "+" for income and a real minus sign (U+2212) for expenses.
-export function formatSigned(amount: number, type: "Income" | "Expense", currency = "EUR"): string {
+export function formatSigned(amount: number, type: "Income" | "Expense", currency = "EUR", hidden = false): string {
   const sign = type === "Income" ? "+" : "−";
-  return `${sign}${formatMoney(amount, currency)}`;
+  return `${sign}${formatMoney(amount, currency, { hidden })}`;
 }
 
 // formatBalance signs a net value: positive gets "+", negative gets "−".
-export function formatBalance(amount: number, currency = "EUR"): string {
-  if (amount < 0) return `−${formatMoney(amount, currency)}`;
-  return `+${formatMoney(amount, currency)}`;
+export function formatBalance(amount: number, currency = "EUR", hidden = false): string {
+  if (amount < 0) return `−${formatMoney(amount, currency, { hidden })}`;
+  return `+${formatMoney(amount, currency, { hidden })}`;
 }
 
 // parseAmount accepts "12.50" or "12,50" and returns a positive number or null.

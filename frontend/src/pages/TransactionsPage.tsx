@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Page } from "../layout/AppShell";
 import { MobileHeader } from "../layout/MobileHeader";
 import { PageHeader } from "../components/PageHeader";
+import { PrivacyToggle } from "../components/PrivacyToggle";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { Icon } from "../components/Icon";
@@ -13,6 +14,7 @@ import { EmptyState } from "../components/EmptyState";
 import { PageLoading, ErrorNote, Spinner } from "../components/Spinner";
 import { useToast } from "../components/Toast";
 import { useUser, useSessionGuard } from "../auth/AuthContext";
+import { usePrivacy } from "../lib/privacy";
 import { useDebounce } from "../lib/useDebounce";
 import { useIsMobile } from "../lib/useMediaQuery";
 import { transactions } from "../api/endpoints";
@@ -78,6 +80,7 @@ function dateWindow(period: string): { dateFrom?: string; dateTo?: string } {
 export function TransactionsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const user = useUser();
+  const { hidden } = usePrivacy();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const guard = useSessionGuard();
@@ -332,9 +335,18 @@ export function TransactionsPage() {
 
   return (
     <>
-      <MobileHeader title="Activity" right={<span className={styles.mCount}>{countText}</span>} tools={mobileTools} />
+      <MobileHeader
+        title="Activity"
+        right={
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className={styles.mCount}>{countText}</span>
+            <PrivacyToggle size={30} iconSize={14} />
+          </div>
+        }
+        tools={mobileTools}
+      />
       <Page>
-        <PageHeader title="Transactions" />
+        <PageHeader title="Transactions" right={<PrivacyToggle />} />
 
         {!isMobile && (
           <div className={styles.filtersRow}>
@@ -397,7 +409,7 @@ export function TransactionsPage() {
                           <CategoryPill category={tx.category} type={tx.type} />
                         </div>
                         <div className={`${styles.cellAmount} ${tx.type === "Income" ? styles.income : ""}`}>
-                          {formatSigned(tx.amount, tx.type, user.currency)}
+                          {formatSigned(tx.amount, tx.type, user.currency, hidden)}
                         </div>
                         <div className={styles.actions}>
                           <button type="button" className={styles.iconBtn} aria-label="Edit transaction" onClick={() => startEdit(tx)}>
@@ -450,7 +462,7 @@ export function TransactionsPage() {
                             <div className={styles.mRowCat}>{categoryLabel(tx.category)}</div>
                           </div>
                           <div className={`mono ${styles.mRowAmount} ${tx.type === "Income" ? styles.income : ""}`}>
-                            {formatSigned(tx.amount, tx.type, user.currency)}
+                            {formatSigned(tx.amount, tx.type, user.currency, hidden)}
                           </div>
                         </div>
                       </div>
@@ -478,7 +490,7 @@ export function TransactionsPage() {
       <ConfirmDialog
         open={deleteTarget !== null}
         title="Delete transaction"
-        message={deleteTarget ? `Delete "${deleteTarget.description}" (${formatSigned(deleteTarget.amount, deleteTarget.type, user.currency)})? This cannot be undone.` : ""}
+        message={deleteTarget ? `Delete "${deleteTarget.description}" (${formatSigned(deleteTarget.amount, deleteTarget.type, user.currency, hidden)})? This cannot be undone.` : ""}
         confirmLabel="Delete"
         danger
         busy={deleting}

@@ -25,6 +25,14 @@ describe("money", () => {
     expect(formatBalance(1107.55)).toBe("+€1,107.55");
     expect(formatBalance(-12)).toBe("−€12.00");
   });
+  it("masks digits but keeps symbol and sign when hidden", () => {
+    expect(formatMoney(1732.45, "EUR", { hidden: true })).toBe("€••••");
+    expect(formatMoney(5, "USD", { hidden: true, decimals: false })).toBe("$••••");
+    expect(formatSigned(2600, "Income", "EUR", true)).toBe("+€••••");
+    expect(formatSigned(64.3, "Expense", "EUR", true)).toBe("−€••••");
+    expect(formatBalance(-12, "EUR", true)).toBe("−€••••");
+    expect(formatBalance(12, "EUR", true)).toBe("+€••••");
+  });
   it("parses amounts", () => {
     expect(parseAmount("12.50")).toBe(12.5);
     expect(parseAmount("12,5")).toBe(12.5);

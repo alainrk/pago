@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import { Page } from "../layout/AppShell";
 import { MobileHeader } from "../layout/MobileHeader";
 import { PageHeader } from "../components/PageHeader";
+import { PrivacyToggle } from "../components/PrivacyToggle";
 import { Segmented } from "../components/Segmented";
 import { MonthNav } from "../components/MonthNav";
 import { Card, CardTitle } from "../components/Card";
@@ -13,6 +14,7 @@ import { CategoryBars, type CategoryRow } from "./reports/CategoryBars";
 import { useQuery } from "../lib/useQuery";
 import { useSwipe } from "../lib/useSwipe";
 import { useUser } from "../auth/AuthContext";
+import { usePrivacy } from "../lib/privacy";
 import { analytics, transactions } from "../api/endpoints";
 import { categoryLabel } from "../lib/categories";
 import { formatBalance, formatSigned, isoDate, toLocalDate, MONTHS_SHORT } from "../lib/format";
@@ -94,6 +96,7 @@ function toEntries(entries: CategoryEntry[] | null): { category: string; amount:
 
 export function ReportsPage() {
   const { currency } = useUser();
+  const { hidden } = usePrivacy();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const rawRange = searchParams.get("range");
@@ -255,14 +258,24 @@ export function ReportsPage() {
     <>
       <MobileHeader
         title="Reports"
-        right={<MonthNav variant="sm" title={mobileTitle} onPrev={goPrev} onNext={goNext} nextDisabled={navNextDisabled} />}
+        right={
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <PrivacyToggle size={30} iconSize={14} />
+            <MonthNav variant="sm" title={mobileTitle} onPrev={goPrev} onNext={goNext} nextDisabled={navNextDisabled} />
+          </div>
+        }
         tools={<Segmented full options={RANGE_OPTIONS} value={range} onChange={setRange} size="md" ariaLabel="Report range" />}
       />
       <Page {...swipe}>
         <PageHeader
           title="Reports"
           left={rangeControl}
-          right={<MonthNav variant="md" title={desktopTitle} onPrev={goPrev} onNext={goNext} nextDisabled={navNextDisabled} />}
+          right={
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <PrivacyToggle />
+              <MonthNav variant="md" title={desktopTitle} onPrev={goPrev} onNext={goNext} nextDisabled={navNextDisabled} />
+            </div>
+          }
         />
         {error ? (
           <ErrorNote message={error} onRetry={reload} />
@@ -271,9 +284,9 @@ export function ReportsPage() {
         ) : data ? (
           <>
             <div className={styles.stats}>
-              <StatCard label="Income" value={formatBalance(data.income, currency)} tone="income" />
-              <StatCard label="Expenses" value={formatSigned(data.expenses, "Expense", currency)} tone="plain" />
-              <BalanceStat balance={data.balance} currency={currency} />
+              <StatCard label="Income" value={formatBalance(data.income, currency, hidden)} tone="income" />
+              <StatCard label="Expenses" value={formatSigned(data.expenses, "Expense", currency, hidden)} tone="plain" />
+              <BalanceStat balance={data.balance} currency={currency} hidden={hidden} />
               <StatCard label="Transactions" value={String(data.count)} tone="plain" />
             </div>
             <div className={styles.grid}>
@@ -292,13 +305,13 @@ export function ReportsPage() {
 
 // BalanceStat mirrors StatCard but colours the value by money direction:
 // green when the period ended ahead, red when it ran at a loss.
-function BalanceStat({ balance, currency }: { balance: number; currency: string }) {
+function BalanceStat({ balance, currency, hidden }: { balance: number; currency: string; hidden: boolean }) {
   const color = balance >= 0 ? "var(--income)" : "var(--danger)";
   return (
     <Card padding="20px 24px" paddingMobile="16px" gap="6px" gapMobile="4px">
       <div className="stat-label">Balance</div>
       <div className="mono stat-value" style={{ fontWeight: 600, color }}>
-        {formatBalance(balance, currency)}
+        {formatBalance(balance, currency, hidden)}
       </div>
     </Card>
   );
