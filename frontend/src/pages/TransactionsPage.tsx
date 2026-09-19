@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Page } from "../layout/AppShell";
 import { MobileHeader } from "../layout/MobileHeader";
 import { PageHeader } from "../components/PageHeader";
@@ -10,6 +10,8 @@ import { Icon } from "../components/Icon";
 import { Select, type SelectOption } from "../components/Select";
 import { CategoryPill, CategoryTile } from "../components/CategoryPill";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { ContextMenu } from "../components/ContextMenu";
+import { SwipeAction } from "../components/SwipeAction";
 import { EmptyState } from "../components/EmptyState";
 import { PageLoading, ErrorNote, Spinner } from "../components/Spinner";
 import { useToast } from "../components/Toast";
@@ -23,6 +25,7 @@ import type { TransactionDTO, TransactionType } from "../api/types";
 import { ALL_CATEGORIES, categoryLabel } from "../lib/categories";
 import { MONTHS_LONG, formatDayLong, formatDayShort, formatSigned, isoDate, parseAmount, toLocalDate } from "../lib/format";
 import { monthRange } from "../lib/month";
+import { cloneNavState } from "../lib/clone";
 import { TransactionRowEditor, type EditDraft } from "./TransactionRowEditor";
 import { TransactionEditSheet } from "./TransactionEditSheet";
 import styles from "./TransactionsPage.module.css";
@@ -84,6 +87,7 @@ export function TransactionsPage() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const guard = useSessionGuard();
+  const navigate = useNavigate();
 
   const currentYear = new Date().getFullYear();
   const q = searchParams.get("q") ?? "";
@@ -186,6 +190,14 @@ export function TransactionsPage() {
   const [deleteTarget, setDeleteTarget] = useState<TransactionDTO | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(category !== "" || type !== "" || period !== "");
+  // Desktop right-click menu: which row, and where the pointer was.
+  const [menu, setMenu] = useState<{ tx: TransactionDTO; x: number; y: number } | null>(null);
+
+  // Cloning opens the add screen with everything prefilled except the date,
+  // which becomes today.
+  function cloneTx(tx: TransactionDTO) {
+    navigate("/", { state: cloneNavState(tx) });
+  }
 
   function clearFilters() {
     setSearchText("");
@@ -402,24 +414,32 @@ export function TransactionsPage() {
                         saving={saving}
                       />
                     ) : (
-                      <div key={tx.id} className={styles.row}>
-                        <div className={styles.cellDate}>{formatDayShort(tx.date)}</div>
-                        <div className={styles.cellDesc}>{tx.description}</div>
-                        <div>
-                          <CategoryPill category={tx.category} type={tx.type} />
+                      <SwipeAction key={tx.id} label="Clone" icon="copy" onAction={() => cloneTx(tx)}>
+                        <div
+                          className={styles.row}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setMenu({ tx, x: e.clientX, y: e.clientY });
+                          }}
+                        >
+                          <div className={styles.cellDate}>{formatDayShort(tx.date)}</div>
+                          <div className={styles.cellDesc}>{tx.description}</div>
+                          <div>
+                            <CategoryPill category={tx.category} type={tx.type} />
+                          </div>
+                          <div className={`${styles.cellAmount} ${tx.type === "Income" ? styles.income : ""}`}>
+                            {formatSigned(tx.amount, tx.type, user.currency, hidden)}
+                          </div>
+                          <div className={styles.actions}>
+                            <button type="button" className={styles.iconBtn} aria-label="Edit transaction" onClick={() => startEdit(tx)}>
+                              <Icon name="pencil" size={14} />
+                            </button>
+                            <button type="button" className={styles.iconBtn} aria-label="Delete transaction" onClick={() => setDeleteTarget(tx)}>
+                              <Icon name="trash" size={14} />
+                            </button>
+                          </div>
                         </div>
-                        <div className={`${styles.cellAmount} ${tx.type === "Income" ? styles.income : ""}`}>
-                          {formatSigned(tx.amount, tx.type, user.currency, hidden)}
-                        </div>
-                        <div className={styles.actions}>
-                          <button type="button" className={styles.iconBtn} aria-label="Edit transaction" onClick={() => startEdit(tx)}>
-                            <Icon name="pencil" size={14} />
-                          </button>
-                          <button type="button" className={styles.iconBtn} aria-label="Delete transaction" onClick={() => setDeleteTarget(tx)}>
-                            <Icon name="trash" size={14} />
-                          </button>
-                        </div>
-                      </div>
+                      </SwipeAction>
                     ),
                   )}
                 </div>
@@ -442,7 +462,7 @@ export function TransactionsPage() {
                   <div key={group.key}>
                     <div className={styles.dayHeader}>{group.label}</div>
                     {group.items.map((tx) => (
-                      <div key={tx.id}>
+                      <SwipeAction key={tx.id} label="Clone" icon="copy" onAction={() => cloneTx(tx)}>
                         <div
                           className={styles.mRow}
                           role="button"
@@ -465,7 +485,7 @@ export function TransactionsPage() {
                             {formatSigned(tx.amount, tx.type, user.currency, hidden)}
                           </div>
                         </div>
-                      </div>
+                      </SwipeAction>
                     ))}
                   </div>
                 ))}
@@ -485,6 +505,18 @@ export function TransactionsPage() {
           onDelete={() => editingTx && setDeleteTarget(editingTx)}
           onClose={cancelEdit}
           saving={saving}
+        />
+      )}
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          onClose={() => setMenu(null)}
+          items={[
+            { label: "Clone", icon: "copy", onSelect: () => cloneTx(menu.tx) },
+            { label: "Edit", icon: "pencil", onSelect: () => startEdit(menu.tx) },
+            { label: "Delete", icon: "trash", danger: true, onSelect: () => setDeleteTarget(menu.tx) },
+          ]}
         />
       )}
       <ConfirmDialog

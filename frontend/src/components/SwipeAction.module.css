@@ -1,0 +1,36 @@
+.wrap {
+  position: relative;
+  overflow: hidden;
+  /* The browser keeps vertical scrolling; we handle sideways moves ourselves. */
+  touch-action: pan-y;
+}
+.action {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--reveal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+.ready {
+  background: var(--brand);
+  color: var(--surface);
+}
+.content {
+  position: relative;
+  background: var(--surface);
+  transition: transform 180ms ease;
+  will-change: transform;
+}
+.dragging {
+  transition: none;
+}

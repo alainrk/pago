@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import styles from "./AddTransactionPage.module.css";
 import { Page } from "../layout/AppShell";
 import { MobileHeader } from "../layout/MobileHeader";
@@ -19,6 +19,8 @@ import { ApiError } from "../api/client";
 import type { TransactionDTO, TransactionType } from "../api/types";
 import { currencySymbol, formatDayShort, formatMoney, isoDate, parseAmount, toLocalDate } from "../lib/format";
 import { categoriesFor, categoryLabel } from "../lib/categories";
+import { readClonePrefill, type ClonePrefill } from "../lib/clone";
+import { returnPath } from "../lib/returnPath";
 
 // The message input has a stable id so the "+" button in the shell can focus it.
 export const ADD_TEXT_INPUT_ID = "add-text";
@@ -33,6 +35,12 @@ interface FormState {
 
 function emptyForm(): FormState {
   return { type: "Expense", category: categoriesFor("Expense")[0], amount: "", description: "", date: isoDate(new Date()) };
+}
+
+// A cloned transaction keeps everything but the date, which becomes today.
+function formFromClone(c: ClonePrefill): FormState {
+  const cats = categoriesFor(c.type);
+  return { type: c.type, category: cats.includes(c.category) ? c.category : cats[0], amount: c.amount.toFixed(2), description: c.description, date: isoDate(new Date()) };
 }
 
 function dupKeyOf(f: FormState): string {
@@ -63,12 +71,18 @@ export function AddTransactionPage() {
   }, [isMobile, keyboard.open]);
   const [searchParams] = useSearchParams();
   const initialText = searchParams.get("text") ?? "";
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Set when the activity list sent us here to clone a transaction.
+  const clone = readClonePrefill(location.state);
+  const startedFromClone = useRef(clone !== null).current;
 
   const [inputText, setInputText] = useState(initialText);
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [parsed, setParsed] = useState(false);
-  const [form, setForm] = useState<FormState>(emptyForm);
+  const [form, setForm] = useState<FormState>(() => (clone ? formFromClone(clone) : emptyForm()));
+  const [cloned, setCloned] = useState(clone !== null);
   const [amountError, setAmountError] = useState<string | null>(null);
   const [duplicates, setDuplicates] = useState<TransactionDTO[]>([]);
 
@@ -85,8 +99,16 @@ export function AddTransactionPage() {
     setDuplicates([]);
     setAmountError(null);
     setParsed(false);
+    setCloned(false);
     setParsing(false);
   }
+
+  // Forget the clone once the form has it, so a reload or a later visit
+  // through history starts from an empty form.
+  useEffect(() => {
+    if (clone) navigate(returnPath(location), { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function runParse(text: string) {
     const trimmed = text.trim();
@@ -109,6 +131,7 @@ export function AddTransactionPage() {
       setDuplicates(res.duplicates);
       setAmountError(null);
       setParsed(true);
+      setCloned(false);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       if (guard(err)) return;
@@ -184,7 +207,7 @@ export function AddTransactionPage() {
       className={[styles.parseInput, inputText.trim() ? styles.active : ""].filter(Boolean).join(" ")}
       value={inputText}
       disabled={parsing}
-      autoFocus
+      autoFocus={!startedFromClone}
       autoComplete="off"
       enterKeyHint="go"
       placeholder="e.g. irish pub with laura 12.50 yesterday"
@@ -259,8 +282,12 @@ export function AddTransactionPage() {
     </div>
   ) : null;
 
-  const cardTitle = parsed ? "Review and confirm" : "New transaction";
-  const cardSubtitle = parsed ? "Prefilled from your message. Edit anything, or save as is." : "Type a message above and let AI fill this in, or enter it by hand.";
+  const cardTitle = parsed || cloned ? "Review and confirm" : "New transaction";
+  const cardSubtitle = parsed
+    ? "Prefilled from your message. Edit anything, or save as is."
+    : cloned
+      ? "Copied from an earlier transaction, dated today. Edit anything, or save as is."
+      : "Type a message above and let AI fill this in, or enter it by hand.";
 
   const formCard = (
     <Card flush radius="lg" className={parsing ? styles.cardParsing : undefined} aria-busy={parsing || undefined}>

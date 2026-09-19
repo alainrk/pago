@@ -21,6 +21,9 @@ body,
 
 html {
   -webkit-tap-highlight-color: transparent;
+  /* Rows can be swiped sideways to clone them. Keep a trackpad swipe from
+     turning into the browser's back or forward gesture. */
+  overscroll-behavior-x: none;
 }
 
 body {
