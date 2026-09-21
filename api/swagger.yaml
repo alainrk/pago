@@ -49,6 +49,19 @@ definitions:
       pct:
         type: number
     type: object
+  web.CategoryYearEntry:
+    properties:
+      byMonth:
+        items:
+          type: number
+        type: array
+      category:
+        type: string
+      count:
+        type: integer
+      total:
+        type: number
+    type: object
   web.CloneTransactionRequest:
     properties:
       id:
@@ -300,6 +313,17 @@ definitions:
       year:
         type: integer
     type: object
+  web.YearCategoriesResponse:
+    properties:
+      categories:
+        items:
+          $ref: '#/definitions/web.CategoryYearEntry'
+        type: array
+      type:
+        type: string
+      year:
+        type: integer
+    type: object
   web.YearMonthEntry:
     properties:
       balance:
@@ -400,6 +424,39 @@ paths:
       security:
       - BearerAuth: []
       summary: Annual breakdown by month and category
+      tags:
+      - analytics
+  /api/analytics/year-categories:
+    get:
+      description: Returns, for each category, the year total and a 12-entry array
+        of monthly totals (January first). Categories are sorted by total descending.
+      parameters:
+      - description: 4-digit year (defaults to current year)
+        in: query
+        name: year
+        type: integer
+      - description: 'Transaction type: Expense (default) or Income'
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.YearCategoriesResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Annual per-category totals by month
       tags:
       - analytics
   /api/budget:

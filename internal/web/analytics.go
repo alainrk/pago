@@ -1,7 +1,9 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -186,6 +188,84 @@ func (s *Server) handleAPIAnalyticsYear(w http.ResponseWriter, r *http.Request) 
 			Income:  incomeEntries,
 		},
 	})
+}
+
+// handleAPIAnalyticsYearCategories returns per-category totals split by month for a year.
+//
+//	@Summary		Annual per-category totals by month
+//	@Description	Returns, for each category, the year total and a 12-entry array of monthly totals (January first). Categories are sorted by total descending.
+//	@Tags			analytics
+//	@Produce		json
+//	@Param			year	query		int		false	"4-digit year (defaults to current year)"
+//	@Param			type	query		string	false	"Transaction type: Expense (default) or Income"
+//	@Success		200		{object}	YearCategoriesResponse
+//	@Failure		401		{object}	ErrorResponse
+//	@Failure		500		{object}	ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/api/analytics/year-categories [get]
+func (s *Server) handleAPIAnalyticsYearCategories(w http.ResponseWriter, r *http.Request) {
+	user := client.GetUserFromContext(r.Context())
+	if user == nil {
+		s.sendJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	year := time.Now().Year()
+	if v := r.URL.Query().Get("year"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 1970 && n <= 9999 {
+			year = n
+		}
+	}
+	txType := model.TypeExpense
+	if r.URL.Query().Get("type") == string(model.TypeIncome) {
+		txType = model.TypeIncome
+	}
+
+	startDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	endDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+
+	rows, err := s.repositories.Transactions.GetCategoryMonthlyTotals(user.TgID, startDate, endDate, txType)
+	if err != nil {
+		s.logger.Errorf("analytics year categories: %v", err)
+		s.sendJSONError(w, "Failed to load year analytics", http.StatusInternalServerError)
+		return
+	}
+
+	s.sendJSONSuccess(w, YearCategoriesResponse{
+		Year:       year,
+		Type:       string(txType),
+		Categories: buildCategoryYearEntries(year, rows),
+	})
+}
+
+// buildCategoryYearEntries pivots (month, category) rows into one entry per
+// category with a 12-slot monthly array. Rows outside the year are ignored.
+func buildCategoryYearEntries(year int, rows []db.CategoryMonthTotal) []CategoryYearEntry {
+	byCat := make(map[string]*CategoryYearEntry)
+	order := make([]string, 0)
+	for _, r := range rows {
+		var y, m int
+		if _, err := fmt.Sscanf(r.YM, "%d-%d", &y, &m); err != nil || y != year || m < 1 || m > 12 {
+			continue
+		}
+		key := string(r.Category)
+		e, ok := byCat[key]
+		if !ok {
+			e = &CategoryYearEntry{Category: key, ByMonth: make([]float64, 12)}
+			byCat[key] = e
+			order = append(order, key)
+		}
+		e.ByMonth[m-1] += r.Total
+		e.Total += r.Total
+		e.Count += r.Count
+	}
+
+	entries := make([]CategoryYearEntry, 0, len(order))
+	for _, key := range order {
+		entries = append(entries, *byCat[key])
+	}
+	sort.SliceStable(entries, func(i, j int) bool { return entries[i].Total > entries[j].Total })
+	return entries
 }
 
 func buildCategoryEntries(rows []db.CategoryAggregate) ([]CategoryEntry, float64) {

@@ -72,3 +72,39 @@ func (db *DB) GetMonthlyTotalsByRange(tgID int64, startDate, endDate time.Time) 
 	}
 	return result, nil
 }
+
+// CategoryMonthTotal is one (month, category) total keyed by YYYY-MM string.
+type CategoryMonthTotal struct {
+	YM       string
+	Category model.TransactionCategory
+	Total    float64
+	Count    int64
+}
+
+// GetCategoryMonthlyTotals returns per (month, category) totals and counts for a
+// user/type between startDate (inclusive) and endDate (inclusive).
+func (db *DB) GetCategoryMonthlyTotals(tgID int64, startDate, endDate time.Time, transactionType model.TransactionType) ([]CategoryMonthTotal, error) {
+	var rows []struct {
+		YM       string
+		Category model.TransactionCategory
+		Total    float64
+		Count    int64
+	}
+
+	err := db.conn.Table("transactions").
+		Select("to_char(date, 'YYYY-MM') as ym, category, SUM(amount) as total, COUNT(*) as count").
+		Where("tg_id = ? AND date BETWEEN ? AND ? AND type = ?",
+			tgID, startDate.Format("2006-01-02"), endDate.Format("2006-01-02"), transactionType).
+		Group("ym, category").
+		Order("ym").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]CategoryMonthTotal, len(rows))
+	for i, r := range rows {
+		result[i] = CategoryMonthTotal{YM: r.YM, Category: r.Category, Total: r.Total, Count: r.Count}
+	}
+	return result, nil
+}

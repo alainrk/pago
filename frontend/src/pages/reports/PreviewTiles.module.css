@@ -1,0 +1,67 @@
+.tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  color: var(--text);
+  min-width: 0;
+  transition: border-color 120ms ease;
+}
+@media (hover: hover) {
+  .tile:hover {
+    text-decoration: none;
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+}
+.tile:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.title {
+  font-size: 14px;
+  font-weight: 600;
+}
+.chevron {
+  color: var(--faint);
+}
+/* On desktop the strip stays narrow; a bar per month should not become a slab. */
+.bars {
+  max-width: 260px;
+}
+.stat {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.statValue {
+  font-weight: 600;
+  color: var(--text);
+}
+.brand {
+  color: var(--brand);
+}
+@media (max-width: 767px) {
+  .tiles {
+    gap: 12px;
+  }
+  .tile {
+    padding: 14px 16px;
+    gap: 8px;
+  }
+  .stat {
+    font-size: 12px;
+  }
+}

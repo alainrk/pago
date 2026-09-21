@@ -150,6 +150,25 @@ dialog::backdrop {
   justify-content: space-between;
   gap: 16px;
 }
+.page-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: -8px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-3);
+}
+@media (hover: hover) {
+  .page-back:hover {
+    color: var(--text);
+    border-color: var(--text-3);
+    text-decoration: none;
+  }
+}
 @media (max-width: 767px) {
   .page-header {
     display: none;

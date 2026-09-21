@@ -10,9 +10,43 @@
   align-items: center;
   font-size: 13px;
 }
+.withChevron {
+  grid-template-columns: 130px 1fr 90px 48px 14px;
+}
+.tappable {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  border-radius: var(--r-sm);
+}
+.tappable:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+@media (hover: hover) {
+  .tappable:hover .label {
+    color: var(--brand-dark);
+  }
+  .tappable:hover .chevron {
+    color: var(--text-3);
+  }
+}
 .label {
   font-weight: 600;
   color: var(--text-2);
+  transition: color 120ms ease;
+}
+.chevron {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--faint);
+  transition: color 120ms ease;
 }
 .label.muted {
   color: var(--muted);
@@ -34,6 +68,9 @@
     grid-template-columns: 96px 1fr 42px;
     gap: 10px;
     font-size: 12.5px;
+  }
+  .withChevron {
+    grid-template-columns: 96px 1fr 42px 14px;
   }
   .amount {
     display: none;

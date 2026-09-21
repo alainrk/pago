@@ -10,8 +10,10 @@ interface MobileHeaderProps {
   // title with optional right-hand controls (month nav, "September 2026" label...)
   title?: string;
   right?: ReactNode;
-  // back renders a back arrow and a smaller title (Add transaction, Settings)
+  // back renders a back arrow and a smaller title (Add transaction, Settings).
+  // backTo is where the arrow goes when there is no history to pop.
   back?: boolean;
+  backTo?: string;
   // brand renders logo + avatar (Dashboard)
   brand?: boolean;
   // tools renders a second row (search, segmented control)
@@ -19,7 +21,7 @@ interface MobileHeaderProps {
 }
 
 // MobileHeader is the white top bar on phones. It renders nothing on desktop.
-export function MobileHeader({ title, right, back, brand, tools }: MobileHeaderProps) {
+export function MobileHeader({ title, right, back, backTo = "/", brand, tools }: MobileHeaderProps) {
   const navigate = useNavigate();
   const user = useUser();
   // Settings is reached from the avatar at the top left of every page.
@@ -37,10 +39,13 @@ export function MobileHeader({ title, right, back, brand, tools }: MobileHeaderP
             <Logo size={24} fontSize={16} />
           </>
         ) : back ? (
-          <button type="button" className={styles.mBack} onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))} aria-label="Back">
-            <Icon name="back" size={18} style={{ color: "var(--text-3)" }} />
-            <span className={styles.mTitleSm}>{title}</span>
-          </button>
+          <>
+            <button type="button" className={styles.mBack} onClick={() => (window.history.length > 1 ? navigate(-1) : navigate(backTo))} aria-label="Back">
+              <Icon name="back" size={18} style={{ color: "var(--text-3)" }} />
+              <span className={styles.mTitleSm}>{title}</span>
+            </button>
+            {right}
+          </>
         ) : (
           <>
             <div className={styles.mTitleWrap}>

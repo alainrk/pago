@@ -141,6 +141,57 @@
                 }
             }
         },
+        "/api/analytics/year-categories": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns, for each category, the year total and a 12-entry array of monthly totals (January first). Categories are sorted by total descending.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Annual per-category totals by month",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "4-digit year (defaults to current year)",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Transaction type: Expense (default) or Income",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.YearCategoriesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/budget": {
             "get": {
                 "security": [
@@ -1233,6 +1284,26 @@
                 }
             }
         },
+        "web.CategoryYearEntry": {
+            "type": "object",
+            "properties": {
+                "byMonth": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "category": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "number"
+                }
+            }
+        },
         "web.CloneTransactionRequest": {
             "type": "object",
             "properties": {
@@ -1598,6 +1669,23 @@
                 },
                 "totalIncome": {
                     "type": "number"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "web.YearCategoriesResponse": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.CategoryYearEntry"
+                    }
+                },
+                "type": {
+                    "type": "string"
                 },
                 "year": {
                     "type": "integer"

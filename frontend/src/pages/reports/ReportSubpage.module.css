@@ -1,0 +1,302 @@
+/* Layout shared by the Reports drill-down pages (category, averages, cash flow). */
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.stats3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+/* Mobile title block: the page title lives in the sticky header, so this only
+   shows the subtitle line under it. */
+.mobileSub {
+  display: none;
+}
+
+/* Category summary card */
+.heroRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.heroLabel {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.heroValue {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.delta {
+  font-size: 16px;
+  font-weight: 600;
+}
+.deltaUp {
+  color: var(--danger);
+}
+.deltaDown {
+  color: var(--income);
+}
+.deltaNone {
+  color: var(--muted);
+}
+.statRow {
+  display: flex;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.statCell {
+  flex: 1;
+  min-width: 0;
+}
+.statLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+.statValue {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+.statUnit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--faint);
+}
+.positive {
+  color: var(--income);
+}
+.negative {
+  color: var(--danger);
+}
+.brand {
+  color: var(--brand);
+}
+
+/* Transactions list */
+.txList {
+  display: flex;
+  flex-direction: column;
+}
+.txRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--divider);
+}
+.txRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.txName {
+  font-size: 14px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.txDate {
+  font-size: 12px;
+  color: var(--faint);
+  margin-top: 2px;
+}
+.txAmount {
+  font-size: 14px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* Averages: category cards */
+.catGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.catHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.catName {
+  font-size: 15px;
+  font-weight: 600;
+}
+.catAvg {
+  font-size: 15px;
+  font-weight: 600;
+}
+.catFoot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 500;
+}
+.catFootMid {
+  color: var(--faint);
+}
+
+/* Cash flow: paired chart */
+.flowHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.legend {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  align-items: center;
+}
+.legendItem {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--border-strong);
+}
+.swatchIn {
+  background: var(--brand);
+}
+.flowBars {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  height: 180px;
+}
+.flowPair {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 100%;
+}
+.flowBar {
+  flex: 1;
+  min-width: 0;
+  border-radius: 3px 3px 1px 1px;
+  background: var(--border-strong);
+  transition: height 300ms ease;
+}
+.flowBarIn {
+  background: var(--brand);
+}
+.flowLabels {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+.flowLabel {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--faint);
+}
+
+/* Cash flow: net by month */
+.netRows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.netRow {
+  display: grid;
+  grid-template-columns: 34px 1fr 90px;
+  gap: 12px;
+  align-items: center;
+}
+.netLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+.netAmount {
+  text-align: right;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .grid {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .column {
+    gap: 14px;
+  }
+  .stats3 {
+    gap: 10px;
+  }
+  .stats3 > * {
+    --pad-m: 14px;
+  }
+  .stats3 :global(.stat-value) {
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  /* Averages summary: three mono values side by side need a little less room. */
+  .avgSummary {
+    --pad-m: 16px;
+  }
+  .avgSummary .statRow {
+    flex-wrap: wrap;
+    gap: 14px 12px;
+  }
+  .avgSummary .statRow > :first-child {
+    flex-basis: 100%;
+  }
+  .mobileSub {
+    display: block;
+    margin-top: -6px;
+  }
+  .catGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .flowBars {
+    height: 90px;
+    gap: 7px;
+  }
+  .flowPair {
+    gap: 2px;
+  }
+  .flowLabels {
+    gap: 7px;
+  }
+  .netRow {
+    grid-template-columns: 34px 1fr 76px;
+  }
+}

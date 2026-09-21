@@ -148,3 +148,16 @@ export interface PasskeyInfo {
 export interface MessageResponse {
   message: string;
 }
+
+export interface CategoryYearEntry {
+  category: string;
+  total: number;
+  count: number;
+  byMonth: number[]; // 12 entries, January first
+}
+
+export interface YearCategoriesResponse {
+  year: number;
+  type: TransactionType;
+  categories: CategoryYearEntry[];
+}

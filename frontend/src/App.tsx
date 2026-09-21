@@ -7,6 +7,9 @@ import { LoginPage } from "./pages/LoginPage";
 import { AddTransactionPage } from "./pages/AddTransactionPage";
 import { TransactionsPage } from "./pages/TransactionsPage";
 import { ReportsPage } from "./pages/ReportsPage";
+import { CategoryDetailPage } from "./pages/reports/CategoryDetailPage";
+import { AveragesPage } from "./pages/reports/AveragesPage";
+import { CashFlowPage } from "./pages/reports/CashFlowPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 export default function App() {
@@ -24,6 +27,9 @@ export default function App() {
                 <Route path="/add" element={<Navigate to="/" replace />} />
                 <Route path="/transactions" element={<TransactionsPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/reports/category/:category" element={<CategoryDetailPage />} />
+                <Route path="/reports/averages" element={<AveragesPage />} />
+                <Route path="/reports/cashflow" element={<CashFlowPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Route>
             </Route>

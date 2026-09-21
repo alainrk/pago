@@ -15,3 +15,8 @@ func (r *Transactions) GetCategoryAggregates(tgID int64, startDate, endDate time
 func (r *Transactions) GetMonthlyTotalsByRange(tgID int64, startDate, endDate time.Time) ([]db.MonthTotal, error) {
 	return r.DB.GetMonthlyTotalsByRange(tgID, startDate, endDate)
 }
+
+// GetCategoryMonthlyTotals exposes per (month, category) totals over a date range.
+func (r *Transactions) GetCategoryMonthlyTotals(tgID int64, startDate, endDate time.Time, t model.TransactionType) ([]db.CategoryMonthTotal, error) {
+	return r.DB.GetCategoryMonthlyTotals(tgID, startDate, endDate, t)
+}

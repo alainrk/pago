@@ -165,3 +165,19 @@ type YearAnalyticsResponse struct {
 	ByMonth       []YearMonthEntry  `json:"byMonth"`
 	ByCategory    CategoryBreakdown `json:"byCategory"`
 }
+
+// CategoryYearEntry is one category inside the year-by-category breakdown.
+// ByMonth always has 12 entries, January first.
+type CategoryYearEntry struct {
+	Category string    `json:"category"`
+	Total    float64   `json:"total"`
+	Count    int64     `json:"count"`
+	ByMonth  []float64 `json:"byMonth"`
+}
+
+// YearCategoriesResponse is the body of GET /api/analytics/year-categories.
+type YearCategoriesResponse struct {
+	Year       int                 `json:"year"`
+	Type       string              `json:"type"`
+	Categories []CategoryYearEntry `json:"categories"`
+}

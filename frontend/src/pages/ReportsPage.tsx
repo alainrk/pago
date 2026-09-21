@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Page } from "../layout/AppShell";
 import { MobileHeader } from "../layout/MobileHeader";
 import { PageHeader } from "../components/PageHeader";
@@ -11,24 +11,19 @@ import { EmptyState } from "../components/EmptyState";
 import { PageLoading, ErrorNote } from "../components/Spinner";
 import { BarChart, type BarPoint } from "./reports/BarChart";
 import { CategoryBars, type CategoryRow } from "./reports/CategoryBars";
+import { PreviewTiles } from "./reports/PreviewTiles";
+import { RANGE_OPTIONS, useReportPeriod } from "./reports/useReportPeriod";
 import { useQuery } from "../lib/useQuery";
 import { useSwipe } from "../lib/useSwipe";
 import { useUser } from "../auth/AuthContext";
 import { usePrivacy } from "../lib/privacy";
-import { analytics, transactions } from "../api/endpoints";
+import { analytics } from "../api/endpoints";
+import { searchAll } from "../api/searchAll";
 import { categoryLabel } from "../lib/categories";
-import { formatBalance, formatSigned, isoDate, toLocalDate, MONTHS_SHORT } from "../lib/format";
-import { currentMonthKey, isValidMonthKey, shiftMonth, monthTitle, parseMonthKey, isCurrentMonth, weekRange } from "../lib/month";
-import type { CategoryEntry, TransactionDTO } from "../api/types";
+import { formatBalance, formatSigned, toLocalDate, MONTHS_SHORT } from "../lib/format";
+import { parseMonthKey, isCurrentMonth, weekRange } from "../lib/month";
+import type { CategoryEntry, YearAnalyticsResponse } from "../api/types";
 import styles from "./ReportsPage.module.css";
-
-type Range = "week" | "month" | "year";
-
-const RANGE_OPTIONS: { value: Range; label: string }[] = [
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
-  { value: "year", label: "Year" },
-];
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -41,16 +36,8 @@ interface ReportData {
   categoryRows: CategoryRow[];
   bars: BarPoint[];
   barsTitle: string;
-}
-
-function addDays(d: Date, n: number): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
-}
-
-function weekTitle(from: Date, to: Date, short = false): string {
-  const f = `${from.getDate()} ${MONTHS_SHORT[from.getMonth()]}`;
-  const t = `${to.getDate()} ${MONTHS_SHORT[to.getMonth()]}`;
-  return short ? `${f} – ${t}` : `${f} – ${t} ${to.getFullYear()}`;
+  // Year data behind the Averages / Cash flow preview tiles.
+  yearData: YearAnalyticsResponse;
 }
 
 // buildCategoryRows sorts categories by amount, keeps the top 7 and merges
@@ -97,55 +84,13 @@ function toEntries(entries: CategoryEntry[] | null): { category: string; amount:
 export function ReportsPage() {
   const { currency } = useUser();
   const { hidden } = usePrivacy();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const rawRange = searchParams.get("range");
-  const range: Range = rawRange === "week" || rawRange === "year" ? rawRange : "month";
-
-  const monthParam = searchParams.get("month");
-  const monthKey = isValidMonthKey(monthParam) ? monthParam : currentMonthKey();
-
-  const yearParam = searchParams.get("year");
-  const year = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : new Date().getFullYear();
-
-  const weekParam = searchParams.get("week");
-  const weekKey = weekParam && /^\d{4}-\d{2}-\d{2}$/.test(weekParam) ? weekParam : isoDate(new Date());
-
-  function updateParams(patch: Record<string, string>) {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        for (const [k, v] of Object.entries(patch)) next.set(k, v);
-        return next;
-      },
-      { replace: true },
-    );
-  }
-
-  function setRange(r: Range) {
-    updateParams({ range: r });
-  }
-
-  function goPrev() {
-    if (range === "week") updateParams({ range, week: isoDate(addDays(toLocalDate(weekKey), -7)) });
-    else if (range === "year") updateParams({ range, year: String(year - 1) });
-    else updateParams({ range, month: shiftMonth(monthKey, -1) });
-  }
-
-  function goNext() {
-    if (range === "week") updateParams({ range, week: isoDate(addDays(toLocalDate(weekKey), 7)) });
-    else if (range === "year") updateParams({ range, year: String(year + 1) });
-    else updateParams({ range, month: shiftMonth(monthKey, 1) });
-  }
+  const navigate = useNavigate();
+  const period = useReportPeriod();
+  const { range, monthKey, year, weekKey, week, anchorYear, nextDisabled: navNextDisabled, setRange, goPrev, goNext } = period;
 
   const now = new Date();
   const currentYear = now.getFullYear();
-  const weekAnchor = toLocalDate(weekKey);
-  const week = weekRange(weekAnchor);
   const currentWeekFrom = weekRange(now).from;
-
-  const navNextDisabled =
-    range === "month" ? monthKey >= currentMonthKey() : range === "year" ? year >= currentYear : week.from.getTime() >= currentWeekFrom.getTime();
 
   // Phones: swipe left for the next period, right for the previous one.
   const swipe = useSwipe(
@@ -155,12 +100,19 @@ export function ReportsPage() {
     () => goPrev(),
   );
 
-  const desktopTitle = range === "month" ? monthTitle(monthKey) : range === "year" ? String(year) : weekTitle(week.from, week.to);
-  const mobileTitle = range === "month" ? monthTitle(monthKey, true) : range === "year" ? String(year) : weekTitle(week.from, week.to, true);
+  const desktopTitle = period.title;
+  const mobileTitle = period.shortTitle;
+
+  function openCategory(key: string) {
+    navigate(`/reports/category/${encodeURIComponent(key)}${period.search}`);
+  }
 
   async function loadReport(signal: AbortSignal): Promise<ReportData> {
+    // The preview tiles always summarise the year the period falls in.
+    const yearReq = analytics.year(anchorYear, signal);
+
     if (range === "month") {
-      const [monthly, trend] = await Promise.all([analytics.monthly(monthKey, signal), analytics.trend(6, signal)]);
+      const [monthly, trend, yearData] = await Promise.all([analytics.monthly(monthKey, signal), analytics.trend(6, signal), yearReq]);
       const inWindow = trend.points.some((p) => p.month === monthKey);
       const bars: BarPoint[] = trend.points.map((p, i) => ({
         label: MONTHS_SHORT[parseMonthKey(p.month).month - 1],
@@ -176,11 +128,12 @@ export function ReportsPage() {
         categoryRows: buildCategoryRows(toEntries(monthly.byCategory.Expense)),
         bars,
         barsTitle: "Expenses, last 6 months",
+        yearData,
       };
     }
 
     if (range === "year") {
-      const res = await analytics.year(year, signal);
+      const res = await yearReq;
       const byMonth = [...res.byMonth].sort((a, b) => a.month - b.month);
       const bars: BarPoint[] = byMonth.map((m) => ({
         label: MONTHS_SHORT[m.month - 1],
@@ -196,23 +149,12 @@ export function ReportsPage() {
         categoryRows: buildCategoryRows(toEntries(res.byCategory.Expense)),
         bars,
         barsTitle: "Expenses by month",
+        yearData: res,
       };
     }
 
     // week
-    const dateFrom = isoDate(week.from);
-    const dateTo = isoDate(week.to);
-    let all: TransactionDTO[] = [];
-    let total = 0;
-    let offset = 0;
-    const limit = 200;
-    for (let page = 0; page < 5; page++) {
-      const res = await transactions.search({ dateFrom, dateTo, offset, limit }, signal);
-      all = all.concat(res.transactions);
-      total = res.total;
-      offset += limit;
-      if (offset >= total || res.transactions.length === 0) break;
-    }
+    const [{ all, total }, yearData] = await Promise.all([searchAll({ dateFrom: period.dateFrom, dateTo: period.dateTo }, signal), yearReq]);
 
     let income = 0;
     let expenses = 0;
@@ -230,7 +172,7 @@ export function ReportsPage() {
       catMap.set(t.category, (catMap.get(t.category) ?? 0) + t.amount);
     }
 
-    const isCurrentWeek = isoDate(week.from) === isoDate(currentWeekFrom);
+    const isCurrentWeek = week.from.getTime() === currentWeekFrom.getTime();
     const todayDow = (now.getDay() + 6) % 7;
     const bars: BarPoint[] = WEEKDAY_LABELS.map((label, i) => ({
       label,
@@ -247,6 +189,7 @@ export function ReportsPage() {
       categoryRows: buildCategoryRows(Array.from(catMap, ([category, amount]) => ({ category, amount }))),
       bars,
       barsTitle: "Expenses by day",
+      yearData,
     };
   }
 
@@ -289,10 +232,18 @@ export function ReportsPage() {
               <BalanceStat balance={data.balance} currency={currency} hidden={hidden} />
               <StatCard label="Transactions" value={String(data.count)} tone="plain" />
             </div>
+            <PreviewTiles data={data.yearData} currency={currency} />
             <div className={styles.grid}>
               <Card radius="lg" padding="24px 28px" paddingMobile="20px" gap="18px" gapMobile="14px">
                 <CardTitle>Spending by category</CardTitle>
-                {data.hasExpenses ? <CategoryBars rows={data.categoryRows} currency={currency} /> : <EmptyState icon="trend" title="No expenses in this period" />}
+                {data.hasExpenses ? (
+                  <>
+                    <CategoryBars rows={data.categoryRows} currency={currency} onSelect={openCategory} />
+                    <div className={styles.hint}>Select a category for breakdown, trend &amp; transactions</div>
+                  </>
+                ) : (
+                  <EmptyState icon="trend" title="No expenses in this period" />
+                )}
               </Card>
               <BarChart title={data.barsTitle} bars={data.bars} currency={currency} />
             </div>

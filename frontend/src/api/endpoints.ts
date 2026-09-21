@@ -16,6 +16,7 @@ import type {
   TransactionType,
   TrendResponse,
   YearAnalyticsResponse,
+  YearCategoriesResponse,
 } from "./types";
 
 function qs(params: Record<string, string | number | undefined>): string {
@@ -104,4 +105,6 @@ export const analytics = {
     request<TrendResponse>(`/api/analytics/trend${qs({ months })}`, { signal }),
   year: (year: number, signal?: AbortSignal) =>
     request<YearAnalyticsResponse>(`/api/analytics/year${qs({ year })}`, { signal }),
+  yearCategories: (year: number, type: TransactionType = "Expense", signal?: AbortSignal) =>
+    request<YearCategoriesResponse>(`/api/analytics/year-categories${qs({ year, type })}`, { signal }),
 };

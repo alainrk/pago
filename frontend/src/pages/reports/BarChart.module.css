@@ -12,12 +12,27 @@
   color: var(--text-2);
 }
 .bars {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
   align-items: flex-end;
   gap: 20px;
   padding: 0 8px 4px;
+}
+.avgLine {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  border-top: 1px dashed var(--border-strong);
+  pointer-events: none;
+}
+.avgTag {
+  position: absolute;
+  right: 0;
+  top: -15px;
+  font-size: 10px;
+  color: var(--faint);
 }
 .col {
   flex: 1;
@@ -42,8 +57,11 @@
   font-weight: 600;
   color: var(--brand-dark);
 }
+/* Fixed label height so the average line can be placed from the bottom. */
 .label {
   font-size: 11.5px;
+  line-height: 16px;
+  height: 16px;
   color: var(--faint);
 }
 .labelHighlight {
@@ -68,5 +86,13 @@
   .value,
   .label {
     font-size: 10px;
+  }
+  .label {
+    line-height: 14px;
+    height: 14px;
+  }
+  .avgLine {
+    left: 4px;
+    right: 4px;
   }
 }
