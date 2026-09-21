@@ -50,13 +50,11 @@
     color: var(--text-3);
   }
 }
-@media (hover: hover) {
-  .item.active,
-  .item.active:hover {
-    background: var(--brand-soft);
-    color: var(--brand-dark);
-    font-weight: 600;
-  }
+.item.active,
+.item.active:hover {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-weight: 600;
 }
 .user {
   margin-top: auto;
@@ -151,12 +149,10 @@
       color: var(--faint);
     }
   }
-  @media (hover: hover) {
-    .tab.active,
-    .tab.active:hover {
-      color: var(--brand-dark);
-      font-weight: 600;
-    }
+  .tab.active,
+  .tab.active:hover {
+    color: var(--brand-dark);
+    font-weight: 600;
   }
   .fabWrap {
     flex: 1;
