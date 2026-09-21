@@ -16,24 +16,37 @@
 .tappable {
   background: none;
   border: none;
-  padding: 0;
-  margin: 0;
-  width: 100%;
+  /* Padding pulled back by a negative margin: the hover surface is a bit
+     bigger than the row but the layout does not move. */
+  padding: 6px 10px;
+  margin: -6px -10px;
+  width: calc(100% + 20px);
   text-align: left;
   font: inherit;
   color: inherit;
-  border-radius: var(--r-sm);
+  cursor: pointer;
+  border-radius: var(--r-md);
+  transition: background-color 120ms ease;
+}
+.tappable .label {
+  color: var(--text);
+}
+.tappable:active {
+  background: var(--surface-muted);
 }
 .tappable:focus-visible {
   outline: none;
   box-shadow: var(--ring);
 }
 @media (hover: hover) {
+  .tappable:hover {
+    background: var(--surface-muted);
+  }
   .tappable:hover .label {
     color: var(--brand-dark);
   }
   .tappable:hover .chevron {
-    color: var(--text-3);
+    color: var(--brand);
   }
 }
 .label {
@@ -45,7 +58,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  color: var(--faint);
+  color: var(--text-3);
   transition: color 120ms ease;
 }
 .label.muted {

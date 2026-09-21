@@ -7,8 +7,10 @@ import { Avatar } from "../components/Avatar";
 import { useUser } from "../auth/AuthContext";
 
 interface MobileHeaderProps {
-  // title with optional right-hand controls (month nav, "September 2026" label...)
-  title?: string;
+  // title with optional right-hand controls (month nav, "September 2026" label...).
+  // A non-string title (a switcher) is rendered as is; with `back` it sits next
+  // to the arrow instead of inside it.
+  title?: ReactNode;
   right?: ReactNode;
   // back renders a back arrow and a smaller title (Add transaction, Settings).
   // backTo is where the arrow goes when there is no history to pop.
@@ -40,10 +42,13 @@ export function MobileHeader({ title, right, back, backTo = "/", brand, tools }:
           </>
         ) : back ? (
           <>
-            <button type="button" className={styles.mBack} onClick={() => (window.history.length > 1 ? navigate(-1) : navigate(backTo))} aria-label="Back">
-              <Icon name="back" size={18} style={{ color: "var(--text-3)" }} />
-              <span className={styles.mTitleSm}>{title}</span>
-            </button>
+            <div className={styles.mTitleWrap}>
+              <button type="button" className={styles.mBack} onClick={() => (window.history.length > 1 ? navigate(-1) : navigate(backTo))} aria-label="Back">
+                <Icon name="back" size={18} style={{ color: "var(--text-3)" }} />
+                {typeof title === "string" && <span className={styles.mTitleSm}>{title}</span>}
+              </button>
+              {typeof title !== "string" && title}
+            </div>
             {right}
           </>
         ) : (

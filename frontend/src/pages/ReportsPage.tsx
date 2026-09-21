@@ -5,7 +5,7 @@ import { PageHeader } from "../components/PageHeader";
 import { PrivacyToggle } from "../components/PrivacyToggle";
 import { Segmented } from "../components/Segmented";
 import { MonthNav } from "../components/MonthNav";
-import { Card, CardTitle } from "../components/Card";
+import { Card, CardHead, CardTitle } from "../components/Card";
 import { StatCard } from "../components/StatCard";
 import { EmptyState } from "../components/EmptyState";
 import { PageLoading, ErrorNote } from "../components/Spinner";
@@ -235,12 +235,12 @@ export function ReportsPage() {
             <PreviewTiles data={data.yearData} currency={currency} />
             <div className={styles.grid}>
               <Card radius="lg" padding="24px 28px" paddingMobile="20px" gap="18px" gapMobile="14px">
-                <CardTitle>Spending by category</CardTitle>
+                <CardHead className={styles.head}>
+                  <CardTitle>Spending by category</CardTitle>
+                  {data.hasExpenses && <div className={styles.hint}>Tap a category for details</div>}
+                </CardHead>
                 {data.hasExpenses ? (
-                  <>
-                    <CategoryBars rows={data.categoryRows} currency={currency} onSelect={openCategory} />
-                    <div className={styles.hint}>Select a category for breakdown, trend &amp; transactions</div>
-                  </>
+                  <CategoryBars rows={data.categoryRows} currency={currency} onSelect={openCategory} />
                 ) : (
                   <EmptyState icon="trend" title="No expenses in this period" />
                 )}

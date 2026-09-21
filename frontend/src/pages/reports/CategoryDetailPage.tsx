@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Page } from "../../layout/AppShell";
 import { MobileHeader } from "../../layout/MobileHeader";
 import { PageHeader } from "../../components/PageHeader";
@@ -17,7 +17,7 @@ import { useSwipe } from "../../lib/useSwipe";
 import { useUser } from "../../auth/AuthContext";
 import { usePrivacy } from "../../lib/privacy";
 import { analytics } from "../../api/endpoints";
-import { categoryLabel } from "../../lib/categories";
+import { categoryLabel, EXPENSE_CATEGORIES } from "../../lib/categories";
 import { formatDayLong, formatMoney, formatSigned, isoDate, MONTHS_SHORT } from "../../lib/format";
 import { monthTitle, parseMonthKey, shiftMonth } from "../../lib/month";
 import type { CategoryEntry, TransactionDTO } from "../../api/types";
@@ -37,6 +37,10 @@ interface DetailData {
   txs: TransactionDTO[];
 }
 
+// The switcher lists every named expense category. "OtherExpenses" is left
+// out: on the Reports page it is merged into the plain "Other" row.
+const CATEGORY_OPTIONS = EXPENSE_CATEGORIES.filter((c) => c !== "OtherExpenses").map((c) => ({ value: c, label: categoryLabel(c) }));
+
 function findEntry(entries: CategoryEntry[] | null, category: string): { amount: number; count: number } {
   const e = (entries ?? []).find((x) => x.category === category);
   return { amount: e?.amount ?? 0, count: e?.count ?? 0 };
@@ -54,6 +58,7 @@ export function CategoryDetailPage() {
   const label = categoryLabel(category);
   const { currency } = useUser();
   const { hidden } = usePrivacy();
+  const navigate = useNavigate();
   const period = useReportPeriod();
   const { range, monthKey, year, weekKey, week, anchorYear, dateFrom, dateTo } = period;
   const now = new Date();
@@ -128,6 +133,19 @@ export function CategoryDetailPage() {
   const subtitle = `${range === "month" ? monthTitle(monthKey, true) : period.shortTitle}${data ? ` · ${data.count} transaction${data.count === 1 ? "" : "s"}` : ""}`;
   const backTo = `/reports${period.search}`;
 
+  // The title doubles as a category switcher. replace: true keeps Back
+  // pointing at the Reports page however many categories were visited.
+  const titleSelect = (
+    <Select
+      variant="title"
+      value={category}
+      options={CATEGORY_OPTIONS}
+      placeholder={label}
+      onChange={(c) => navigate(`/reports/category/${encodeURIComponent(c)}${period.search}`, { replace: true })}
+      ariaLabel="Category"
+    />
+  );
+
   const scopeSelect = (
     <Select
       value={range}
@@ -143,7 +161,7 @@ export function CategoryDetailPage() {
       <MobileHeader
         back
         backTo={backTo}
-        title={label}
+        title={titleSelect}
         right={
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <PrivacyToggle size={30} iconSize={14} />
@@ -153,7 +171,7 @@ export function CategoryDetailPage() {
       />
       <Page {...swipe}>
         <PageHeader
-          title={label}
+          title={titleSelect}
           backTo={backTo}
           left={<Segmented options={RANGE_OPTIONS} value={range} onChange={period.setRange} size="md" ariaLabel="Period scope" />}
           right={

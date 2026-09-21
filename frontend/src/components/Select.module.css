@@ -51,6 +51,38 @@
   color: var(--brand);
 }
 
+/* Title variant: no box, title-sized text, chevron always visible. */
+.title {
+  --h: auto;
+  width: auto;
+  gap: 6px;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 2px 4px;
+  margin: -2px -4px;
+  background: none;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: color 120ms ease;
+}
+.title .chevron {
+  color: var(--text-3);
+}
+@media (hover: hover) {
+  .title:hover:not(:disabled) {
+    color: var(--brand-dark);
+  }
+  .title:hover:not(:disabled) .chevron {
+    color: var(--brand);
+  }
+}
+@media (max-width: 767px) {
+  .title {
+    font-size: 16px;
+  }
+}
+
 /* Desktop popover */
 .popover {
   position: fixed;

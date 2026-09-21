@@ -35,6 +35,6 @@ export function CardSubtitle({ children }: { children: ReactNode }) {
   return <div className={styles.subtitle}>{children}</div>;
 }
 
-export function CardHead({ children }: { children: ReactNode }) {
-  return <div className={styles.head}>{children}</div>;
+export function CardHead({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={[styles.head, className ?? ""].join(" ")}>{children}</div>;
 }

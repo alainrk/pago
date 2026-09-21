@@ -22,6 +22,9 @@ interface SelectProps {
   disabled?: boolean;
   // Shown on the trigger when the value matches no option.
   placeholder?: string;
+  // "title" makes the trigger read as a page title with a chevron, for
+  // switchers that replace the heading (the category on its detail page).
+  variant?: "default" | "title";
 }
 
 type Row = { kind: "group"; label: string } | { kind: "option"; option: SelectOption; index: number };
@@ -53,7 +56,7 @@ const MAX_LIST_HEIGHT = 320;
 
 // Select is a styled replacement for the native <select>. On desktop it opens
 // a popover under (or above) the trigger; on phones it opens a bottom sheet.
-export function Select({ value, options, onChange, ariaLabel, id, className, style, disabled, placeholder = "Select…" }: SelectProps) {
+export function Select({ value, options, onChange, ariaLabel, id, className, style, disabled, placeholder = "Select…", variant = "default" }: SelectProps) {
   const isMobile = useIsMobile();
   const reactId = useId();
   const listId = `${reactId}-list`;
@@ -257,13 +260,13 @@ export function Select({ value, options, onChange, ariaLabel, id, className, sty
         aria-controls={open ? listId : undefined}
         aria-label={ariaLabel}
         disabled={disabled}
-        className={[styles.trigger, open ? styles.open : "", className ?? ""].filter(Boolean).join(" ")}
+        className={[styles.trigger, variant === "title" ? styles.title : "", open ? styles.open : "", className ?? ""].filter(Boolean).join(" ")}
         style={style}
         onClick={() => (open ? closeList() : openList())}
         onKeyDown={onTriggerKeyDown}
       >
         <span className={[styles.triggerLabel, selected ? "" : styles.placeholder].filter(Boolean).join(" ")}>{selected ? selected.label : placeholder}</span>
-        <Icon name="chevron-down" size={12} className={styles.chevron} />
+        <Icon name="chevron-down" size={variant === "title" ? 14 : 12} className={styles.chevron} />
       </button>
       {open &&
         createPortal(

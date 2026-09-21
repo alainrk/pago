@@ -4,7 +4,7 @@ import { Icon } from "./Icon";
 
 // PageHeader is the desktop title row. Hidden on mobile (MobileHeader takes over).
 // backTo adds a back arrow before the title for drill-down pages.
-export function PageHeader({ title, right, left, backTo }: { title: string; right?: ReactNode; left?: ReactNode; backTo?: string }) {
+export function PageHeader({ title, right, left, backTo }: { title: ReactNode; right?: ReactNode; left?: ReactNode; backTo?: string }) {
   return (
     <div className="page-header">
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
