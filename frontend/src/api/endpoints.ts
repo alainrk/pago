@@ -2,6 +2,7 @@ import { request, requestBlob } from "./client";
 import type {
   BudgetResponse,
   CreateTransactionRequest,
+  CreateTransactionResponse,
   DuplicateCheckResponse,
   EditTransactionRequest,
   MeResponse,
@@ -9,6 +10,9 @@ import type {
   MonthlyAnalyticsResponse,
   ParseTransactionResponse,
   PasskeyInfo,
+  RecurringDTO,
+  RecurringInput,
+  RecurringListResponse,
   SearchTransactionsRequest,
   SearchTransactionsResponse,
   StatsResponse,
@@ -70,7 +74,7 @@ export const transactions = {
   search: (req: SearchTransactionsRequest, signal?: AbortSignal) =>
     request<SearchTransactionsResponse>("/api/transactions/search", { method: "POST", body: req, signal }),
   create: (req: CreateTransactionRequest) =>
-    request<MessageResponse>("/api/transactions/create", { method: "POST", body: req }),
+    request<CreateTransactionResponse>("/api/transactions/create", { method: "POST", body: req }),
   edit: (req: EditTransactionRequest) =>
     request<TransactionDTO>("/api/transactions/edit", { method: "PATCH", body: req }),
   remove: (id: number) =>
@@ -90,6 +94,14 @@ export const transactions = {
 // Stats and analytics
 export const stats = {
   month: (month: string, signal?: AbortSignal) => request<StatsResponse>(`/api/stats${qs({ month })}`, { signal }),
+};
+
+export const recurring = {
+  list: (signal?: AbortSignal) => request<RecurringListResponse>("/api/recurring", { signal }),
+  create: (req: RecurringInput & { sourceTransactionId?: number }) =>
+    request<RecurringDTO>("/api/recurring/create", { method: "POST", body: req }),
+  edit: (id: number, req: RecurringInput) => request<RecurringDTO>("/api/recurring/edit", { method: "PATCH", body: { id, ...req } }),
+  remove: (id: number) => request<MessageResponse>("/api/recurring/delete", { method: "DELETE", body: { id } }),
 };
 
 export const budget = {

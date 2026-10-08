@@ -26,6 +26,7 @@ import { ALL_CATEGORIES, categoryLabel } from "../lib/categories";
 import { MONTHS_LONG, formatDayLong, formatDayShort, formatSigned, isoDate, parseAmount, toLocalDate } from "../lib/format";
 import { monthRange } from "../lib/month";
 import { cloneNavState } from "../lib/clone";
+import { makeRecurringNavState } from "../lib/recurring";
 import { TransactionRowEditor, type EditDraft } from "./TransactionRowEditor";
 import { TransactionEditSheet } from "./TransactionEditSheet";
 import styles from "./TransactionsPage.module.css";
@@ -197,6 +198,14 @@ export function TransactionsPage() {
   // which becomes today.
   function cloneTx(tx: TransactionDTO) {
     navigate("/", { state: cloneNavState(tx) });
+  }
+
+  // "Make recurring" opens the recurring form prefilled from this transaction.
+  function makeRecurring(tx: TransactionDTO) {
+    navigate("/recurring", { state: makeRecurringNavState(tx) });
+  }
+  function openRecurring(id: number) {
+    navigate(`/recurring?edit=${id}`);
   }
 
   function clearFilters() {
@@ -423,7 +432,20 @@ export function TransactionsPage() {
                           }}
                         >
                           <div className={styles.cellDate}>{formatDayShort(tx.date)}</div>
-                          <div className={styles.cellDesc}>{tx.description}</div>
+                          <div className={styles.cellDesc}>
+                            {tx.recurringId != null && (
+                              <button
+                                type="button"
+                                className={styles.recurringBadge}
+                                title="Added by a recurring item. Click to edit it."
+                                aria-label="Edit the recurring item that added this"
+                                onClick={() => openRecurring(tx.recurringId as number)}
+                              >
+                                <Icon name="repeat" size={12} />
+                              </button>
+                            )}
+                            <span className={styles.cellDescText}>{tx.description}</span>
+                          </div>
                           <div>
                             <CategoryPill category={tx.category} type={tx.type} />
                           </div>
@@ -479,7 +501,10 @@ export function TransactionsPage() {
                           <CategoryTile category={tx.category} type={tx.type} />
                           <div className={styles.mRowText}>
                             <div className={styles.mRowDesc}>{tx.description}</div>
-                            <div className={styles.mRowCat}>{categoryLabel(tx.category)}</div>
+                            <div className={styles.mRowCat}>
+                              {tx.recurringId != null && <Icon name="repeat" size={11} className={styles.mRecurringIcon} title="Recurring" />}
+                              {categoryLabel(tx.category)}
+                            </div>
                           </div>
                           <div className={`mono ${styles.mRowAmount} ${tx.type === "Income" ? styles.income : ""}`}>
                             {formatSigned(tx.amount, tx.type, user.currency, hidden)}
@@ -503,6 +528,11 @@ export function TransactionsPage() {
           onChange={(patch) => setDraft((d) => (d ? { ...d, ...patch } : d))}
           onSave={() => editingTx && saveEdit(editingTx)}
           onDelete={() => editingTx && setDeleteTarget(editingTx)}
+          onRecurring={() => {
+            if (!editingTx) return;
+            if (editingTx.recurringId != null) openRecurring(editingTx.recurringId);
+            else makeRecurring(editingTx);
+          }}
           onClose={cancelEdit}
           saving={saving}
         />
@@ -514,6 +544,9 @@ export function TransactionsPage() {
           onClose={() => setMenu(null)}
           items={[
             { label: "Clone", icon: "copy", onSelect: () => cloneTx(menu.tx) },
+            menu.tx.recurringId != null
+              ? { label: "Edit recurring", icon: "repeat", onSelect: () => openRecurring(menu.tx.recurringId as number) }
+              : { label: "Make recurring", icon: "repeat", onSelect: () => makeRecurring(menu.tx) },
             { label: "Edit", icon: "pencil", onSelect: () => startEdit(menu.tx) },
             { label: "Delete", icon: "trash", danger: true, onSelect: () => setDeleteTarget(menu.tx) },
           ]}

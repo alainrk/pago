@@ -9,6 +9,8 @@ export interface TransactionDTO {
   description: string;
   amount: number;
   type: TransactionType;
+  // The recurring rule that added this transaction, if any.
+  recurringId?: number | null;
 }
 
 export interface TransactionsResponse {
@@ -41,6 +43,39 @@ export interface CreateTransactionRequest {
   amount: number;
   description: string;
   date: string; // YYYY-MM-DD
+  // Also create a monthly recurring rule from this transaction.
+  repeatMonthly?: boolean;
+}
+
+export interface CreateTransactionResponse {
+  message: string;
+  recurring?: RecurringDTO;
+}
+
+export interface RecurringDTO {
+  id: number;
+  type: TransactionType;
+  category: string;
+  amount: number;
+  currency: string;
+  description: string;
+  dayOfMonth: number;
+  nextDueDate: string; // YYYY-MM-DD, UTC
+}
+
+export interface RecurringListResponse {
+  recurring: RecurringDTO[];
+  count: number;
+  totalExpense: number;
+  totalIncome: number;
+}
+
+export interface RecurringInput {
+  type: TransactionType;
+  category: string;
+  amount: number;
+  description: string;
+  dayOfMonth: number;
 }
 
 export interface EditTransactionRequest {

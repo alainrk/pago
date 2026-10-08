@@ -25,6 +25,14 @@
   background: var(--brand);
   color: var(--surface);
 }
+.danger {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+.danger.ready {
+  background: var(--danger);
+  color: var(--surface);
+}
 .content {
   position: relative;
   background: var(--surface);

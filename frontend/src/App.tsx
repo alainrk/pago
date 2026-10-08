@@ -11,6 +11,7 @@ import { CategoryDetailPage } from "./pages/reports/CategoryDetailPage";
 import { AveragesPage } from "./pages/reports/AveragesPage";
 import { CashFlowPage } from "./pages/reports/CashFlowPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { RecurringPage } from "./pages/RecurringPage";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
                 <Route path="/reports/averages" element={<AveragesPage />} />
                 <Route path="/reports/cashflow" element={<CashFlowPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/recurring" element={<RecurringPage />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

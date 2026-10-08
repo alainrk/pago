@@ -81,11 +81,41 @@
   font-size: 12px;
 }
 .cellDesc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-weight: 500;
+  min-width: 0;
+}
+.cellDescText {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.recurringBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .recurringBadge:hover {
+    background: var(--brand);
+    color: var(--on-brand);
+  }
+}
+.recurringBadge:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
 }
 .cellAmount {
   text-align: right;
@@ -293,8 +323,14 @@
   white-space: nowrap;
 }
 .mRowCat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 11.5px;
   color: var(--muted);
+}
+.mRecurringIcon {
+  color: var(--brand-dark);
 }
 .mRowAmount {
   font-size: 13.5px;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Page } from "../layout/AppShell";
 import { MobileHeader } from "../layout/MobileHeader";
 import { PageHeader } from "../components/PageHeader";
@@ -14,7 +14,7 @@ import { useToast } from "../components/Toast";
 import { useAuth, useUser, useSessionGuard } from "../auth/AuthContext";
 import { useQuery } from "../lib/useQuery";
 import { useIsMobile } from "../lib/useMediaQuery";
-import { account, budget as budgetApi } from "../api/endpoints";
+import { account, budget as budgetApi, recurring as recurringApi } from "../api/endpoints";
 import { registerPasskey, suggestPasskeyName, isPasskeySupported, PasskeyCancelledError } from "../api/webauthn";
 import { currencySymbol, formatDateFull, formatMoney, formatRelativeDay, parseAmount } from "../lib/format";
 import styles from "./SettingsPage.module.css";
@@ -38,6 +38,7 @@ export function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
 
   const budgetQuery = useQuery((signal) => budgetApi.get(signal), []);
+  const recurringQuery = useQuery((signal) => recurringApi.list(signal), []);
   const hasBudget = budgetQuery.data?.hasBudget ?? false;
   const [budgetInput, setBudgetInput] = useState("");
   const [budgetSaving, setBudgetSaving] = useState(false);
@@ -277,6 +278,29 @@ export function SettingsPage() {
     </Card>
   );
 
+  const recurringData = recurringQuery.data;
+  const recurringCard = (
+    <Link to="/recurring" className={styles.cardLink} aria-label="Recurring transactions">
+      <Card radius={isMobile ? "lg" : "md"} gap="8px" className={styles.linkCard}>
+        <div className={styles.linkHead}>
+          <CardTitle>Recurring</CardTitle>
+          <span className={styles.linkMeta}>
+            {recurringData && recurringData.count > 0 && <span className={styles.countPill}>{recurringData.count}</span>}
+            <Icon name="arrow-right" size={14} />
+          </span>
+        </div>
+        {recurringData && recurringData.count > 0 ? (
+          <div className={styles.text}>
+            <span className="mono">{formatMoney(recurringData.totalExpense, user.currency)}</span> out ·{" "}
+            <span className="mono">{formatMoney(recurringData.totalIncome, user.currency)}</span> in, each month
+          </div>
+        ) : (
+          <div className={styles.text}>Add rent, subscriptions or salary once, and they&apos;re added each month.</div>
+        )}
+      </Card>
+    </Link>
+  );
+
   return (
     <>
       <MobileHeader back title="Settings" />
@@ -304,6 +328,7 @@ export function SettingsPage() {
               <div className={styles.note}>All amounts are stored in EUR.</div>
             </Card>
             {budgetCard}
+            {recurringCard}
             {passkeysCard}
             <Card radius="lg" gap="12px">
               <CardTitle>Data</CardTitle>
@@ -340,6 +365,7 @@ export function SettingsPage() {
                 <div className={styles.note}>All amounts are stored in EUR.</div>
               </Card>
               {budgetCard}
+              {recurringCard}
               <Card radius="md" gap="14px">
                 <CardTitle>Data</CardTitle>
                 {dataText}

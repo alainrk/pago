@@ -19,6 +19,9 @@ interface TransactionEditSheetProps {
   onChange: (patch: Partial<EditDraft>) => void;
   onSave: () => void;
   onDelete: () => void;
+  // onRecurring opens the rule that added this transaction, or starts a new
+  // rule from it.
+  onRecurring: () => void;
   onClose: () => void;
   saving: boolean;
 }
@@ -26,7 +29,7 @@ interface TransactionEditSheetProps {
 // TransactionEditSheet is the phone editor: a bottom sheet with full-size
 // labelled fields. It moves up with the keyboard so the field being edited
 // stays visible.
-export function TransactionEditSheet({ transaction, draft, currency, onChange, onSave, onDelete, onClose, saving }: TransactionEditSheetProps) {
+export function TransactionEditSheet({ transaction, draft, currency, onChange, onSave, onDelete, onRecurring, onClose, saving }: TransactionEditSheetProps) {
   const keyboardOffset = useKeyboardOffset();
   const open = transaction !== null && draft !== null;
   const onCloseRef = useRef(onClose);
@@ -117,6 +120,9 @@ export function TransactionEditSheet({ transaction, draft, currency, onChange, o
         <div className={styles.foot}>
           <Button variant="primary" size="lg" full icon="check" loading={saving} style={{ "--h": "50px" } as never} onClick={onSave}>
             Save changes
+          </Button>
+          <Button variant="outline" full disabled={saving} icon="repeat" style={{ "--h": "46px" } as never} onClick={onRecurring}>
+            {transaction.recurringId != null ? "Edit recurring" : "Make recurring"}
           </Button>
           <Button variant="outline" full disabled={saving} icon="trash" style={{ "--h": "46px", color: "var(--danger)", borderColor: "var(--danger-border)" } as never} onClick={onDelete}>
             Delete transaction

@@ -7,6 +7,8 @@ interface SwipeActionProps {
   label: string;
   icon: IconName;
   onAction: () => void;
+  // danger colors the revealed panel red, for destructive actions.
+  tone?: "danger";
   className?: string;
   children: ReactNode;
 }
@@ -30,7 +32,7 @@ function clampOffset(dx: number): number {
 // SwipeAction wraps a list row. Swiping it left with a finger, or scrolling
 // it sideways on a trackpad, slides the row over and reveals one action.
 // Going far enough fires the action.
-export function SwipeAction({ label, icon, onAction, className, children }: SwipeActionProps) {
+export function SwipeAction({ label, icon, onAction, tone, className, children }: SwipeActionProps) {
   const [offset, setOffset] = useState(0);
   const [dragging, setDragging] = useState(false);
   const drag = useRef<{ id: number; x: number; y: number; moved: boolean; ignored: boolean } | null>(null);
@@ -116,7 +118,7 @@ export function SwipeAction({ label, icon, onAction, className, children }: Swip
   const ready = offset >= TRIGGER;
   return (
     <div className={[styles.wrap, className ?? ""].filter(Boolean).join(" ")} style={{ "--reveal": `${REVEAL}px` } as never} onWheel={onWheel}>
-      <div className={[styles.action, ready ? styles.ready : ""].filter(Boolean).join(" ")} style={{ opacity: Math.min(1, offset / TRIGGER) }} aria-hidden>
+      <div className={[styles.action, tone === "danger" ? styles.danger : "", ready ? styles.ready : ""].filter(Boolean).join(" ")} style={{ opacity: Math.min(1, offset / TRIGGER) }} aria-hidden>
         <Icon name={icon} size={14} />
         <span>{label}</span>
       </div>

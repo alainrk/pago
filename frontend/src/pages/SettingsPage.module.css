@@ -178,3 +178,45 @@
     max-width: none;
   }
 }
+
+/* Card that links to another page (Recurring) */
+.cardLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--r-card);
+}
+.cardLink:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+@media (hover: hover) {
+  .cardLink:hover .linkCard {
+    border-color: var(--border-strong);
+  }
+  .cardLink:hover .linkMeta {
+    color: var(--brand);
+  }
+}
+.linkHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.linkMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+}
+.countPill {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: var(--r-pill);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}

@@ -9,6 +9,7 @@ import { Field } from "../components/Field";
 import { Segmented, type SegmentedOption } from "../components/Segmented";
 import { Select } from "../components/Select";
 import { Callout } from "../components/Callout";
+import { Toggle } from "../components/Toggle";
 import { useToast } from "../components/Toast";
 import { useUser, useSessionGuard } from "../auth/AuthContext";
 import { useIsMobile } from "../lib/useMediaQuery";
@@ -21,6 +22,7 @@ import { currencySymbol, formatDayShort, formatMoney, isoDate, parseAmount, toLo
 import { categoriesFor, categoryLabel } from "../lib/categories";
 import { readClonePrefill, type ClonePrefill } from "../lib/clone";
 import { returnPath } from "../lib/returnPath";
+import { dayFromDate, formatDue, fromTransaction, monthName, ordinal, todayUTC } from "../lib/recurring";
 
 // The message input has a stable id so the "+" button in the shell can focus it.
 export const ADD_TEXT_INPUT_ID = "add-text";
@@ -49,6 +51,17 @@ function dupKeyOf(f: FormState): string {
 
 function isValidDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(toLocalDate(value).getTime());
+}
+
+// repeatHint explains what "Repeat monthly" will do for the chosen date,
+// using the same rule as the server.
+function repeatHint(date: string): string {
+  const today = todayUTC();
+  const day = dayFromDate(date);
+  const { link, next } = fromTransaction(date, today, day);
+  const when = Number(date.slice(8, 10)) > day ? `${ordinal(day)} (every month has it)` : ordinal(day);
+  const start = link ? `This one counts for ${monthName(date)}. Next on ${formatDue(next, today)}.` : `First one on ${formatDue(next, today)}.`;
+  return `Adds it on the ${when} of each month. ${start}`;
 }
 
 const TYPE_OPTIONS: SegmentedOption<TransactionType>[] = [
@@ -85,6 +98,7 @@ export function AddTransactionPage() {
   const [cloned, setCloned] = useState(clone !== null);
   const [amountError, setAmountError] = useState<string | null>(null);
   const [duplicates, setDuplicates] = useState<TransactionDTO[]>([]);
+  const [repeatMonthly, setRepeatMonthly] = useState(false);
 
   const parseAbortRef = useRef<AbortController | null>(null);
   const autoParsedRef = useRef(false);
@@ -96,6 +110,7 @@ export function AddTransactionPage() {
   function resetForm() {
     parseAbortRef.current?.abort();
     setForm(emptyForm());
+    setRepeatMonthly(false);
     setDuplicates([]);
     setAmountError(null);
     setParsed(false);
@@ -181,11 +196,20 @@ export function AddTransactionPage() {
       return;
     }
     if (!form.category || !isValidDate(form.date)) return;
+    const description = form.description.trim();
+    if (repeatMonthly && !description) {
+      toast("Add a description to repeat this monthly", "error");
+      return;
+    }
     setAmountError(null);
     setSaving(true);
     try {
-      await transactions.create({ type: form.type, category: form.category, amount: amt, description: form.description.trim(), date: form.date });
-      toast("Transaction saved", "success");
+      const res = await transactions.create({ type: form.type, category: form.category, amount: amt, description, date: form.date, repeatMonthly: repeatMonthly || undefined });
+      if (res.recurring) {
+        toast(`Saved. Repeats on the ${ordinal(res.recurring.dayOfMonth)}, next on ${formatDue(res.recurring.nextDueDate, todayUTC())}.`, "success");
+      } else {
+        toast("Transaction saved", "success");
+      }
       resetForm();
       setInputText("");
     } catch (err) {
@@ -270,6 +294,10 @@ export function AddTransactionPage() {
           onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
         />
       </Field>
+      <div className={styles.repeatRow}>
+        <Toggle id="add-repeat" label="Repeat monthly" checked={repeatMonthly} disabled={busy} onChange={setRepeatMonthly} />
+        {repeatMonthly && isValidDate(form.date) && <div className={styles.repeatHint}>{repeatHint(form.date)}</div>}
+      </div>
     </div>
   );
 
