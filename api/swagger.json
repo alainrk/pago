@@ -585,6 +585,238 @@
                 }
             }
         },
+        "/api/recurring": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Monthly rules, sorted by day of month, with monthly totals per type.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "List recurring transactions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.RecurringListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/recurring/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The first transaction is added on the first matching day strictly after today. With sourceTransactionId, a source transaction in the current month or later counts as that month's payment and the rule starts the month after.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "Create recurring transaction",
+                "parameters": [
+                    {
+                        "description": "Rule",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/web.CreateRecurringRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.RecurringDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/recurring/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Stops future transactions. Past transactions are kept and lose their link to the rule.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "Delete recurring transaction",
+                "parameters": [
+                    {
+                        "description": "Rule ID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/web.DeleteRecurringRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/recurring/edit": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Changes apply to future transactions only. A new day moves the next date inside the month still owed, so a month is never skipped or doubled.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "Edit recurring transaction",
+                "parameters": [
+                    {
+                        "description": "Rule",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/web.EditRecurringRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.RecurringDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/stats": {
             "get": {
                 "security": [
@@ -749,6 +981,7 @@
                         "BearerAuth": []
                     }
                 ],
+                "description": "With repeatMonthly, a monthly recurring rule is created from the transaction in the same database transaction.",
                 "consumes": [
                     "application/json"
                 ],
@@ -774,7 +1007,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/web.MessageResponse"
+                            "$ref": "#/definitions/web.CreateTransactionResponse"
                         }
                     },
                     "400": {
@@ -1313,6 +1546,35 @@
                 }
             }
         },
+        "web.CreateRecurringRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 900
+                },
+                "category": {
+                    "type": "string",
+                    "example": "House"
+                },
+                "dayOfMonth": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rent"
+                },
+                "sourceTransactionId": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "type": {
+                    "type": "string",
+                    "example": "Expense"
+                }
+            }
+        },
         "web.CreateTransactionRequest": {
             "type": "object",
             "properties": {
@@ -1332,9 +1594,34 @@
                     "type": "string",
                     "example": "lunch"
                 },
+                "repeatMonthly": {
+                    "description": "RepeatMonthly also creates a monthly recurring rule from this transaction.",
+                    "type": "boolean",
+                    "example": false
+                },
                 "type": {
                     "type": "string",
                     "example": "Expense"
+                }
+            }
+        },
+        "web.CreateTransactionResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "recurring": {
+                    "$ref": "#/definitions/web.RecurringDTO"
+                }
+            }
+        },
+        "web.DeleteRecurringRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -1371,6 +1658,35 @@
                     "items": {
                         "$ref": "#/definitions/web.TransactionDTO"
                     }
+                }
+            }
+        },
+        "web.EditRecurringRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 950
+                },
+                "category": {
+                    "type": "string",
+                    "example": "House"
+                },
+                "dayOfMonth": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rent"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "type": {
+                    "type": "string",
+                    "example": "Expense"
                 }
             }
         },
@@ -1517,6 +1833,63 @@
                 }
             }
         },
+        "web.RecurringDTO": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 900
+                },
+                "category": {
+                    "type": "string",
+                    "example": "House"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "EUR"
+                },
+                "dayOfMonth": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rent"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "nextDueDate": {
+                    "description": "NextDueDate is the next date this rule adds a transaction (YYYY-MM-DD, UTC).",
+                    "type": "string",
+                    "example": "2026-11-05"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "Expense"
+                }
+            }
+        },
+        "web.RecurringListResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "recurring": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.RecurringDTO"
+                    }
+                },
+                "totalExpense": {
+                    "type": "number"
+                },
+                "totalIncome": {
+                    "type": "number"
+                }
+            }
+        },
         "web.SearchTransactionsRequest": {
             "type": "object",
             "properties": {
@@ -1611,6 +1984,10 @@
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "recurringId": {
+                    "description": "RecurringID is the rule that added this transaction, if any.",
                     "type": "integer"
                 },
                 "type": {

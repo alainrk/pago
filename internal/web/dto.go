@@ -20,6 +20,8 @@ type TransactionDTO struct {
 	Description string    `json:"description"`
 	Amount      float64   `json:"amount"`
 	Type        string    `json:"type"`
+	// RecurringID is the rule that added this transaction, if any.
+	RecurringID *int64 `json:"recurringId"`
 }
 
 // TransactionsResponse is the body of GET /api/transactions.
@@ -40,6 +42,15 @@ type CreateTransactionRequest struct {
 	Amount      float64 `json:"amount"      example:"12.50"`
 	Description string  `json:"description" example:"lunch"`
 	Date        string  `json:"date"        example:"2026-05-21"`
+	// RepeatMonthly also creates a monthly recurring rule from this transaction.
+	RepeatMonthly bool `json:"repeatMonthly,omitempty" example:"false"`
+}
+
+// CreateTransactionResponse is the body of POST /api/transactions/create.
+// Recurring is set when RepeatMonthly created a rule.
+type CreateTransactionResponse struct {
+	Message   string        `json:"message"`
+	Recurring *RecurringDTO `json:"recurring,omitempty"`
 }
 
 // DeleteTransactionRequest is the body of DELETE /api/transactions/delete.
@@ -180,4 +191,53 @@ type YearCategoriesResponse struct {
 	Year       int                 `json:"year"`
 	Type       string              `json:"type"`
 	Categories []CategoryYearEntry `json:"categories"`
+}
+
+// RecurringDTO is the JSON shape of a monthly recurring rule.
+type RecurringDTO struct {
+	ID          int64   `json:"id"`
+	Type        string  `json:"type"        example:"Expense"`
+	Category    string  `json:"category"    example:"House"`
+	Amount      float64 `json:"amount"      example:"900"`
+	Currency    string  `json:"currency"    example:"EUR"`
+	Description string  `json:"description" example:"Rent"`
+	DayOfMonth  int     `json:"dayOfMonth"  example:"5"`
+	// NextDueDate is the next date this rule adds a transaction (YYYY-MM-DD, UTC).
+	NextDueDate string `json:"nextDueDate" example:"2026-11-05"`
+}
+
+// RecurringListResponse is the body of GET /api/recurring.
+type RecurringListResponse struct {
+	Recurring    []RecurringDTO `json:"recurring"`
+	Count        int            `json:"count"`
+	TotalExpense float64        `json:"totalExpense"`
+	TotalIncome  float64        `json:"totalIncome"`
+}
+
+// CreateRecurringRequest is the body of POST /api/recurring/create.
+// SourceTransactionID is set by "Make recurring": when that transaction is in
+// the current month or later, it is linked as that month's payment.
+type CreateRecurringRequest struct {
+	Type                string  `json:"type"                          example:"Expense"`
+	Category            string  `json:"category"                      example:"House"`
+	Amount              float64 `json:"amount"                        example:"900"`
+	Description         string  `json:"description"                   example:"Rent"`
+	DayOfMonth          int     `json:"dayOfMonth"                    example:"5"`
+	SourceTransactionID *int64  `json:"sourceTransactionId,omitempty" example:"42"`
+}
+
+// EditRecurringRequest is the body of PATCH /api/recurring/edit. All fields
+// are replaced. Changing the day only moves the date inside the month still owed.
+type EditRecurringRequest struct {
+	ID          int64   `json:"id"          example:"1"`
+	Type        string  `json:"type"        example:"Expense"`
+	Category    string  `json:"category"    example:"House"`
+	Amount      float64 `json:"amount"      example:"950"`
+	Description string  `json:"description" example:"Rent"`
+	DayOfMonth  int     `json:"dayOfMonth"  example:"5"`
+}
+
+// DeleteRecurringRequest is the body of DELETE /api/recurring/delete.
+type DeleteRecurringRequest struct {
+	ID int64 `json:"id" example:"1"`
 }

@@ -77,6 +77,18 @@ func (s *Scheduler) Start() {
 		s.logger.Errorf("Failed to schedule monthly reminders: %v", err)
 	}
 
+	// Apply recurring transactions. Runs right away at startup, then every
+	// hour, so a missed hour or day is picked up by the next run.
+	// SingletonMode keeps a slow catch-up from overlapping the next run.
+	_, err = s.scheduler.Every(RECURRING_PROCESSING_MIN).Minute().SingletonMode().Do(func() {
+		if err := s.processRecurring(); err != nil {
+			s.logger.Errorf("Failed to process recurring transactions: %v", err)
+		}
+	})
+	if err != nil {
+		s.logger.Errorf("Failed to schedule recurring transactions: %v", err)
+	}
+
 	// Start the scheduler
 	s.scheduler.StartAsync()
 	s.logger.Info("Scheduler started successfully")

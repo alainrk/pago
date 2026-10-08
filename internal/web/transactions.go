@@ -24,6 +24,7 @@ func toTransactionDTO(tx model.Transaction) TransactionDTO {
 		Description: tx.Description,
 		Amount:      tx.Amount,
 		Type:        string(tx.Type),
+		RecurringID: tx.RecurringID,
 	}
 }
 

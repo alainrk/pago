@@ -23,6 +23,7 @@ type Repositories struct {
 	Auth         repository.Auth
 	WebAuthn     *repository.WebAuthn
 	Budgets      repository.Budgets
+	Recurring    repository.Recurring
 }
 
 type Server struct {

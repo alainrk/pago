@@ -128,8 +128,12 @@ type Transaction struct {
 	Amount      float64             `gorm:"column:amount;not null;type:decimal(15,2)"`
 	Currency    CurrencyType        `gorm:"column:currency;not null;type:currency_type;default:'EUR'"`
 	Description string              `gorm:"column:description;type:text"`
-	CreatedAt   time.Time           `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt   time.Time           `gorm:"column:updated_at;autoUpdateTime"`
+	// Set when a recurring rule added this transaction. RecurringPeriod is
+	// the month it pays for ("2006-01").
+	RecurringID     *int64    `gorm:"column:recurring_id"`
+	RecurringPeriod *string   `gorm:"column:recurring_period;type:char(7)"`
+	CreatedAt       time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt       time.Time `gorm:"column:updated_at;autoUpdateTime"`
 
 	// Association to User (optional)
 	User *User `gorm:"foreignKey:TgID;references:TgID"`

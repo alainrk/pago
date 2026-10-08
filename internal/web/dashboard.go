@@ -160,14 +160,7 @@ func (s *Server) handleAPITransactions(w http.ResponseWriter, r *http.Request) {
 
 	transactionResponses := make([]TransactionDTO, len(transactions))
 	for i, tx := range transactions {
-		transactionResponses[i] = TransactionDTO{
-			ID:          tx.ID,
-			Date:        tx.Date,
-			Category:    string(tx.Category),
-			Description: tx.Description,
-			Amount:      tx.Amount,
-			Type:        string(tx.Type),
-		}
+		transactionResponses[i] = toTransactionDTO(tx)
 	}
 
 	s.sendJSONSuccess(w, TransactionsResponse{
@@ -216,8 +209,9 @@ func (s *Server) handleAPICategories(w http.ResponseWriter, r *http.Request) {
 //	@Tags			transactions
 //	@Accept			json
 //	@Produce		json
+//	@Description	With repeatMonthly, a monthly recurring rule is created from the transaction in the same database transaction.
 //	@Param			body	body		CreateTransactionRequest	true	"Transaction payload"
-//	@Success		200		{object}	MessageResponse
+//	@Success		200		{object}	CreateTransactionResponse
 //	@Failure		400		{object}	ErrorResponse
 //	@Failure		401		{object}	ErrorResponse
 //	@Failure		500		{object}	ErrorResponse
@@ -278,6 +272,11 @@ func (s *Server) handleAPICreateTransaction(w http.ResponseWriter, r *http.Reque
 		Currency:    model.CurrencyEUR, // Default to EUR
 	}
 
+	if req.RepeatMonthly {
+		s.createTransactionWithRecurring(w, &transaction)
+		return
+	}
+
 	err = s.repositories.Transactions.Add(&transaction)
 	if err != nil {
 		s.logger.Errorf("Failed to create transaction: %v", err)
@@ -285,7 +284,7 @@ func (s *Server) handleAPICreateTransaction(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	s.sendJSONSuccess(w, MessageResponse{Message: "Transaction created successfully"})
+	s.sendJSONSuccess(w, CreateTransactionResponse{Message: "Transaction created successfully"})
 }
 
 // handleAPIDeleteTransaction deletes a transaction by ID.

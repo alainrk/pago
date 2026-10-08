@@ -68,6 +68,27 @@ definitions:
         example: 42
         type: integer
     type: object
+  web.CreateRecurringRequest:
+    properties:
+      amount:
+        example: 900
+        type: number
+      category:
+        example: House
+        type: string
+      dayOfMonth:
+        example: 5
+        type: integer
+      description:
+        example: Rent
+        type: string
+      sourceTransactionId:
+        example: 42
+        type: integer
+      type:
+        example: Expense
+        type: string
+    type: object
   web.CreateTransactionRequest:
     properties:
       amount:
@@ -82,9 +103,27 @@ definitions:
       description:
         example: lunch
         type: string
+      repeatMonthly:
+        description: RepeatMonthly also creates a monthly recurring rule from this
+          transaction.
+        example: false
+        type: boolean
       type:
         example: Expense
         type: string
+    type: object
+  web.CreateTransactionResponse:
+    properties:
+      message:
+        type: string
+      recurring:
+        $ref: '#/definitions/web.RecurringDTO'
+    type: object
+  web.DeleteRecurringRequest:
+    properties:
+      id:
+        example: 1
+        type: integer
     type: object
   web.DeleteTransactionRequest:
     properties:
@@ -109,6 +148,27 @@ definitions:
         items:
           $ref: '#/definitions/web.TransactionDTO'
         type: array
+    type: object
+  web.EditRecurringRequest:
+    properties:
+      amount:
+        example: 950
+        type: number
+      category:
+        example: House
+        type: string
+      dayOfMonth:
+        example: 5
+        type: integer
+      description:
+        example: Rent
+        type: string
+      id:
+        example: 1
+        type: integer
+      type:
+        example: Expense
+        type: string
     type: object
   web.EditTransactionRequest:
     properties:
@@ -207,6 +267,47 @@ definitions:
         example: Expense
         type: string
     type: object
+  web.RecurringDTO:
+    properties:
+      amount:
+        example: 900
+        type: number
+      category:
+        example: House
+        type: string
+      currency:
+        example: EUR
+        type: string
+      dayOfMonth:
+        example: 5
+        type: integer
+      description:
+        example: Rent
+        type: string
+      id:
+        type: integer
+      nextDueDate:
+        description: NextDueDate is the next date this rule adds a transaction (YYYY-MM-DD,
+          UTC).
+        example: "2026-11-05"
+        type: string
+      type:
+        example: Expense
+        type: string
+    type: object
+  web.RecurringListResponse:
+    properties:
+      count:
+        type: integer
+      recurring:
+        items:
+          $ref: '#/definitions/web.RecurringDTO'
+        type: array
+      totalExpense:
+        type: number
+      totalIncome:
+        type: number
+    type: object
   web.SearchTransactionsRequest:
     properties:
       amountMax:
@@ -272,6 +373,9 @@ definitions:
       description:
         type: string
       id:
+        type: integer
+      recurringId:
+        description: RecurringID is the rule that added this transaction, if any.
         type: integer
       type:
         type: string
@@ -706,6 +810,159 @@ paths:
       summary: Current user
       tags:
       - account
+  /api/recurring:
+    get:
+      description: Monthly rules, sorted by day of month, with monthly totals per
+        type.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.RecurringListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List recurring transactions
+      tags:
+      - recurring
+  /api/recurring/create:
+    post:
+      consumes:
+      - application/json
+      description: The first transaction is added on the first matching day strictly
+        after today. With sourceTransactionId, a source transaction in the current
+        month or later counts as that month's payment and the rule starts the month
+        after.
+      parameters:
+      - description: Rule
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/web.CreateRecurringRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.RecurringDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create recurring transaction
+      tags:
+      - recurring
+  /api/recurring/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Stops future transactions. Past transactions are kept and lose
+        their link to the rule.
+      parameters:
+      - description: Rule ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/web.DeleteRecurringRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete recurring transaction
+      tags:
+      - recurring
+  /api/recurring/edit:
+    patch:
+      consumes:
+      - application/json
+      description: Changes apply to future transactions only. A new day moves the
+        next date inside the month still owed, so a month is never skipped or doubled.
+      parameters:
+      - description: Rule
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/web.EditRecurringRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.RecurringDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Edit recurring transaction
+      tags:
+      - recurring
   /api/stats:
     get:
       parameters:
@@ -809,6 +1066,8 @@ paths:
     post:
       consumes:
       - application/json
+      description: With repeatMonthly, a monthly recurring rule is created from the
+        transaction in the same database transaction.
       parameters:
       - description: Transaction payload
         in: body
@@ -822,7 +1081,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/web.MessageResponse'
+            $ref: '#/definitions/web.CreateTransactionResponse'
         "400":
           description: Bad Request
           schema:

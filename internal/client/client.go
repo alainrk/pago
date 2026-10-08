@@ -32,6 +32,7 @@ type Repositories struct {
 	Transactions repository.Transactions
 	Reminders    repository.Reminders
 	Budgets      repository.Budgets
+	Recurring    repository.Recurring
 }
 
 func NewClient(logger *logrus.Logger, db *db.DB, llm ai.LLM) *Client {
@@ -63,6 +64,7 @@ func NewClient(logger *logrus.Logger, db *db.DB, llm ai.LLM) *Client {
 			Transactions: repository.Transactions{Repository: repo},
 			Reminders:    repository.Reminders{Repository: repo},
 			Budgets:      repository.Budgets{Repository: repo},
+			Recurring:    repository.Recurring{Repository: repo},
 		},
 		LLM: llm,
 	}
