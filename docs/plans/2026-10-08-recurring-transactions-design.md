@@ -88,8 +88,11 @@ Steps:
    months already done.
 4. After each commit, for expenses dated in the current month, call the
    budget check (`EvaluateAfterExpenseInsert`) and send any alert, like
-   the bot does today. Catch-up rows for past months do not trigger
-   alerts, so a long outage does not cause a burst of stale messages.
+   the bot does today. A message is sent only when this transaction
+   crossed 80% or 100% (the bot's "still over budget" line is not
+   repeated as a standalone message). Catch-up rows for past months do
+   not trigger alerts, so a long outage does not cause a burst of
+   stale messages.
    An alert error is logged and never undoes the insert.
 5. An error on one rule is logged with the rule id and the job moves
    on to the next rule. The next hourly run tries again.
@@ -128,7 +131,8 @@ All in one small pure Go package so they are easy to test, mirrored in
 - **Editing the day**: only the day changes, inside the month still
   owed: `next_due_date = (year, month of next_due_date, new day)`.
   Due Oct 20, today Oct 8, day set to 5: Oct 5, applied by the next
-  run. A month is never skipped or doubled.
+  run (within the hour, the form says so). A month is never skipped
+  or doubled.
 - **Editing other fields** (amount, category, description, type) only
   affects future transactions.
 - **From a transaction** ("Repeat monthly" and "Make recurring"):
@@ -190,8 +194,10 @@ a confirm dialog: "Past transactions are kept."
 ### Ways to create
 
 1. "Add recurring" on the page: empty sheet.
-2. "Make recurring" next to Clone, in the right-click menu and on
-   swipe: the sheet, prefilled from the transaction.
+2. "Make recurring" next to Clone in the right-click menu, and as a
+   button in the phone edit sheet (swipe keeps its single Clone
+   action): the sheet, prefilled from the transaction. On a
+   transaction already added by a rule, it reads "Edit recurring".
 3. "Repeat monthly" toggle on the Add transaction page, under the
    date. Hint when on: "Repeats on the 5th each month" (or "on the
    28th" for days 29 to 31). Works the same after an LLM parse. The
