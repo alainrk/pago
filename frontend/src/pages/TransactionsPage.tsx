@@ -453,6 +453,15 @@ export function TransactionsPage() {
                             {formatSigned(tx.amount, tx.type, user.currency, hidden)}
                           </div>
                           <div className={styles.actions}>
+                            <button
+                              type="button"
+                              className={styles.iconBtn}
+                              aria-label={tx.recurringId != null ? "Edit recurring" : "Make recurring"}
+                              title={tx.recurringId != null ? "Edit recurring" : "Make recurring"}
+                              onClick={() => (tx.recurringId != null ? openRecurring(tx.recurringId) : makeRecurring(tx))}
+                            >
+                              <Icon name="repeat" size={14} />
+                            </button>
                             <button type="button" className={styles.iconBtn} aria-label="Edit transaction" onClick={() => startEdit(tx)}>
                               <Icon name="pencil" size={14} />
                             </button>

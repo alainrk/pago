@@ -48,7 +48,7 @@
 .headerRow,
 .row {
   display: grid;
-  grid-template-columns: 88px 1fr 170px 130px 76px;
+  grid-template-columns: 88px 1fr 170px 130px 96px;
   gap: 12px;
   align-items: center;
   padding: 8px 20px;
