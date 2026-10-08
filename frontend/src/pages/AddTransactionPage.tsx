@@ -205,7 +205,10 @@ export function AddTransactionPage() {
     setSaving(true);
     try {
       const res = await transactions.create({ type: form.type, category: form.category, amount: amt, description, date: form.date, repeatMonthly: repeatMonthly || undefined });
-      if (res.recurring) {
+      if (repeatMonthly && !res.recurring) {
+        // An older server ignores repeatMonthly and only saves the transaction.
+        toast("Transaction saved, but it was not set to repeat. The server may need updating.", "error");
+      } else if (res.recurring) {
         toast(`Saved. Repeats on the ${ordinal(res.recurring.dayOfMonth)}, next on ${formatDue(res.recurring.nextDueDate, todayUTC())}.`, "success");
       } else {
         toast("Transaction saved", "success");

@@ -67,7 +67,13 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
     throw new ApiError(res.status, await readError(res));
   }
   if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  try {
+    return (await res.json()) as T;
+  } catch {
+    // An HTML page instead of JSON usually means the server does not know
+    // this endpoint yet (the app is newer than the server).
+    throw new ApiError(res.status, "The server sent an unexpected reply. It may need updating.");
+  }
 }
 
 // requestBlob fetches a file (used by the CSV export) with cookies attached.
