@@ -1,30 +1,28 @@
 # pago Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-03
-
 ## Active Technologies
 
-- Go 1.26 + gotgbot/v2 (Telegram bot framework), GORM (ORM), OpenAI-compatible LLM (001-duplicate-transaction)
+- Go 1.26 + gotgbot/v2 (Telegram bot framework), GORM with PostgreSQL, OpenAI-compatible LLM (internal/ai)
+- Frontend: React + Vite + TypeScript (frontend/)
 
 ## Project Structure
 
 ```text
-backend/
-frontend/
-tests/
+cmd/server/   Telegram bot entry point
+cmd/web/      web server entry point
+cmd/          also email, migrate, seed
+internal/     app code (ai, db, model, repository, scheduler, server, web, ...)
+frontend/     React app
+specs/        feature specs (001-003)
 ```
 
 ## Commands
 
-# Add commands for Go 1.26
+- `make test` runs lint, then tests with -race
+- `make lint` runs golangci-lint
+- `make build` / `make build-web` build the bot / web server
+- `make run` / `make run-web` build and run them
 
 ## Code Style
 
-Go 1.26: Follow standard conventions
-
-## Recent Changes
-
-- 001-duplicate-transaction: Added Go 1.26 + gotgbot/v2 (Telegram bot framework), GORM (ORM), OpenAI-compatible LLM
-
-<!-- MANUAL ADDITIONS START -->
-<!-- MANUAL ADDITIONS END -->
+Code must pass `make lint` (config in golangci.yml).
