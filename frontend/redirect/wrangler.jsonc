@@ -1,0 +1,11 @@
+// Redirect Worker for the old pago address (see redirect/worker.js).
+// Deploy from this folder with `npx wrangler deploy`.
+{
+  "name": "pago-old-redirect",
+  "main": "worker.js",
+  "compatibility_date": "2026-08-22",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "pago.alaindichiappari.dev", "custom_domain": true }
+  ]
+}

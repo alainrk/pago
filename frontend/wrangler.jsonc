@@ -11,9 +11,9 @@
     "directory": "./dist",
     "not_found_handling": "single-page-application"
   },
-  // The old address stays here until it becomes a redirect.
+  // The old address, pago.alaindichiappari.dev, belongs to the redirect
+  // Worker in redirect/.
   "routes": [
-    { "pattern": "pago.faccio.app", "custom_domain": true },
-    { "pattern": "pago.alaindichiappari.dev", "custom_domain": true }
+    { "pattern": "pago.faccio.app", "custom_domain": true }
   ]
 }
