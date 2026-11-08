@@ -6,6 +6,7 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -36,6 +37,15 @@ const maxCredentialsPerUser = 10
 
 type WebAuthn struct {
 	Repository
+	// parties holds one WebAuthn setup per frontend origin. The first one is
+	// the default, used when a request comes from an origin not in the list.
+	parties []relyingParty
+}
+
+// relyingParty is one RP ID and the frontend origin that uses it.
+type relyingParty struct {
+	id       string
+	origin   string
 	webAuthn *webauthn.WebAuthn
 }
 
@@ -45,25 +55,104 @@ type WebAuthn struct {
 //   - WEBAUTHN_RP_ID: Relying Party ID (e.g., "example.com")
 //   - WEBAUTHN_RP_ORIGIN: Relying Party origin (e.g., "https://example.com")
 //
+// Both accept a comma separated list, paired by position, so one server can
+// serve passkeys for more than one frontend domain (for example while the app
+// moves to a new domain). The first pair is the default. Example:
+//
+//	WEBAUTHN_RP_ID="app.new.example,app.old.example"
+//	WEBAUTHN_RP_ORIGIN="https://app.new.example,https://app.old.example"
+//
 // Configuration details:
 //   - Timeouts: 60 seconds for both registration and login (enforced)
 //   - Attestation: PreferNoAttestation (standard for passkeys, no attestation verification)
 //   - User Verification: Required (biometric or PIN)
 //   - Resident Keys: Preferred (enables discoverable credentials)
 func NewWebAuthn(repo Repository) (*WebAuthn, error) {
-	rpID := os.Getenv("WEBAUTHN_RP_ID")
-	if rpID == "" {
+	rawIDs := os.Getenv("WEBAUTHN_RP_ID")
+	if strings.TrimSpace(rawIDs) == "" {
 		return nil, errors.New("WEBAUTHN_RP_ID environment variable is required")
 	}
 
-	rpOrigin := os.Getenv("WEBAUTHN_RP_ORIGIN")
-	if rpOrigin == "" {
+	rawOrigins := os.Getenv("WEBAUTHN_RP_ORIGIN")
+	if strings.TrimSpace(rawOrigins) == "" {
 		return nil, errors.New("WEBAUTHN_RP_ORIGIN environment variable is required")
 	}
 
+	pairs, err := parseRelyingParties(rawIDs, rawOrigins)
+	if err != nil {
+		return nil, err
+	}
+
+	parties := make([]relyingParty, 0, len(pairs))
+	for _, p := range pairs {
+		instance, err := newWebAuthnInstance(p.id, p.origin)
+		if err != nil {
+			return nil, fmt.Errorf("webauthn config for %s: %w", p.id, err)
+		}
+		p.webAuthn = instance
+		parties = append(parties, p)
+	}
+
+	return &WebAuthn{
+		Repository: repo,
+		parties:    parties,
+	}, nil
+}
+
+// parseRelyingParties pairs the comma separated RP IDs and origins by
+// position. Both lists must have the same length and no empty entries.
+func parseRelyingParties(rawIDs, rawOrigins string) ([]relyingParty, error) {
+	ids := splitList(rawIDs)
+	origins := splitList(rawOrigins)
+	if len(ids) == 0 || len(origins) == 0 {
+		return nil, errors.New("WEBAUTHN_RP_ID and WEBAUTHN_RP_ORIGIN must not be empty")
+	}
+	if len(ids) != len(origins) {
+		return nil, fmt.Errorf("WEBAUTHN_RP_ID has %d entries but WEBAUTHN_RP_ORIGIN has %d, they must match", len(ids), len(origins))
+	}
+	parties := make([]relyingParty, len(ids))
+	for i := range ids {
+		if ids[i] == "" || origins[i] == "" {
+			return nil, errors.New("WEBAUTHN_RP_ID and WEBAUTHN_RP_ORIGIN must not have empty entries")
+		}
+		parties[i] = relyingParty{id: ids[i], origin: normalizeOrigin(origins[i])}
+	}
+	return parties, nil
+}
+
+func splitList(raw string) []string {
+	parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		out = append(out, strings.TrimSpace(p))
+	}
+	if len(out) == 1 && out[0] == "" {
+		return nil
+	}
+	return out
+}
+
+func normalizeOrigin(origin string) string {
+	return strings.TrimRight(strings.TrimSpace(origin), "/")
+}
+
+// partyFor returns the setup for the frontend origin of the request (the
+// Origin header). Unknown or empty origins get the default, and the library
+// then rejects the ceremony because the origin does not match.
+func (r *WebAuthn) partyFor(origin string) *relyingParty {
+	origin = strings.ToLower(normalizeOrigin(origin))
+	for i := range r.parties {
+		if strings.ToLower(r.parties[i].origin) == origin {
+			return &r.parties[i]
+		}
+	}
+	return &r.parties[0]
+}
+
+func newWebAuthnInstance(rpID, rpOrigin string) (*webauthn.WebAuthn, error) {
 	wconfig := &webauthn.Config{
 		RPID:          rpID,               // Domain for passkey (e.g., "example.com")
-		RPDisplayName: "Pago",          // Display name shown to users
+		RPDisplayName: "Pago",             // Display name shown to users
 		RPOrigins:     []string{rpOrigin}, // Allowed origins (must match exactly)
 		Timeouts: webauthn.TimeoutsConfig{
 			Login: webauthn.TimeoutConfig{
@@ -88,19 +177,11 @@ func NewWebAuthn(repo Repository) (*WebAuthn, error) {
 		},
 	}
 
-	webAuthnInstance, err := webauthn.New(wconfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return &WebAuthn{
-		Repository: repo,
-		webAuthn:   webAuthnInstance,
-	}, nil
+	return webauthn.New(wconfig)
 }
 
 // BeginRegistration starts passkey registration ceremony
-func (r *WebAuthn) BeginRegistration(user *model.User) (*protocol.CredentialCreation, string, error) {
+func (r *WebAuthn) BeginRegistration(origin string, user *model.User) (*protocol.CredentialCreation, string, error) {
 	// Generate session ID
 	sessionID, err := generateSessionID()
 	if err != nil {
@@ -108,7 +189,7 @@ func (r *WebAuthn) BeginRegistration(user *model.User) (*protocol.CredentialCrea
 	}
 
 	// Start registration
-	creation, sessionData, err := r.webAuthn.BeginRegistration(user)
+	creation, sessionData, err := r.partyFor(origin).webAuthn.BeginRegistration(user)
 	if err != nil {
 		return nil, "", err
 	}
@@ -131,7 +212,7 @@ func (r *WebAuthn) BeginRegistration(user *model.User) (*protocol.CredentialCrea
 }
 
 // FinishRegistration completes passkey registration
-func (r *WebAuthn) FinishRegistration(user *model.User, sessionID string, credentialName *string, response *http.Request) error {
+func (r *WebAuthn) FinishRegistration(origin string, user *model.User, sessionID string, credentialName *string, response *http.Request) error {
 	// SECURITY: Get session and delete it IMMEDIATELY to prevent replay attacks.
 	// This ensures the session is single-use, even if validation fails later.
 	// An attacker cannot retry with a different credential using the same challenge.
@@ -182,7 +263,8 @@ func (r *WebAuthn) FinishRegistration(user *model.User, sessionID string, creden
 	}
 
 	// Verify the origin
-	rpOrigin := os.Getenv("WEBAUTHN_RP_ORIGIN")
+	party := r.partyFor(origin)
+	rpOrigin := party.origin
 	if parsedResponse.Response.CollectedClientData.Origin != rpOrigin {
 		r.Logger.Warnf("Registration origin mismatch for user %d: expected %s, got %s",
 			user.TgID, rpOrigin, parsedResponse.Response.CollectedClientData.Origin)
@@ -196,8 +278,7 @@ func (r *WebAuthn) FinishRegistration(user *model.User, sessionID string, creden
 	}
 
 	// Verify RP ID hash
-	rpID := os.Getenv("WEBAUTHN_RP_ID")
-	rpIDHash := sha256.Sum256([]byte(rpID))
+	rpIDHash := sha256.Sum256([]byte(party.id))
 	if !bytes.Equal(parsedResponse.Response.AttestationObject.AuthData.RPIDHash, rpIDHash[:]) {
 		r.Logger.Warnf("Registration RP ID hash mismatch for user %d", user.TgID)
 		return errors.New("RP ID hash mismatch")
@@ -326,7 +407,7 @@ func (r *WebAuthn) FinishRegistration(user *model.User, sessionID string, creden
 }
 
 // BeginLogin starts passkey authentication ceremony
-func (r *WebAuthn) BeginLogin(user *model.User) (*protocol.CredentialAssertion, string, error) {
+func (r *WebAuthn) BeginLogin(origin string, user *model.User) (*protocol.CredentialAssertion, string, error) {
 	// Check user has credentials
 	if len(user.WebAuthnCredentials()) == 0 {
 		return nil, "", ErrNoCredentials
@@ -339,7 +420,7 @@ func (r *WebAuthn) BeginLogin(user *model.User) (*protocol.CredentialAssertion, 
 	}
 
 	// Start login
-	assertion, sessionData, err := r.webAuthn.BeginLogin(user)
+	assertion, sessionData, err := r.partyFor(origin).webAuthn.BeginLogin(user)
 	if err != nil {
 		return nil, "", err
 	}
@@ -362,7 +443,7 @@ func (r *WebAuthn) BeginLogin(user *model.User) (*protocol.CredentialAssertion, 
 }
 
 // FinishLogin completes passkey authentication
-func (r *WebAuthn) FinishLogin(user *model.User, sessionID string, response *http.Request) (*model.WebAuthnCredential, error) {
+func (r *WebAuthn) FinishLogin(origin string, user *model.User, sessionID string, response *http.Request) (*model.WebAuthnCredential, error) {
 	// SECURITY: Get session and delete it IMMEDIATELY to prevent replay attacks.
 	// This ensures the session is single-use, even if validation fails later.
 	session, err := r.DB.GetWebAuthnSession(sessionID)
@@ -400,7 +481,7 @@ func (r *WebAuthn) FinishLogin(user *model.User, sessionID string, response *htt
 	}
 
 	// Parse and validate assertion
-	credential, err := r.webAuthn.FinishLogin(user, sessionData, response)
+	credential, err := r.partyFor(origin).webAuthn.FinishLogin(user, sessionData, response)
 	if err != nil {
 		r.Logger.Warnf("Authentication failed for user %d: %v", user.TgID, err)
 		return nil, err
@@ -412,13 +493,13 @@ func (r *WebAuthn) FinishLogin(user *model.User, sessionID string, response *htt
 // BeginDiscoverableLogin starts a usernameless passkey ceremony. The browser
 // picks a credential for our RP ID and we learn who the user is when the
 // assertion comes back. The session is stored with TgID 0 until then.
-func (r *WebAuthn) BeginDiscoverableLogin() (*protocol.CredentialAssertion, string, error) {
+func (r *WebAuthn) BeginDiscoverableLogin(origin string) (*protocol.CredentialAssertion, string, error) {
 	sessionID, err := generateSessionID()
 	if err != nil {
 		return nil, "", err
 	}
 
-	assertion, sessionData, err := r.webAuthn.BeginDiscoverableLogin()
+	assertion, sessionData, err := r.partyFor(origin).webAuthn.BeginDiscoverableLogin()
 	if err != nil {
 		return nil, "", err
 	}
@@ -440,7 +521,7 @@ func (r *WebAuthn) BeginDiscoverableLogin() (*protocol.CredentialAssertion, stri
 
 // FinishDiscoverableLogin completes a usernameless ceremony started with
 // BeginDiscoverableLogin and returns the user that owns the credential.
-func (r *WebAuthn) FinishDiscoverableLogin(sessionID string, response *http.Request) (*model.User, *model.WebAuthnCredential, error) {
+func (r *WebAuthn) FinishDiscoverableLogin(origin string, sessionID string, response *http.Request) (*model.User, *model.WebAuthnCredential, error) {
 	session, err := r.DB.GetWebAuthnSession(sessionID)
 	if err != nil {
 		return nil, nil, err
@@ -476,7 +557,7 @@ func (r *WebAuthn) FinishDiscoverableLogin(sessionID string, response *http.Requ
 		return u, nil
 	}
 
-	credential, err := r.webAuthn.FinishDiscoverableLogin(handler, sessionData, response)
+	credential, err := r.partyFor(origin).webAuthn.FinishDiscoverableLogin(handler, sessionData, response)
 	if err != nil || owner == nil {
 		r.Logger.Warnf("Discoverable authentication failed: %v", err)
 		if err == nil {

@@ -81,10 +81,12 @@ func (s *Server) getLimiterWithRate(key string, every time.Duration, burst int) 
 	return limiter
 }
 
-// Middleware to log requests
+// Middleware to log requests. The host and the bearer flag show which
+// hostname API clients still call, which matters during a domain move.
 func (s *Server) loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.logger.Infof("%s %s %s", r.RemoteAddr, r.Method, r.URL.Path)
+		_, bearer := extractBearerToken(r)
+		s.logger.Infof("%s %s %s %s bearer=%v", r.RemoteAddr, r.Host, r.Method, r.URL.Path, bearer)
 		next.ServeHTTP(w, r)
 	})
 }

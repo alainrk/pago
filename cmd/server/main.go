@@ -161,14 +161,20 @@ func main() {
 			panic("failed to start webhook: " + err.Error())
 		}
 
+		// WEBHOOK_DROP_PENDING_UPDATES=false keeps the updates Telegram queued
+		// while the bot was restarting (for example when the webhook moves to a
+		// new host). Anything else keeps the old behaviour and drops them.
+		dropPending := !strings.EqualFold(strings.TrimSpace(os.Getenv("WEBHOOK_DROP_PENDING_UPDATES")), "false")
+
 		err = updater.SetAllBotWebhooks(webhookDomain, &gotgbot.SetWebhookOpts{
 			MaxConnections:     100,
-			DropPendingUpdates: true,
+			DropPendingUpdates: dropPending,
 			SecretToken:        webhookOpts.SecretToken,
 		})
 		if err != nil {
 			panic("failed to set webhook: " + err.Error())
 		}
+		logger.Infof("Webhook set on %s (drop pending updates: %v)", webhookDomain, dropPending)
 	default:
 		logger.Fatalf("unknown run mode: %s\n", runMode)
 	}

@@ -7,6 +7,7 @@ import { auth } from "../api/endpoints";
 import { ApiError } from "../api/client";
 import { isPasskeySupported, loginWithPasskey, PasskeyCancelledError } from "../api/webauthn";
 import { useAuth } from "../auth/AuthContext";
+import { BrandLinks } from "../components/BrandLinks";
 
 type Step = "start" | "code";
 
@@ -231,6 +232,7 @@ export function LoginPage() {
           </div>
         </div>
         <div className={styles.below}>First time here? Start the bot on Telegram to create your account.</div>
+        <BrandLinks style={{ marginTop: 16 }} />
       </div>
     </main>
   );

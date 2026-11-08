@@ -98,7 +98,7 @@ func (s *Server) handlePasskeyBeginLogin(w http.ResponseWriter, r *http.Request)
 	if email == "" {
 		// No email: usernameless (discoverable) flow. The browser shows the
 		// passkeys it holds for this site and we learn the user at finish time.
-		assertion, sessionID, err := s.repositories.WebAuthn.BeginDiscoverableLogin()
+		assertion, sessionID, err := s.repositories.WebAuthn.BeginDiscoverableLogin(r.Header.Get("Origin"))
 		if err != nil {
 			s.logger.Errorf("Failed to begin discoverable passkey login: %v", err)
 			s.sendJSONError(w, "Failed to start passkey login", http.StatusInternalServerError)
@@ -128,7 +128,7 @@ func (s *Server) handlePasskeyBeginLogin(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Begin login
-	assertion, sessionID, err := s.repositories.WebAuthn.BeginLogin(userWithCreds)
+	assertion, sessionID, err := s.repositories.WebAuthn.BeginLogin(r.Header.Get("Origin"), userWithCreds)
 	if err != nil {
 		if err == repository.ErrNoCredentials {
 			s.sendJSONError(w, "No passkeys registered", http.StatusBadRequest)
@@ -178,7 +178,7 @@ func (s *Server) handlePasskeyFinishLogin(w http.ResponseWriter, r *http.Request
 	var user *model.User
 	if waSession.TgID == 0 {
 		// Discoverable flow: the credential tells us who the user is.
-		user, _, err = s.repositories.WebAuthn.FinishDiscoverableLogin(sessionID, r)
+		user, _, err = s.repositories.WebAuthn.FinishDiscoverableLogin(r.Header.Get("Origin"), sessionID, r)
 		if err != nil {
 			s.logger.Errorf("Failed to finish discoverable passkey login: %v", err)
 			s.sendJSONError(w, "Authentication failed", http.StatusUnauthorized)
@@ -193,7 +193,7 @@ func (s *Server) handlePasskeyFinishLogin(w http.ResponseWriter, r *http.Request
 		}
 
 		// Finish login using secure library method
-		_, err = s.repositories.WebAuthn.FinishLogin(user, sessionID, r)
+		_, err = s.repositories.WebAuthn.FinishLogin(r.Header.Get("Origin"), user, sessionID, r)
 		if err != nil {
 			s.logger.Errorf("Failed to finish passkey login: %v", err)
 			s.sendJSONError(w, "Authentication failed", http.StatusUnauthorized)
@@ -250,7 +250,7 @@ func (s *Server) handlePasskeyBeginRegister(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Begin registration
-	creation, sessionID, err := s.repositories.WebAuthn.BeginRegistration(userWithCreds)
+	creation, sessionID, err := s.repositories.WebAuthn.BeginRegistration(r.Header.Get("Origin"), userWithCreds)
 	if err != nil {
 		s.logger.Errorf("Failed to begin passkey registration: %v", err)
 		s.sendJSONError(w, "Failed to start passkey registration", http.StatusInternalServerError)
@@ -309,7 +309,7 @@ func (s *Server) handlePasskeyFinishRegister(w http.ResponseWriter, r *http.Requ
 
 	// Finish registration using secure verification method
 	// The request body contains the credential directly
-	err = s.repositories.WebAuthn.FinishRegistration(user, sessionID, credName, r)
+	err = s.repositories.WebAuthn.FinishRegistration(r.Header.Get("Origin"), user, sessionID, credName, r)
 	if err != nil {
 		s.logger.Errorf("Failed to finish passkey registration: %v", err)
 		s.sendJSONError(w, "Registration failed", http.StatusBadRequest)

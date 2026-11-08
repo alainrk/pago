@@ -378,7 +378,26 @@ config for Cloudflare Workers static assets (`frontend/wrangler.jsonc`).
    `WEB_COOKIE_SAMESITE=none` (HTTPS only).
 
 The build also writes a `_headers` file with a Content-Security-Policy that
-only allows API calls to the `VITE_API_URL` origin.
+only allows API calls to the `VITE_API_URL` origin (plus any
+`VITE_API_URL_BY_HOST` origins, see below).
+
+#### Moving to a new domain
+
+One build and one server can run on an old and a new domain at the same time,
+so people can move at their own pace:
+
+- Attach both hostnames to the `pago-web` worker.
+- In `frontend/.env.production.local` set `VITE_API_URL` to the new API and
+  `VITE_API_URL_BY_HOST=app.old.example=https://api.old.example` so the old
+  app keeps using the old API host (the cookie needs a shared parent domain).
+  Add `VITE_MOVED_FROM_HOSTS` and `VITE_MOVED_TO_URL` to show a "we moved"
+  banner on the old host. See `frontend/.env.example`.
+- On the server list both app origins in `WEB_CORS_ORIGINS`, and give
+  `WEBAUTHN_RP_ID` and `WEBAUTHN_RP_ORIGIN` one entry per domain, in the same
+  order. Passkeys are bound to a domain, so people add a new passkey on the
+  new one after signing in with a code.
+- Set `WEBHOOK_DROP_PENDING_UPDATES=false` for the restart that moves
+  `WEBHOOK_DOMAIN`, so no Telegram message sent during the restart is lost.
 
 ### Manual Deployment
 

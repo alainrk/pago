@@ -1,13 +1,15 @@
 import { defineConfig, type Plugin } from "vitest/config";
 import { loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { allApiOrigins } from "./src/lib/domains";
 
 // Emits a Cloudflare `_headers` file into dist/ so the deployed SPA ships a
-// Content-Security-Policy that only allows API calls to the configured
-// VITE_API_URL origin. The origin is read at build time from the (untracked)
-// .env.production.local file, so no deployment detail lives in the repo.
-function cloudflareHeaders(apiOrigin: string): Plugin {
-  const connect = apiOrigin ? `'self' ${apiOrigin}` : "'self'";
+// Content-Security-Policy that only allows API calls to the configured API
+// origins (VITE_API_URL plus any VITE_API_URL_BY_HOST entries). They are read
+// at build time from the (untracked) .env.production.local file, so no
+// deployment detail lives in the repo.
+function cloudflareHeaders(apiOrigins: string[]): Plugin {
+  const connect = ["'self'", ...apiOrigins].join(" ");
   const csp = [
     "default-src 'self'",
     "script-src 'self'",
@@ -37,20 +39,11 @@ function cloudflareHeaders(apiOrigin: string): Plugin {
   };
 }
 
-function originOf(url: string): string {
-  if (!url) return "";
-  try {
-    return new URL(url).origin;
-  } catch {
-    return "";
-  }
-}
-
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_");
-  const apiOrigin = originOf(env.VITE_API_URL ?? "");
+  const apiOrigins = allApiOrigins(env.VITE_API_URL, env.VITE_API_URL_BY_HOST);
   return {
-    plugins: [react(), cloudflareHeaders(apiOrigin)],
+    plugins: [react(), cloudflareHeaders(apiOrigins)],
     server: {
       port: 5174,
       host: true,

@@ -3,6 +3,7 @@ import { AuthProvider } from "./auth/AuthContext";
 import { PublicOnly, RequireAuth } from "./auth/RequireAuth";
 import { AppShell } from "./layout/AppShell";
 import { ToastProvider } from "./components/Toast";
+import { MovedBanner } from "./components/MovedBanner";
 import { LoginPage } from "./pages/LoginPage";
 import { AddTransactionPage } from "./pages/AddTransactionPage";
 import { TransactionsPage } from "./pages/TransactionsPage";
@@ -16,6 +17,7 @@ import { RecurringPage } from "./pages/RecurringPage";
 export default function App() {
   return (
     <BrowserRouter>
+      <MovedBanner />
       <AuthProvider>
         <ToastProvider>
           <Routes>

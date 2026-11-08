@@ -18,6 +18,7 @@ import { account, budget as budgetApi, recurring as recurringApi } from "../api/
 import { registerPasskey, suggestPasskeyName, isPasskeySupported, PasskeyCancelledError } from "../api/webauthn";
 import { currencySymbol, formatDateFull, formatMoney, formatRelativeDay, parseAmount } from "../lib/format";
 import styles from "./SettingsPage.module.css";
+import { BrandLinks } from "../components/BrandLinks";
 
 export function SettingsPage() {
   const user = useUser();
@@ -384,6 +385,7 @@ export function SettingsPage() {
             </div>
           </div>
         )}
+        <BrandLinks style={{ marginTop: 8 }} />
       </Page>
       <ConfirmDialog
         open={budgetConfirm}

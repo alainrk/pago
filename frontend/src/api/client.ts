@@ -5,8 +5,14 @@
 // production VITE_API_URL points at the API origin and requests are
 // cross-origin with cookies (credentials: "include").
 
-const rawBase = (import.meta.env.VITE_API_URL ?? "").trim();
-export const API_BASE_URL = rawBase.replace(/\/+$/, "");
+import { pickApiBase } from "../lib/domains";
+
+// One build can serve more than one hostname (see lib/domains.ts): the API
+// origin is picked from the page host, so the app on the old domain keeps
+// talking to the API on the old domain (the session cookie needs both on the
+// same parent domain).
+const pageHost = typeof window !== "undefined" ? window.location.hostname : "";
+export const API_BASE_URL = pickApiBase(pageHost, import.meta.env.VITE_API_URL, import.meta.env.VITE_API_URL_BY_HOST);
 export const WEB_PATH = "/web";
 
 export class ApiError extends Error {
