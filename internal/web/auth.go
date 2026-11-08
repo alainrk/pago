@@ -9,9 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"pago/internal/model"
-
-	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 )
 
 // handleHome redirects to dashboard if authenticated, otherwise to login
@@ -26,6 +23,10 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 
 // handleLogin shows the login page
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
+	if !s.legacyLoginAllowed(r) {
+		http.Error(w, "This sign-in page is closed on this address. Use the Pago web app and sign in with Google or a passkey.", http.StatusGone)
+		return
+	}
 	// Check if already logged in
 	session, _ := s.getSession(r)
 	if session != nil && session.IsValid() {
@@ -49,16 +50,22 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleAuthRequest handles the initial auth request
+// handleAuthRequest sends a login code by email (legacy). It only works on
+// hosts without Google sign-in, which during the domain move means the old
+// address. The Telegram code is gone with the bot. Removed in the cleanup
+// phase.
 func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
+	if !s.legacyLoginAllowed(r) {
+		s.sendJSONError(w, "Sign in with Google or a passkey on this address", http.StatusGone)
+		return
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var req struct {
-		Username string `json:"username"`
-		Email    string `json:"email"`
+		Email string `json:"email"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -66,21 +73,13 @@ func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Determine which login method to use
-	username := strings.TrimSpace(strings.TrimPrefix(req.Username, "@"))
 	email := strings.TrimSpace(strings.ToLower(req.Email))
-
-	if username == "" && email == "" {
-		s.sendJSONError(w, "Username or email is required", http.StatusBadRequest)
+	if email == "" {
+		s.sendJSONError(w, "Email is required. Telegram codes stopped with the Telegram bot.", http.StatusBadRequest)
 		return
 	}
 
-	if username != "" && email != "" {
-		s.sendJSONError(w, "Please provide either username or email, not both", http.StatusBadRequest)
-		return
-	}
-
-	if email != "" && s.emailService == nil {
+	if s.emailService == nil {
 		// Independent of whether the user exists, so it leaks nothing.
 		s.sendJSONError(w, "Email sign-in is not available on this server", http.StatusServiceUnavailable)
 		return
@@ -89,16 +88,7 @@ func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 	// Generic success message to prevent user enumeration
 	const genericSuccessMsg = "If an account exists with these credentials, a verification code has been sent"
 
-	var user model.User
-	var exists bool
-	var err error
-
-	// Get user by username or email
-	if email != "" {
-		user, exists, err = s.repositories.Users.GetByEmail(email)
-	} else {
-		user, exists, err = s.repositories.Users.GetByUsername(username)
-	}
+	user, exists, err := s.repositories.Users.GetByEmail(email)
 
 	// Add consistent delay to prevent timing attacks
 	defer time.Sleep(100 * time.Millisecond)
@@ -122,24 +112,12 @@ func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send code via email or Telegram based on login method
-	if email != "" {
-		// Send code via email
-		subject := "Your Pago Login Code"
-		textContent := fmt.Sprintf("🔐 Your Pago login code is:\n\n%s\n\nThis code will expire in 5 minutes.", authToken.Token)
-		err = s.emailService.SendTransacEmail(email, subject, textContent)
-		if err != nil {
-			s.logger.Errorf("Failed to send auth code via email: %v", err)
-		}
-	} else {
-		// Send code via Telegram
-		message := fmt.Sprintf("🔐 Your Pago login code is:\n\n<code>%s</code>\n\nThis code will expire in 5 minutes.", authToken.Token)
-		_, err = s.bot.SendMessage(user.TgID, message, &gotgbot.SendMessageOpts{
-			ParseMode: "HTML",
-		})
-		if err != nil {
-			s.logger.Errorf("Failed to send auth code: %v", err)
-		}
+	// Send code via email
+	subject := "Your Pago Login Code"
+	textContent := fmt.Sprintf("🔐 Your Pago login code is:\n\n%s\n\nThis code will expire in 5 minutes.", authToken.Token)
+	err = s.emailService.SendTransacEmail(email, subject, textContent)
+	if err != nil {
+		s.logger.Errorf("Failed to send auth code via email: %v", err)
 	}
 
 	// Always return generic success message
@@ -150,6 +128,10 @@ func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 
 // handleAuthVerify verifies the auth code
 func (s *Server) handleAuthVerify(w http.ResponseWriter, r *http.Request) {
+	if !s.legacyLoginAllowed(r) {
+		s.sendJSONError(w, "Sign in with Google or a passkey on this address", http.StatusGone)
+		return
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return

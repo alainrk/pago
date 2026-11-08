@@ -2,16 +2,16 @@
 
 ## Active Technologies
 
-- Go 1.26 + gotgbot/v2 (Telegram bot framework), GORM with PostgreSQL, OpenAI-compatible LLM (internal/ai)
+- Go 1.26, GORM with PostgreSQL, OpenAI-compatible LLM (internal/ai)
+- Sign-in: Google (only way to sign up) and passkeys. The Telegram bot was removed.
 - Frontend: React + Vite + TypeScript (frontend/)
 
 ## Project Structure
 
 ```text
-cmd/server/   Telegram bot entry point
-cmd/web/      web server entry point
-cmd/          also email, migrate, seed
-internal/     app code (ai, db, model, repository, scheduler, server, web, ...)
+cmd/web/      web server entry point (API, legacy dashboard, recurring job)
+cmd/          also email, migrate, seed, telegram-farewell (one-off)
+internal/     app code (ai, db, model, repository, scheduler, web, ...)
 frontend/     React app
 specs/        feature specs (001-003)
 ```
@@ -20,8 +20,7 @@ specs/        feature specs (001-003)
 
 - `make test` runs lint, then tests with -race
 - `make lint` runs golangci-lint
-- `make build` / `make build-web` build the bot / web server
-- `make run` / `make run-web` build and run them
+- `make build-web` / `make run-web` build / run the web server
 
 ## Code Style
 

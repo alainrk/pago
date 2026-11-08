@@ -54,16 +54,21 @@ const (
 type CommandType string
 
 // User represents the users table structure
+//
+// TgID is the account id. For accounts made by the old Telegram bot it is the
+// Telegram id, for accounts made with Google it is negative.
 type User struct {
-	TgID        int64       `gorm:"column:tg_id;primaryKey"`
-	TgUsername  string      `gorm:"column:tg_username;unique"`
-	TgFirstname string      `gorm:"column:tg_firstname"`
-	TgLastname  string      `gorm:"column:tg_lastname"`
-	Name        string      `gorm:"column:name"`
-	Email       *string     `gorm:"column:email;uniqueIndex:idx_users_email,where:email IS NOT NULL"`
-	Session     UserSession `gorm:"column:session;type:jsonb"`
-	CreatedAt   time.Time   `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt   time.Time   `gorm:"column:updated_at;autoUpdateTime"`
+	TgID        int64   `gorm:"column:tg_id;primaryKey"`
+	TgUsername  string  `gorm:"column:tg_username"`
+	TgFirstname string  `gorm:"column:tg_firstname"`
+	TgLastname  string  `gorm:"column:tg_lastname"`
+	Name        string  `gorm:"column:name"`
+	Email       *string `gorm:"column:email;uniqueIndex:idx_users_email,where:email IS NOT NULL"`
+	// GoogleSub is Google's stable account id ("sub"), or nil.
+	GoogleSub *string     `gorm:"column:google_sub"`
+	Session   UserSession `gorm:"column:session;type:jsonb"`
+	CreatedAt time.Time   `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt time.Time   `gorm:"column:updated_at;autoUpdateTime"`
 
 	// WebAuthn credentials (loaded via preload)
 	// Note: Foreign key constraints are handled in migration files

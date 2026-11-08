@@ -107,3 +107,46 @@ func (t *APIToken) IsValid() bool {
 	}
 	return time.Now().UTC().Before(*t.ExpiresAt)
 }
+
+// Link token purposes.
+const (
+	// LinkPurposeHandoff moves a signed-in user from the old address to the
+	// new one, where they sign in with Google and the Google account is
+	// linked to them.
+	LinkPurposeHandoff = "handoff"
+)
+
+// LinkToken is a one-time token tied to a user. Only the sha256 of the token
+// is stored.
+type LinkToken struct {
+	ID        int64      `gorm:"column:id;primaryKey;autoIncrement"`
+	TgID      int64      `gorm:"column:tg_id;not null"`
+	Purpose   string     `gorm:"column:purpose;not null"`
+	TokenHash string     `gorm:"column:token_hash;not null;unique"`
+	ExpiresAt time.Time  `gorm:"column:expires_at;not null"`
+	UsedAt    *time.Time `gorm:"column:used_at"`
+	CreatedAt time.Time  `gorm:"column:created_at;autoCreateTime"`
+}
+
+func (LinkToken) TableName() string {
+	return "link_tokens"
+}
+
+// OAuthState is the server side of one Google sign-in, from the start to the
+// callback. It is used once.
+type OAuthState struct {
+	StateHash    string `gorm:"column:state_hash;primaryKey"`
+	Nonce        string `gorm:"column:nonce;not null"`
+	CodeVerifier string `gorm:"column:code_verifier;not null"`
+	RedirectURL  string `gorm:"column:redirect_url;not null"`
+	ReturnOrigin string `gorm:"column:return_origin;not null"`
+	ReturnPath   string `gorm:"column:return_path;not null"`
+	// HandoffHash is the sha256 of a hand-off token from the old address.
+	HandoffHash *string   `gorm:"column:handoff_hash"`
+	ExpiresAt   time.Time `gorm:"column:expires_at;not null"`
+	CreatedAt   time.Time `gorm:"column:created_at;autoCreateTime"`
+}
+
+func (OAuthState) TableName() string {
+	return "oauth_states"
+}

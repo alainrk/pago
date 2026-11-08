@@ -2,33 +2,14 @@ package repository
 
 import (
 	"errors"
-	"strings"
 
 	"pago/internal/model"
 
-	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"gorm.io/gorm"
 )
 
 type Users struct {
 	Repository
-}
-
-func (r *Users) UpsertWithContext(user gotgbot.User, session model.UserSession) error {
-	name := user.FirstName
-	name = strings.Trim(name, " ")
-	if name == "" {
-		name = user.Username
-	}
-
-	return r.DB.SetUser(&model.User{
-		TgID:        user.Id,
-		Name:        name,
-		Session:     session,
-		TgUsername:  user.Username,
-		TgFirstname: user.FirstName,
-		TgLastname:  user.LastName,
-	})
 }
 
 func (r *Users) Update(user *model.User) error {

@@ -109,10 +109,10 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          output_name="pago"
+          output_name="pago-web"
           go build -ldflags="-w -s -X main.version=${{ github.ref_name }}" \
             -o=bin/${output_name} \
-            ./cmd/server/main.go
+            ./cmd/web/main.go
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

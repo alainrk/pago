@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import styles from "./LoginPage.module.css";
 import { Logo } from "../components/Logo";
 import { Button } from "../components/Button";
@@ -8,40 +8,30 @@ import { ApiError } from "../api/client";
 import { isPasskeySupported, loginWithPasskey, PasskeyCancelledError } from "../api/webauthn";
 import { useAuth } from "../auth/AuthContext";
 import { BrandLinks } from "../components/BrandLinks";
+import type { AuthMethods } from "../api/types";
+import { googleErrorMessage, startGoogle } from "../lib/signin";
 
 type Step = "start" | "code";
 
-const USERNAME_KEY = "pago.telegram-username";
-
-function readSavedUsername(): string {
-  try {
-    return window.localStorage.getItem(USERNAME_KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
-
-function saveUsername(value: string) {
-  try {
-    window.localStorage.setItem(USERNAME_KEY, value);
-  } catch {
-    // Storage can be unavailable (private mode). Remembering is only a convenience.
-  }
-}
+// Sign-in on the new address: Google or a passkey. Sign-up: Google only.
+// On the old address, during the move, the old email code still works (and
+// there is no Google there).
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { refresh } = useAuth();
   const from = (location.state as { from?: string } | null)?.from;
+  const [params] = useSearchParams();
 
+  const [methods, setMethods] = useState<AuthMethods | null>(null);
   const [step, setStep] = useState<Step>("start");
-  const [username, setUsername] = useState(readSavedUsername);
+  const [codeEmail, setCodeEmail] = useState("");
   const [code, setCode] = useState("");
   const [passkeyEmail, setPasskeyEmail] = useState("");
   const [askEmail, setAskEmail] = useState(false);
-  const [busy, setBusy] = useState<"" | "passkey" | "code" | "verify">("");
-  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"" | "passkey" | "code" | "verify" | "google">("");
+  const [error, setError] = useState<string | null>(() => googleErrorMessage(params.get("error")));
   const [notice, setNotice] = useState<string | null>(null);
   const passkeyOk = isPasskeySupported();
   const codeRef = useRef<HTMLInputElement>(null);
@@ -49,6 +39,34 @@ export function LoginPage() {
   useEffect(() => {
     if (step === "code") codeRef.current?.focus();
   }, [step]);
+
+  useEffect(() => {
+    let cancelled = false;
+    auth
+      .methods()
+      .then((m) => {
+        if (!cancelled) setMethods(m);
+      })
+      .catch(() => {
+        // Older server without this endpoint: show passkeys only.
+        if (!cancelled) setMethods({ google: false, email: false, passkey: true });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function onGoogle() {
+    setError(null);
+    setNotice(null);
+    setBusy("google");
+    try {
+      await startGoogle(auth.googleStart, from && from !== "/login" ? from : "/");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not start Google sign-in. Try again.");
+      setBusy("");
+    }
+  }
 
   async function finishLogin() {
     await refresh();
@@ -73,7 +91,7 @@ export function LoginPage() {
         setError(err.message);
         if (err.status === 401 && !askEmail) setAskEmail(true);
       } else {
-        setError("Passkey sign-in failed. Try again or use a Telegram code.");
+        setError(methods?.google ? "Passkey sign-in failed. Try again or continue with Google." : "Passkey sign-in failed. Try again.");
       }
     } finally {
       setBusy("");
@@ -82,9 +100,9 @@ export function LoginPage() {
 
   async function onSendCode(e: FormEvent) {
     e.preventDefault();
-    const clean = username.trim().replace(/^@/, "");
-    if (!clean) {
-      setError("Enter your Telegram username.");
+    const clean = codeEmail.trim().toLowerCase();
+    if (!clean || !clean.includes("@")) {
+      setError("Enter the email of your Pago account.");
       return;
     }
     setError(null);
@@ -92,9 +110,8 @@ export function LoginPage() {
     setBusy("code");
     try {
       await auth.requestCode(clean);
-      saveUsername(clean);
       setStep("code");
-      setNotice("If that username has a Pago account, a code is on its way on Telegram.");
+      setNotice("If that email has a Pago account, a code is on its way.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not send the code. Try again.");
     } finally {
@@ -134,6 +151,15 @@ export function LoginPage() {
           </div>
 
           <div className={styles.methods}>
+            {methods?.google && (
+              <>
+                <Button size="xl" variant="primary" full loading={busy === "google"} onClick={onGoogle} style={{ height: 46, fontSize: 14.5, borderRadius: "var(--r-lg)" }}>
+                  Continue with Google
+                </Button>
+                {passkeyOk && <div className={styles.or}>or</div>}
+              </>
+            )}
+
             {passkeyOk && (
               <>
                 {askEmail && (
@@ -148,71 +174,85 @@ export function LoginPage() {
                     aria-label="Email linked to your passkey"
                   />
                 )}
-                <Button size="xl" icon="shield-lock" iconSize={17} full loading={busy === "passkey"} onClick={onPasskey} style={{ height: 46, fontSize: 14.5, borderRadius: "var(--r-lg)" }}>
-                  Continue with a passkey
+                <Button
+                  size="xl"
+                  variant={methods?.google ? "secondary" : "primary"}
+                  icon="shield-lock"
+                  iconSize={17}
+                  full
+                  loading={busy === "passkey"}
+                  onClick={onPasskey}
+                  style={{ height: 46, fontSize: 14.5, borderRadius: "var(--r-lg)" }}
+                >
+                  Sign in with a passkey
                 </Button>
-                <div className={styles.or}>or</div>
               </>
             )}
 
-            {step === "start" ? (
-              <form className={styles.tg} onSubmit={onSendCode}>
-                <label className={styles.tgLabel} htmlFor="tg-username">
-                  Sign in with Telegram
-                </label>
-                <div className={styles.row}>
-                  <input
-                    id="tg-username"
-                    className={`input ${styles.input}`}
-                    placeholder="@username"
-                    autoComplete="username"
-                    autoCapitalize="none"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                  <Button type="submit" variant="secondary" size="xl" loading={busy === "code"} style={{ height: 44, fontSize: 13.5 }}>
-                    Send code
-                  </Button>
-                </div>
-                <div className={styles.hint}>We'll message you a 6-digit code on Telegram.</div>
-              </form>
-            ) : (
-              <form className={styles.tg} onSubmit={onVerify}>
-                <label className={styles.tgLabel} htmlFor="tg-code">
-                  Enter the code we sent to @{username.replace(/^@/, "")}
-                </label>
-                <div className={styles.row}>
-                  <input
-                    id="tg-code"
-                    ref={codeRef}
-                    className={`input is-mono ${styles.input} ${styles.code}`}
-                    placeholder="••••••"
-                    inputMode="text"
-                    autoComplete="one-time-code"
-                    maxLength={6}
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  />
-                  <Button type="submit" size="xl" loading={busy === "verify"} style={{ height: 44, fontSize: 13.5 }}>
-                    Verify
-                  </Button>
-                </div>
-                <div className={styles.hint}>
-                  The code expires in 5 minutes.{" "}
-                  <button
-                    type="button"
-                    className={styles.linkBtn}
-                    onClick={() => {
-                      setStep("start");
-                      setCode("");
-                      setError(null);
-                      setNotice(null);
-                    }}
-                  >
-                    Use another username
-                  </button>
-                </div>
-              </form>
+            {methods?.email && (
+              <>
+                {passkeyOk && <div className={styles.or}>or</div>}
+                {step === "start" ? (
+                  <form className={styles.tg} onSubmit={onSendCode}>
+                    <label className={styles.tgLabel} htmlFor="code-email">
+                      Get a code by email
+                    </label>
+                    <div className={styles.row}>
+                      <input
+                        id="code-email"
+                        className={`input ${styles.input}`}
+                        type="email"
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        value={codeEmail}
+                        onChange={(e) => setCodeEmail(e.target.value)}
+                      />
+                      <Button type="submit" variant="secondary" size="xl" loading={busy === "code"} style={{ height: 44, fontSize: 13.5 }}>
+                        Send code
+                      </Button>
+                    </div>
+                    <div className={styles.hint}>We'll email you a 6-character code.</div>
+                  </form>
+                ) : (
+                  <form className={styles.tg} onSubmit={onVerify}>
+                    <label className={styles.tgLabel} htmlFor="email-code">
+                      Enter the code we sent to {codeEmail.trim()}
+                    </label>
+                    <div className={styles.row}>
+                      <input
+                        id="email-code"
+                        ref={codeRef}
+                        className={`input is-mono ${styles.input} ${styles.code}`}
+                        placeholder="••••••"
+                        inputMode="text"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.toUpperCase())}
+                      />
+                      <Button type="submit" size="xl" loading={busy === "verify"} style={{ height: 44, fontSize: 13.5 }}>
+                        Verify
+                      </Button>
+                    </div>
+                    <div className={styles.hint}>
+                      The code expires in 5 minutes.{" "}
+                      <button
+                        type="button"
+                        className={styles.linkBtn}
+                        onClick={() => {
+                          setStep("start");
+                          setCode("");
+                          setError(null);
+                          setNotice(null);
+                        }}
+                      >
+                        Use another email
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </>
             )}
 
             {error && (
@@ -228,10 +268,14 @@ export function LoginPage() {
           </div>
 
           <div className={styles.foot}>
-            {passkeyOk ? "Passkeys use Face ID, Touch ID or your device PIN. No passwords, no codes." : "This browser does not support passkeys. Sign in with a Telegram code instead."}
+            {passkeyOk
+              ? "Passkeys use Face ID, Touch ID or your device PIN. No passwords."
+              : methods?.google
+                ? "This browser does not support passkeys. Continue with Google instead."
+                : "This browser does not support passkeys."}
           </div>
         </div>
-        <div className={styles.below}>First time here? Start the bot on Telegram to create your account.</div>
+        {methods?.google && <div className={styles.below}>New to Pago? Continue with Google to create your account.</div>}
         <BrandLinks style={{ marginTop: 16 }} />
       </div>
     </main>

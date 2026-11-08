@@ -1,5 +1,6 @@
 import { request, requestBlob } from "./client";
 import type {
+  AuthMethods,
   BudgetResponse,
   CreateTransactionRequest,
   CreateTransactionResponse,
@@ -34,8 +35,16 @@ function qs(params: Record<string, string | number | undefined>): string {
 
 // Auth (public)
 export const auth = {
-  requestCode: (username: string) =>
-    request<MessageResponse>("/auth/request", { method: "POST", body: { username } }),
+  // Which sign-in methods this address offers. On the new address: Google and
+  // passkeys. On the old one, during the move: email codes and passkeys.
+  methods: () => request<AuthMethods>("/auth/methods"),
+  // Starts Google sign-in and returns the Google URL to open. handoff is the
+  // one-time token from the old address, if the person came from there.
+  googleStart: (returnTo: string, handoff?: string) =>
+    request<{ url: string }>("/auth/google/start", { method: "POST", body: { returnTo, handoff: handoff ?? "" } }),
+  // Legacy email code, old address only.
+  requestCode: (email: string) =>
+    request<MessageResponse>("/auth/request", { method: "POST", body: { email } }),
   verifyCode: (code: string) =>
     request<MessageResponse & { redirect?: string }>("/auth/verify", { method: "POST", body: { code } }),
   logout: () => request<MessageResponse>("/logout", { method: "POST" }),
@@ -67,6 +76,8 @@ export const account = {
   passkeyDelete: (credentialId: string) =>
     request<MessageResponse>("/api/passkey/delete", { method: "POST", body: { credentialId } }),
   exportCsv: () => requestBlob("/api/transactions/export"),
+  // One-time token that moves this account to the new address (old address).
+  handoff: () => request<{ token: string; expiresAt: string }>("/api/auth/handoff", { method: "POST", body: {} }),
 };
 
 // Transactions

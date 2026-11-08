@@ -32,9 +32,20 @@ func (db *DB) GetUserByEmail(email string) (*model.User, error) {
 	return &user, nil
 }
 
-// SetUser creates or updates a user
+// SetUser creates or updates a user. google_sub is left out: a caller saving
+// a row it loaded a while ago must not undo a Google link made in the
+// meantime. It changes only through GoogleSignIn.
 func (db *DB) SetUser(user *model.User) error {
 	// Use upsert functionality (create if not exists, update if exists)
-	result := db.conn.Save(user)
+	result := db.conn.Omit("google_sub").Save(user)
 	return result.Error
+}
+
+// ListTelegramUsers returns the accounts made by the old Telegram bot
+// (positive tg_id, which is their Telegram chat id). Used once, to tell them
+// that the bot is going away.
+func (db *DB) ListTelegramUsers() ([]model.User, error) {
+	var users []model.User
+	err := db.conn.Where("tg_id > 0").Order("tg_id").Find(&users).Error
+	return users, err
 }

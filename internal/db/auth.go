@@ -84,5 +84,13 @@ func (db *DB) CleanupExpiredAuthData() error {
 		return err
 	}
 
+	// Delete expired one-time link tokens and Google sign-in states
+	if err := db.conn.Where("expires_at < ?", now).Delete(&model.LinkToken{}).Error; err != nil {
+		return err
+	}
+	if err := db.conn.Where("expires_at < ?", now).Delete(&model.OAuthState{}).Error; err != nil {
+		return err
+	}
+
 	return nil
 }

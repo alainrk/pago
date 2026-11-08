@@ -24,9 +24,12 @@ type WebAuthnCredential struct {
 	FlagsBackupState    bool           `gorm:"column:flags_backup_state;not null"`
 	Transport           pq.StringArray `gorm:"column:transport;type:text[];not null;default:'{}'"`
 	CredentialName      *string        `gorm:"column:credential_name"`
-	LastUsedAt          *time.Time     `gorm:"column:last_used_at"`
-	CreatedAt           time.Time      `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt           time.Time      `gorm:"column:updated_at;autoUpdateTime"`
+	// RPID is the domain the passkey belongs to. NULL for passkeys made
+	// before the domain move (they belong to the old domain).
+	RPID       *string    `gorm:"column:rp_id"`
+	LastUsedAt *time.Time `gorm:"column:last_used_at"`
+	CreatedAt  time.Time  `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt  time.Time  `gorm:"column:updated_at;autoUpdateTime"`
 
 	// Association
 	User *User `gorm:"foreignKey:TgID;references:TgID"`
@@ -133,8 +136,15 @@ func (u *User) WebAuthnName() string {
 	if u.Email != nil && *u.Email != "" {
 		return *u.Email
 	}
-	// Fallback to username
-	return u.TgUsername
+	// Fallback to username, then to a fixed label (web accounts may have
+	// neither, and passkeys need a name).
+	if u.TgUsername != "" {
+		return u.TgUsername
+	}
+	if u.Name != "" {
+		return u.Name
+	}
+	return "Pago account"
 }
 
 // WebAuthnDisplayName returns the user's display name
@@ -143,7 +153,10 @@ func (u *User) WebAuthnDisplayName() string {
 	if u.Name != "" {
 		return u.Name
 	}
-	return u.TgUsername
+	if u.TgUsername != "" {
+		return u.TgUsername
+	}
+	return u.WebAuthnName()
 }
 
 // WebAuthnCredentials returns the user's credentials for WebAuthn

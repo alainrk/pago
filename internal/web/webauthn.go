@@ -236,12 +236,6 @@ func (s *Server) handlePasskeyBeginRegister(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Verify user has email
-	if user.Email == nil || *user.Email == "" {
-		s.sendJSONError(w, "Email required for passkey registration", http.StatusBadRequest)
-		return
-	}
-
 	// Load existing credentials
 	userWithCreds, err := s.repositories.WebAuthn.DB.GetUserWithWebAuthnCredentials(user.TgID)
 	if err != nil {
@@ -345,8 +339,12 @@ func (s *Server) handlePasskeyList(w http.ResponseWriter, r *http.Request) {
 		Name       string     `json:"name"`
 		CreatedAt  time.Time  `json:"createdAt"`
 		LastUsedAt *time.Time `json:"lastUsedAt"`
+		// OtherDomain is true for a passkey made on another address (for
+		// example the old one before a domain move). It cannot be used here.
+		OtherDomain bool `json:"otherDomain"`
 	}
 
+	currentRP := s.repositories.WebAuthn.RPIDFor(r.Header.Get("Origin"))
 	passkeys := make([]passkeyInfo, len(creds))
 	for i, cred := range creds {
 		name := "Unnamed Passkey"
@@ -355,10 +353,11 @@ func (s *Server) handlePasskeyList(w http.ResponseWriter, r *http.Request) {
 		}
 
 		passkeys[i] = passkeyInfo{
-			ID:         hex.EncodeToString(cred.ID),
-			Name:       name,
-			CreatedAt:  cred.CreatedAt,
-			LastUsedAt: cred.LastUsedAt,
+			ID:          hex.EncodeToString(cred.ID),
+			Name:        name,
+			CreatedAt:   cred.CreatedAt,
+			LastUsedAt:  cred.LastUsedAt,
+			OtherDomain: cred.RPID != nil && *cred.RPID != currentRP,
 		}
 	}
 

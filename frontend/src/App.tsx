@@ -13,14 +13,16 @@ import { AveragesPage } from "./pages/reports/AveragesPage";
 import { CashFlowPage } from "./pages/reports/CashFlowPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { RecurringPage } from "./pages/RecurringPage";
+import { WelcomePage } from "./pages/WelcomePage";
 
 export default function App() {
   return (
     <BrowserRouter>
-      <MovedBanner />
       <AuthProvider>
+        <MovedBanner />
         <ToastProvider>
           <Routes>
+            <Route path="/welcome" element={<WelcomePage />} />
             <Route element={<PublicOnly />}>
               <Route path="/login" element={<LoginPage />} />
             </Route>

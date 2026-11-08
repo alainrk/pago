@@ -12,7 +12,6 @@ import (
 	"pago/internal/model"
 	"pago/internal/repository"
 
-	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 )
@@ -29,22 +28,30 @@ type Repositories struct {
 type Server struct {
 	logger         *logrus.Logger
 	repositories   Repositories
-	bot            *gotgbot.Bot
 	llm            ai.LLM
 	loginLimiter   map[string]*rate.Limiter
 	loginLimiterMu sync.Mutex
 	emailService   *email.EmailService
+	google         googleConfig
 }
 
-func NewServer(logger *logrus.Logger, repos Repositories, bot *gotgbot.Bot, llm ai.LLM, emailService *email.EmailService) *Server {
+func NewServer(logger *logrus.Logger, repos Repositories, llm ai.LLM, emailService *email.EmailService) *Server {
+	google, err := loadGoogleConfig()
+	if err != nil {
+		logger.Errorf("Google sign-in is off: %v", err)
+	}
+	for _, c := range google.clients {
+		logger.Infof("Google sign-in enabled on host %s", c.host)
+	}
+
 	return &Server{
 		logger:         logger,
 		repositories:   repos,
-		bot:            bot,
 		llm:            llm,
 		loginLimiter:   make(map[string]*rate.Limiter),
 		loginLimiterMu: sync.Mutex{},
 		emailService:   emailService,
+		google:         google,
 	}
 }
 

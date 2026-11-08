@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"pago/internal/client"
 	"pago/internal/db"
 	"pago/internal/model"
 	"pago/internal/recurring"
@@ -224,45 +223,5 @@ func TestApplyDueRecurring_LoopCap(t *testing.T) {
 	}
 	if store.calls != maxCatchUpPerRule {
 		t.Errorf("calls = %d; want %d", store.calls, maxCatchUpPerRule)
-	}
-}
-
-func TestShouldCheckBudget(t *testing.T) {
-	today := day("2026-10-08")
-	cases := []struct {
-		name string
-		tx   model.Transaction
-		want bool
-	}{
-		{"current month expense", model.Transaction{Type: model.TypeExpense, Date: day("2026-10-05")}, true},
-		{"past month expense", model.Transaction{Type: model.TypeExpense, Date: day("2026-09-05")}, false},
-		{"current month income", model.Transaction{Type: model.TypeIncome, Date: day("2026-10-05")}, false},
-		{"same month last year", model.Transaction{Type: model.TypeExpense, Date: day("2025-10-05")}, false},
-	}
-	for _, c := range cases {
-		if got := shouldCheckBudget(c.tx, today); got != c.want {
-			t.Errorf("%s: got %v; want %v", c.name, got, c.want)
-		}
-	}
-}
-
-func TestShouldSendBudgetAlert(t *testing.T) {
-	cases := []struct {
-		name   string
-		p      *client.BudgetProgress
-		amount float64
-		want   bool
-	}{
-		{"no budget", nil, 10, false},
-		{"no alert", &client.BudgetProgress{Limit: 100, Spent: 50}, 10, false},
-		{"crossed 80", &client.BudgetProgress{Limit: 100, Spent: 85, NewAlerts: []int16{80}}, 10, true},
-		{"crossed 100", &client.BudgetProgress{Limit: 100, Spent: 105, NewAlerts: []int16{100}}, 10, true},
-		{"already over", &client.BudgetProgress{Limit: 100, Spent: 130, NewAlerts: []int16{100}}, 10, false},
-		{"landed exactly on 100", &client.BudgetProgress{Limit: 100, Spent: 100, NewAlerts: []int16{100}}, 10, true},
-	}
-	for _, c := range cases {
-		if got := shouldSendBudgetAlert(c.p, c.amount); got != c.want {
-			t.Errorf("%s: got %v; want %v", c.name, got, c.want)
-		}
 	}
 }

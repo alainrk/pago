@@ -1,86 +1,37 @@
+// Package scheduler runs the background jobs of the web server. Today that
+// is only the monthly recurring transactions. (The Telegram bot used to run
+// this, together with weekly and monthly recaps sent on Telegram; the bot is
+// gone.)
 package scheduler
 
 import (
-	"pago/internal/client"
 	"time"
 
-	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/go-co-op/gocron"
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	WEEKLY_REMINDER_PROCESSING_MIN  = 60
-	MONTHLY_REMINDER_PROCESSING_MIN = 60
-)
-
 type Scheduler struct {
-	scheduler    *gocron.Scheduler
-	bot          *gotgbot.Bot
-	repositories client.Repositories
-	logger       *logrus.Logger
+	scheduler *gocron.Scheduler
+	recurring recurringStore
+	logger    *logrus.Logger
 }
 
-func NewScheduler(bot *gotgbot.Bot, repos client.Repositories, logger *logrus.Logger) *Scheduler {
-	// Create scheduler with UTC timezone
-	s := gocron.NewScheduler(time.UTC)
-
+func NewScheduler(recurring recurringStore, logger *logrus.Logger) *Scheduler {
 	return &Scheduler{
-		scheduler:    s,
-		bot:          bot,
-		repositories: repos,
-		logger:       logger,
+		scheduler: gocron.NewScheduler(time.UTC),
+		recurring: recurring,
+		logger:    logger,
 	}
 }
 
 func (s *Scheduler) Start() {
-	var err error
-	// Schedule the creation of weekly recaps
-	// s.scheduler.Every(1).Minute().Do(func() { /* TEST */
-	_, err = s.scheduler.Every(1).Day().At("15:00").Do(func() {
-		if err := s.createWeeklyReminders(); err != nil {
-			s.logger.Errorf("Failed to create weekly reminders: %v", err)
-		}
-	})
-	if err != nil {
-		s.logger.Errorf("Failed to schedule weekly reminders: %v", err)
-	}
-
-	// Schedule the creation of monthly recaps
-	// s.scheduler.Every(1).Minute().Do(func() { /* TEST */
-	_, err = s.scheduler.Every(1).Day().At("10:00").Do(func() {
-		if err := s.createMonthlyReminders(); err != nil {
-			s.logger.Errorf("Failed to create monthly reminders: %v", err)
-		}
-	})
-	if err != nil {
-		s.logger.Errorf("Failed to schedule monthly reminders: %v", err)
-	}
-
-	// Process weekly reminders
-	_, err = s.scheduler.Every(WEEKLY_REMINDER_PROCESSING_MIN).Minute().Do(func() {
-		if err := s.processWeeklyReminders(); err != nil {
-			s.logger.Errorf("Failed to process weekly reminders: %v", err)
-		}
-	})
-	if err != nil {
-		s.logger.Errorf("Failed to schedule weekly reminders: %v", err)
-	}
-
-	// Process monthly reminders
-	_, err = s.scheduler.Every(MONTHLY_REMINDER_PROCESSING_MIN).Minute().Do(func() {
-		if err := s.processMonthlyReminders(); err != nil {
-			s.logger.Errorf("Failed to process monthly reminders: %v", err)
-		}
-	})
-	if err != nil {
-		s.logger.Errorf("Failed to schedule monthly reminders: %v", err)
-	}
-
 	// Apply recurring transactions. Runs right away at startup, then every
 	// hour, so a missed hour or day is picked up by the next run.
 	// SingletonMode keeps a slow catch-up from overlapping the next run.
-	_, err = s.scheduler.Every(RECURRING_PROCESSING_MIN).Minute().SingletonMode().Do(func() {
+	// Running twice at the same time (for example the old bot and this
+	// server during the move) is safe: each month is inserted once.
+	_, err := s.scheduler.Every(RECURRING_PROCESSING_MIN).Minute().SingletonMode().Do(func() {
 		if err := s.processRecurring(); err != nil {
 			s.logger.Errorf("Failed to process recurring transactions: %v", err)
 		}
@@ -89,7 +40,6 @@ func (s *Scheduler) Start() {
 		s.logger.Errorf("Failed to schedule recurring transactions: %v", err)
 	}
 
-	// Start the scheduler
 	s.scheduler.StartAsync()
 	s.logger.Info("Scheduler started successfully")
 }

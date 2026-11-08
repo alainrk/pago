@@ -1,6 +1,6 @@
 # Pago
 
-**AI Agent** and **App** for Income and Expense Management.
+**Web app** for Income and Expense Management, with AI help.
 
 You can self-host it following the Developer section down below.
 
@@ -20,23 +20,26 @@ You can self-host it following the Developer section down below.
 
 ## Features
 
-Pago is an intelligent Telegram bot that leverages AI to make expense tracking effortless. Simply send a message in natural language, and the bot will understand and categorize your transactions automatically.
+Pago is a web app for tracking income and expenses, with AI help: type a
+transaction in plain words and it fills in the details for you. (Pago used to
+be a Telegram bot too. The bot is gone; your data from it is all in the web
+app.)
 
 ### AI-Powered Transaction Processing
 
-- **Intelligent Intent Routing**: Just type naturally, no commands needed. The AI understands whether you want to add a transaction, check your weekly summary, search, edit, delete, or export. Simply say "show me this week", "delete expense" or "irish pub 4.50" and the bot figures out the rest. If there is no match or you prefer to do otherwise, you can always fall back to a completely deterministic and classic flow.
+- **Plain words**: type "irish pub 4.50 yesterday" and review the parsed fields before saving.
 - **Smart Categorization**: Automatically assigns the right category based on your description.
-- **Duplicate Detection**: The AI detects when a new transaction looks like a recent one already saved and asks you to confirm before storing it, preventing accidental double-entries.
+- **Duplicate Detection**: Warns when a new transaction looks like a recent one already saved.
 - **Flexible Date Recognition**: Understands various date formats (dd/mm, dd-mm-yyyy, "yesterday", etc.).
 - **Multi-language Support**: Works with transaction descriptions in any language.
 
 ### Transaction Management
 
-- **Quick Entry**: Add expenses and income with a single message.
-- **Inline Editing**: Modify amount, category, description, or date before confirming.
-- **Bulk Operations**: Edit or delete existing transactions with paginated navigation.
+- **Quick Entry**: Add expenses and income in one line.
+- **Inline Editing**: Change amount, category, description or date.
+- **Recurring transactions**: rent, subscriptions or salary, added each month.
 - **Transaction Types**: Track both expenses (17 categories) and income (2 categories).
-- **Search and Full Listing**: Find transactions by full text search and category or full listing.
+- **Search and Full Listing**: Find transactions by full text search and category.
 - **Export Functionality**: Download all your transactions as CSV files.
 
 ### Financial Insights
@@ -49,18 +52,17 @@ Pago is an intelligent Telegram bot that leverages AI to make expense tracking e
 
 ### Monthly Budget
 
-- **One Monthly Limit**: Set a total spending limit that applies to every month.
-- **Telegram Alerts**: The bot warns you once as spending gets close to the limit, and again when you go over it.
-- **Managed Anywhere**: Set, change or remove the budget from the web app settings or with `/budget` in the bot.
+- **One Monthly Limit**: Set a total spending limit that applies to every month, from Settings.
 
 ### Web App
 
 - **Responsive SPA** (`frontend/`): desktop sidebar layout and a mobile layout with bottom tabs.
 - **AI quick add**: type "irish pub 12.50 yesterday", review the parsed fields, confirm. Warns about likely duplicates.
-- **Multiple Authentication Methods**:
-  - Passkey/WebAuthn sign-in, usernameless (the browser picks the passkey).
-  - Telegram-based login with verification codes.
-  - Email-based passwordless authentication (API only).
+- **Sign-in**:
+  - Google sign-in. It is also the only way to create an account.
+  - Passkeys (WebAuthn), discoverable: "Sign in with a passkey" needs nothing else.
+  - The old email code only works on API hosts without a Google client
+    (during a domain move, the old address). It will be removed.
 - **Transaction Management**:
   - Add new transactions directly from the web interface, with auto-save on creation.
   - Edit and delete existing transactions inline.
@@ -78,44 +80,11 @@ Pago is an intelligent Telegram bot that leverages AI to make expense tracking e
   - Support for multiple passkeys per user.
   - Passkey management (register, list, delete).
 
-### Smart Reminders
-
-- **Automated Weekly Recaps**: Receive your previous week's summary every Monday.
-- **Automated Monthly Recaps**: Receive your previous month's summary on the 1st of each month.
-- **Intelligent Scheduling**: Only sends reminders to active users.
-- **Reliable Delivery**: Built-in retry mechanism for failed notifications.
-
-### Available Commands
-
-- `/start` or `/new` - Show the main menu
-- `/edit` - Edit an existing transaction
-- `/delete` - Delete a transaction
-- `/clone` - Copy an existing transaction to a new date
-- `/list` - View all transactions (paginated)
-- `/search` - Search transactions by description
-- `/week` - Get current week's financial summary
-- `/month` - Get current month's financial summary
-- `/year` - Get current year's financial summary
-- `/budget` - View or change the monthly spending limit
-- `/export` - Export all transactions to CSV
-- `/cancel` - Cancel the current operation
-
-### User Experience
-
-- **Intuitive Interface**: Clean inline keyboards for all operations, with a homogeneous category selector across add, edit, search, and budget flows.
-- **Smart Navigation**: Year/month selectors for browsing historical data, with the year shown in list and search results to avoid ambiguity.
-- **Pagination**: Handle large transaction lists with ease.
-- **Live Typing Indicator**: The bot signals "typing..." while the AI thinks, so you always know it is working.
-- **Quick Actions**: Home screen with instant access to all major functions, kept stable to avoid flicker on updates.
-- **Cancel Anytime**: Every operation can be cancelled mid-flow.
-
 ### Technical Features
 
 - **Database Migrations**: Version-controlled schema management
-- **Webhook & Polling Support**: Flexible deployment options.
 - **Development Tools**: Built-in database seeder for testing.
-- **Modular Architecture**: Clean separation of concerns for easy maintenance.
-- **Configurable Access**: Optional user whitelist for private deployments.
+- **Configurable Access**: Optional `ALLOWED_EMAILS` list of who can create an account.
 
 ## Getting Started
 
@@ -151,26 +120,17 @@ Then edit `.env`. The full list with comments is in `.env.example`. The main
 settings are:
 
 ```env
-TELEGRAM_BOT_API_TOKEN='XXXXXXXXXX:AAAA_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
 DATABASE_URL='postgres://postgres:postgres@localhost:5433/postgres'
 OPENAI_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 OPENAI_BASE_URL='https://api.deepseek.com/v1'
 LLM_MODEL='deepseek-v4-flash'
 LLM_DISABLE_THINKING='true'
-RUN_MODE='polling' # webhook or polling
-WEBHOOK_DOMAIN=''
-WEBHOOK_SECRET=''
-WEBHOOK_HOST='localhost'
-WEBHOOK_PORT='8080'
 LOG_LEVEL='info'
-# Dev purpose, comma separated Telegram usernames. Keep it empty to allow all
-ALLOWED_USERS=''
-# Seed purpose - set the Telegram ID of the user to seed transactions for
+# Seed purpose - set the account id (users.tg_id) to seed transactions for
 SEED_USER_TG_ID=''
 # Web server (API and legacy dashboard)
 WEB_HOST=127.0.0.1
 WEB_PORT=8091
-WEB_DASHBOARD_URL='http://localhost:8091/web/dashboard'
 SESSION_SECRET='your-random-session-secret-here'
 SESSION_DURATION_MIN=43200
 # Browser app served from another origin (see "Web App" below)
@@ -179,13 +139,11 @@ WEB_COOKIE_SAMESITE='lax'
 # Passkeys. RP ID is the domain, RP origin is the exact frontend origin
 WEBAUTHN_RP_ID='localhost'
 WEBAUTHN_RP_ORIGIN='http://localhost:5174'
-# Email login codes are sent through Brevo. Leave the key empty to disable email login
-BREVO_API_KEY=''
-EMAIL_FROM_NAME='Pago App'
-EMAIL_FROM_ADDRESS='noreply@your-domain.com'
-# Bot health check endpoint
-HEALTH_CHECK_TOKEN='your-secret-token'
-HEALTH_CHECK_PORT=8082
+# Google sign-in (paired lists, one entry per API host)
+GOOGLE_CLIENT_ID=''
+GOOGLE_CLIENT_SECRET=''
+GOOGLE_REDIRECT_URL='http://localhost:5174/web/auth/google/callback'
+ALLOWED_EMAILS=''
 ```
 
 Start a local PostgreSQL (the `docker-compose.yml` in the repo root only
@@ -230,19 +188,6 @@ func rollback_email_column(tx *gorm.DB) error {
 
 ### Building and Running
 
-#### Telegram Bot
-
-```bash
-# Build the bot
-make build
-
-# Run the bot
-make run
-
-# Run the bot with live reloading (requires Air)
-make run/live
-```
-
 #### Web Server
 
 ```bash
@@ -277,28 +222,14 @@ make fe/check
 For passkeys to work in development set `WEBAUTHN_RP_ID=localhost` and
 `WEBAUTHN_RP_ORIGIN=http://localhost:5174` in `.env`.
 
-#### Both Services
-
-```bash
-# Build both applications
-make build-all
-
-# Build both for Linux
-make build-linux-all
-
-# Note: Running both requires two terminals
-# Terminal 1: make run
-# Terminal 2: make run-web
-```
-
 ### Database Seeding
 
 The Dev DB Seeder generates test transaction data for development. The user
-must already exist: send `/start` to your bot once, or insert a row in the
-`users` table by hand.
+must already exist: sign in once with Google, then use the `tg_id` of your row
+in the `users` table (accounts made with Google have a negative id).
 
 ```bash
-# Set the user's Telegram ID you want to seed data for (or put it in .env)
+# Set the account id you want to seed data for (or put it in .env)
 export SEED_USER_TG_ID=123456789
 
 # Seed the database with random transactions
@@ -312,29 +243,26 @@ The seeder will:
 - Distribute transactions across all categories.
 - Ensure at least one salary per month.
 - Delete existing transactions before seeding (idempotent).
-- Leave budgets untouched. Create those from the web app or the `/budget` command.
+- Leave budgets untouched. Create those from the web app.
 
 ## Deployment
 
 ### Docker Images
 
-The repo ships two images, one per process:
+The repo ships one image:
 
-- `Dockerfile` builds the Telegram bot (`/app/pago`). It listens on 8080 for
-  the webhook and on 8082 for the health check.
 - `Dockerfile.web` builds the web server (`/app/pago-web`). It serves the API
-  and the legacy dashboard on 8081 (set `WEB_HOST=0.0.0.0` and `WEB_PORT=8081`).
+  and the legacy dashboard on 8081 (set `WEB_HOST=0.0.0.0` and `WEB_PORT=8081`),
+  and runs the monthly recurring transactions.
 
 ```bash
-docker build -t pago -f Dockerfile .
 docker build -t pago-web -f Dockerfile.web .
 ```
 
-Run them with your own compose file or orchestrator behind a reverse proxy
-that terminates TLS. Point `/health*` at the bot's health port, `/web/*` at
-the web server, and everything else at the bot's webhook port. Migrations are
-not run by the images: run `go run ./cmd/migrate/main.go -command up` against
-the database before the first start and after each upgrade.
+Run it behind a reverse proxy that terminates TLS and sends `/web/*` to the web
+server. Migrations are not run by the image: run
+`go run ./cmd/migrate/main.go -command up` against the database before the
+first start and after each upgrade.
 
 The `docker-compose.yml` in the repo root is for local development only. It
 starts just PostgreSQL.
@@ -395,30 +323,12 @@ so people can move at their own pace:
 - On the server list both app origins in `WEB_CORS_ORIGINS`, and give
   `WEBAUTHN_RP_ID` and `WEBAUTHN_RP_ORIGIN` one entry per domain, in the same
   order. Passkeys are bound to a domain, so people add a new passkey on the
-  new one after signing in with a code.
-- Set `WEBHOOK_DROP_PENDING_UPDATES=false` for the restart that moves
-  `WEBHOOK_DOMAIN`, so no Telegram message sent during the restart is lost.
+  new one after signing in with Google.
+- Give only the new API host a Google client (`GOOGLE_*`). The old host then
+  keeps the old email code, and its "we moved" banner gives signed-in people a
+  one-time hand-off link that links their Google account on the new host.
 
 ### Manual Deployment
-
-#### Telegram Bot
-
-The bot can run both in `webhook` and `polling` mode.
-
-**Webhook Mode:**
-
-```env
-RUN_MODE='webhook'
-WEBHOOK_DOMAIN='https://your-domain.com'
-WEBHOOK_SECRET='xxxyyyzzz'
-WEBHOOK_PORT='8080'
-```
-
-**Polling Mode:**
-
-```env
-RUN_MODE='polling'
-```
 
 #### Web Server
 
@@ -459,22 +369,12 @@ LLM_MODEL='gpt-4'
 
 ### Authentication Options
 
-The web app supports three authentication methods:
-
-1. **Telegram Login** (code-based):
-   - Enter your Telegram username.
-   - Check Telegram for a 6-digit verification code.
-   - Enter the code to access your dashboard.
-
-2. **Email Login** (passwordless):
-   - Enter your registered email address.
-   - Check your email for a 6-digit verification code.
-   - Enter the code to access your dashboard.
-
-3. **Passkey Login** (WebAuthn):
-   - Register a passkey from your dashboard settings after initial login.
-   - Use biometric authentication (fingerprint, face recognition) on subsequent logins.
-   - No codes needed - instant secure access.
+- **Google**: the only way to create an account. Existing accounts are found
+  by Google account id, then by verified email, or linked with the hand-off
+  link from the old address.
+- **Passkeys**: create one in Settings (or right after the first Google
+  sign-in). "Sign in with a passkey" then needs nothing else.
+- **Email code** (legacy): only on an API host without a Google client.
 
 ### App Features
 
@@ -490,14 +390,6 @@ The web app supports three authentication methods:
    - View transactions by category.
 6. **Settings**: Set the monthly budget, register and delete passkeys, export
    your data as CSV.
-
-The web app provides a complementary interface to the Telegram bot, offering:
-
-- Better visualization for large datasets.
-- Month-by-month navigation.
-- Desktop and mobile-friendly transaction management.
-- Multiple secure authentication options.
-- Direct transaction creation without needing Telegram.
 
 ## HTTP API & SDKs
 
@@ -516,7 +408,7 @@ TOKEN="pago_$(openssl rand -base64 24 | tr -d '=+/' | head -c 32)"
 HASH=$(printf %s "$TOKEN" | shasum -a 256 | awk '{print $1}')
 echo "token=$TOKEN"
 
-# Then in psql, replace <tg_id> with the target user's Telegram ID:
+# Then in psql, replace <tg_id> with the target account id (users.tg_id):
 # INSERT INTO api_tokens (tg_id, name, token_hash, prefix)
 #   VALUES (<tg_id>, 'my-cli', '<HASH>', substring('<TOKEN>' from 1 for 8));
 ```

@@ -1,3 +1,14 @@
+// Package main is the pago web server entrypoint (API and old dashboard).
+//
+//	@title			Pago API
+//	@version		1.0
+//	@description	Personal finance tracking API. All /api/* endpoints require either a session cookie (browser) or an Authorization: Bearer <token> header (machine clients).
+//	@BasePath		/web
+//
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Provide the value as: Bearer <token>
 package main
 
 import (
@@ -12,9 +23,9 @@ import (
 	"pago/internal/email"
 	"pago/internal/logging"
 	"pago/internal/repository"
+	"pago/internal/scheduler"
 	"pago/internal/web"
 
-	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/joho/godotenv"
 )
 
@@ -36,18 +47,6 @@ func main() {
 		}
 	} else {
 		logger.Warnln("BREVO_API_KEY is empty: email login is disabled")
-	}
-
-	// Get token from the environment variable
-	token := os.Getenv("TELEGRAM_BOT_API_TOKEN")
-	if token == "" {
-		logger.Fatalln("TELEGRAM_BOT_API_TOKEN environment variable is empty")
-	}
-
-	// Create bot for sending auth codes
-	bot, err := gotgbot.NewBot(token, nil)
-	if err != nil {
-		logger.Fatalf("failed to create new bot: %s\n", err.Error())
 	}
 
 	// OpenAI API Compatible LLM Setup (if needed for dashboard features)
@@ -105,11 +104,20 @@ func main() {
 			} else {
 				logger.Debugf("Successfully cleaned up expired WebAuthn sessions")
 			}
+			if err := repositories.Auth.CleanupExpiredTokens(); err != nil {
+				logger.Errorf("Failed to cleanup expired auth data: %v", err)
+			}
 		}
 	}()
 
 	// Initialize web server
-	webServer := web.NewServer(logger, repositories, bot, llm, emailService)
+	webServer := web.NewServer(logger, repositories, llm, emailService)
+
+	// Background jobs: monthly recurring transactions (this used to run in
+	// the Telegram bot).
+	sched := scheduler.NewScheduler(&repositories.Recurring, logger)
+	sched.Start()
+	defer sched.Stop()
 
 	// Get web server configuration
 	webHost := os.Getenv("WEB_HOST")

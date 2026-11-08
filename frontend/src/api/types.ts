@@ -158,6 +158,13 @@ export interface MeResponse {
   initials: string;
   hasEmail: boolean;
   currency: string;
+  googleConnected: boolean;
+}
+
+export interface AuthMethods {
+  google: boolean;
+  email: boolean;
+  passkey: boolean;
 }
 
 export interface ParseTransactionResponse {
@@ -178,6 +185,8 @@ export interface PasskeyInfo {
   name: string;
   createdAt: string;
   lastUsedAt: string | null;
+  // Made on another address (the old one). It does not work here.
+  otherDomain?: boolean;
 }
 
 export interface MessageResponse {

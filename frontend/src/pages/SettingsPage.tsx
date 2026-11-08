@@ -88,12 +88,8 @@ export function SettingsPage() {
   }
 
   const supported = isPasskeySupported();
-  const canRegister = supported && user.hasEmail;
-  const registerNote = !supported
-    ? "Passkeys are not supported in this browser."
-    : !user.hasEmail
-      ? "Add an email to your account from the Telegram bot to use passkeys."
-      : null;
+  const canRegister = supported;
+  const registerNote = !supported ? "Passkeys are not supported in this browser." : null;
 
   async function handleExport() {
     setExporting(true);
@@ -173,6 +169,7 @@ export function SettingsPage() {
             <div className={styles.pkInfo}>
               <div className={styles.pkName}>{pk.name}</div>
               <div className={styles.pkMeta}>
+                {pk.otherDomain ? "Old address only, does not work here. You can remove it. " : ""}
                 Added {formatDateFull(pk.createdAt)} &middot; Last used {pk.lastUsedAt ? formatRelativeDay(pk.lastUsedAt) : "never"}
               </div>
             </div>
@@ -240,7 +237,7 @@ export function SettingsPage() {
   const budgetCard = (
     <Card radius={isMobile ? "lg" : "md"} gap="12px">
       <CardTitle>Monthly budget</CardTitle>
-      <div className={styles.text}>One limit for every month. The Telegram bot warns you as spending gets close to it.</div>
+      <div className={styles.text}>One limit for every month. Alerts used to come from the Telegram bot, which is gone. Alerts in the web app are coming later.</div>
       {budgetQuery.loading && !budgetQuery.data ? (
         <PageLoading />
       ) : budgetQuery.error ? (
@@ -319,10 +316,6 @@ export function SettingsPage() {
               </div>
               <div className={styles.divider} />
               <div className={styles.row}>
-                <span className={styles.rowLabel}>Telegram</span>
-                <span className={`${styles.rowValue} mono`}>@{user.username}</span>
-              </div>
-              <div className={styles.row}>
                 <span className={styles.rowLabel}>Currency</span>
                 {currencySelect}
               </div>
@@ -355,8 +348,8 @@ export function SettingsPage() {
                     <span className={[styles.rowValue, !user.email ? "text-muted" : ""].filter(Boolean).join(" ")}>{user.email || "Not set"}</span>
                   </div>
                   <div className={styles.row}>
-                    <span className={styles.rowLabel}>Telegram</span>
-                    <span className={`${styles.rowValue} mono`}>@{user.username}</span>
+                    <span className={styles.rowLabel}>Google</span>
+                    <span className={[styles.rowValue, !user.googleConnected ? "text-muted" : ""].filter(Boolean).join(" ")}>{user.googleConnected ? "Connected" : "Not connected"}</span>
                   </div>
                   <div className={styles.row}>
                     <span className={styles.rowLabel}>Currency</span>

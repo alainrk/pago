@@ -2,16 +2,12 @@ package scheduler
 
 import (
 	"fmt"
-	"html"
-	"slices"
 	"time"
 
-	"pago/internal/client"
 	"pago/internal/db"
 	"pago/internal/model"
 	"pago/internal/recurring"
 
-	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -78,31 +74,9 @@ func applyDueRecurring(store recurringStore, today time.Time, logger *logrus.Log
 	return stats, nil
 }
 
-// shouldCheckBudget reports whether a generated transaction should run the
-// budget check. Catch-up rows for past months are skipped, so a long outage
-// does not send a burst of stale alerts.
-func shouldCheckBudget(tx model.Transaction, today time.Time) bool {
-	return tx.Type == model.TypeExpense && recurring.Period(tx.Date) == recurring.Period(today)
-}
-
-// shouldSendBudgetAlert reports whether a budget result is worth a message.
-// The bot repeats the over-budget line on every expense it confirms, but a
-// standalone message is only sent when this transaction crossed 80% or 100%.
-func shouldSendBudgetAlert(p *client.BudgetProgress, amount float64) bool {
-	if p == nil {
-		return false
-	}
-	if slices.Contains(p.NewAlerts, 80) {
-		return true
-	}
-	return slices.Contains(p.NewAlerts, 100) && p.Spent-amount < p.Limit
-}
-
+// processRecurring applies every due recurring transaction.
 func (s *Scheduler) processRecurring() error {
-	today := recurring.Today()
-	stats, err := applyDueRecurring(&s.repositories.Recurring, today, s.logger, func(tx model.Transaction) {
-		s.checkRecurringBudget(tx, today)
-	})
+	stats, err := applyDueRecurring(s.recurring, recurring.Today(), s.logger, nil)
 	if err != nil {
 		return err
 	}
@@ -111,26 +85,4 @@ func (s *Scheduler) processRecurring() error {
 			stats.Rules, stats.Created, stats.Conflicts, stats.Errors)
 	}
 	return nil
-}
-
-// checkRecurringBudget runs the usual budget check for a generated expense and
-// sends a message when a threshold was crossed. Failures are logged only:
-// the transaction is already saved.
-func (s *Scheduler) checkRecurringBudget(tx model.Transaction, today time.Time) {
-	if !shouldCheckBudget(tx, today) {
-		return
-	}
-	c := &client.Client{Logger: s.logger, Repositories: s.repositories}
-	progress, err := c.EvaluateAfterExpenseInsert(tx)
-	if err != nil {
-		s.logger.Warnf("Budget check failed for recurring transaction %d: %v", tx.ID, err)
-		return
-	}
-	if !shouldSendBudgetAlert(progress, tx.Amount) {
-		return
-	}
-	msg := fmt.Sprintf("🔁 Recurring: <b>%s</b> %.2f € added.", html.EscapeString(tx.Description), tx.Amount) + client.FormatBudgetSuffix(progress)
-	if _, err := s.bot.SendMessage(tx.TgID, msg, &gotgbot.SendMessageOpts{ParseMode: "HTML"}); err != nil {
-		s.logger.Warnf("Failed to send budget alert for recurring transaction %d: %v", tx.ID, err)
-	}
 }

@@ -66,7 +66,7 @@ type relyingParty struct {
 //   - Timeouts: 60 seconds for both registration and login (enforced)
 //   - Attestation: PreferNoAttestation (standard for passkeys, no attestation verification)
 //   - User Verification: Required (biometric or PIN)
-//   - Resident Keys: Preferred (enables discoverable credentials)
+//   - Resident Keys: Required (discoverable credentials, passkey-only sign-in)
 func NewWebAuthn(repo Repository) (*WebAuthn, error) {
 	rawIDs := os.Getenv("WEBAUTHN_RP_ID")
 	if strings.TrimSpace(rawIDs) == "" {
@@ -173,7 +173,10 @@ func newWebAuthnInstance(rpID, rpOrigin string) (*webauthn.WebAuthn, error) {
 		// This ensures the user must prove their identity, not just possession of the device.
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
 			UserVerification: protocol.VerificationRequired,
-			ResidentKey:      protocol.ResidentKeyRequirementPreferred,
+			// Discoverable credentials are required, so a passkey alone can
+			// sign in ("Sign in with a passkey", no email or Google first).
+			ResidentKey:        protocol.ResidentKeyRequirementRequired,
+			RequireResidentKey: protocol.ResidentKeyRequired(),
 		},
 	}
 
@@ -338,6 +341,8 @@ func (r *WebAuthn) FinishRegistration(origin string, user *model.User, sessionID
 	}
 
 	dbCredential := model.FromWebAuthnCredential(user.TgID, credential, credentialName)
+	rpID := party.id
+	dbCredential.RPID = &rpID
 
 	// SECURITY: Use transaction to prevent race conditions between count check and insert.
 	// This ensures atomic verification of credential limit and duplicate prevention.
@@ -646,4 +651,27 @@ func (r *WebAuthn) DeleteCredential(credentialID []byte) error {
 // CleanupExpiredSessions removes expired challenge sessions
 func (r *WebAuthn) CleanupExpiredSessions() error {
 	return r.DB.CleanupExpiredWebAuthnSessions()
+}
+
+// RPIDFor returns the RP ID (domain) used for a frontend origin.
+func (r *WebAuthn) RPIDFor(origin string) string {
+	return r.partyFor(origin).id
+}
+
+// CountCredentialsForOrigin counts the user's passkeys that work on this
+// frontend origin (same RP ID). Passkeys from before the domain move have no
+// RP ID stored and are not counted.
+func (r *WebAuthn) CountCredentialsForOrigin(origin string, tgID int64) (int, error) {
+	creds, err := r.DB.GetWebAuthnCredentialsByUser(tgID)
+	if err != nil {
+		return 0, err
+	}
+	id := r.RPIDFor(origin)
+	n := 0
+	for _, c := range creds {
+		if c.RPID != nil && *c.RPID == id {
+			n++
+		}
+	}
+	return n, nil
 }

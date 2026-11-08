@@ -18,6 +18,8 @@ type MeResponse struct {
 	// HasEmail tells the client whether passkey registration is possible.
 	HasEmail bool   `json:"hasEmail"`
 	Currency string `json:"currency"`
+	// GoogleConnected tells whether the account has a Google sign-in.
+	GoogleConnected bool `json:"googleConnected"`
 }
 
 // handleAPIMe returns the signed-in user's profile.
@@ -55,7 +57,8 @@ func buildMeResponse(user *model.User) MeResponse {
 		Initials: initials(name, user.TgUsername),
 		HasEmail: email != "",
 		// Transactions are stored in EUR today; exposed so the client does not hardcode it.
-		Currency: string(model.CurrencyEUR),
+		Currency:        string(model.CurrencyEUR),
+		GoogleConnected: user.GoogleSub != nil && *user.GoogleSub != "",
 	}
 }
 
@@ -68,7 +71,13 @@ func displayName(user *model.User) string {
 	if full != "" {
 		return full
 	}
-	return user.TgUsername
+	if user.TgUsername != "" {
+		return user.TgUsername
+	}
+	if user.Email != nil {
+		return strings.Split(*user.Email, "@")[0]
+	}
+	return ""
 }
 
 // initials returns up to two upper-case letters from the name, falling back to
