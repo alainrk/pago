@@ -179,8 +179,8 @@ func sha256Hex(s string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-// legacyLoginAllowed tells whether the old sign-in method (email codes)
-// works on this host. They only work where there is no Google
+// legacyLoginAllowed tells whether the old sign-in methods (email and
+// Telegram codes) work on this host. They only work where there is no Google
 // sign-in, which during the move is the old address. On the new address the
 // only ways in are Google and passkeys.
 func (s *Server) legacyLoginAllowed(r *http.Request) bool {
@@ -189,9 +189,10 @@ func (s *Server) legacyLoginAllowed(r *http.Request) bool {
 
 // AuthMethodsResponse tells the login page which buttons to show.
 type AuthMethodsResponse struct {
-	Google  bool `json:"google"`
-	Email   bool `json:"email"`
-	Passkey bool `json:"passkey"`
+	Google   bool `json:"google"`
+	Email    bool `json:"email"`
+	Telegram bool `json:"telegram"`
+	Passkey  bool `json:"passkey"`
 }
 
 // handleAuthMethods lists the sign-in methods on this host.
@@ -202,9 +203,10 @@ func (s *Server) handleAuthMethods(w http.ResponseWriter, r *http.Request) {
 	}
 	legacy := s.legacyLoginAllowed(r)
 	s.sendJSONSuccess(w, AuthMethodsResponse{
-		Google:  !legacy,
-		Email:   legacy && s.emailService != nil,
-		Passkey: true,
+		Google:   !legacy,
+		Email:    legacy && s.emailService != nil,
+		Telegram: legacy && s.telegram != nil,
+		Passkey:  true,
 	})
 }
 

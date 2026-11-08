@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"pago/internal/model"
 )
 
 // handleHome redirects to dashboard if authenticated, otherwise to login
@@ -50,10 +51,11 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleAuthRequest sends a login code by email (legacy). It only works on
-// hosts without Google sign-in, which during the domain move means the old
-// address. The Telegram code is gone with the bot. Removed in the cleanup
-// phase.
+// handleAuthRequest sends a legacy login code, by email or by Telegram. It
+// only works on hosts without Google sign-in, which during the domain move
+// means the old address, so existing users can still sign in there and use
+// the hand-off button. The Telegram code needs TELEGRAM_BOT_API_TOKEN (only
+// the Bot API is used, not the old bot). Removed in the cleanup phase.
 func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 	if !s.legacyLoginAllowed(r) {
 		s.sendJSONError(w, "Sign in with Google or a passkey on this address", http.StatusGone)
@@ -65,7 +67,8 @@ func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Email string `json:"email"`
+		Username string `json:"username"`
+		Email    string `json:"email"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -73,22 +76,40 @@ func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	username := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(req.Username), "@"))
 	email := strings.TrimSpace(strings.ToLower(req.Email))
-	if email == "" {
-		s.sendJSONError(w, "Email is required. Telegram codes stopped with the Telegram bot.", http.StatusBadRequest)
+
+	if username == "" && email == "" {
+		s.sendJSONError(w, "Username or email is required", http.StatusBadRequest)
 		return
 	}
-
-	if s.emailService == nil {
-		// Independent of whether the user exists, so it leaks nothing.
+	if username != "" && email != "" {
+		s.sendJSONError(w, "Please provide either username or email, not both", http.StatusBadRequest)
+		return
+	}
+	// Both checks are independent of whether the user exists, so they leak nothing.
+	if email != "" && s.emailService == nil {
 		s.sendJSONError(w, "Email sign-in is not available on this server", http.StatusServiceUnavailable)
+		return
+	}
+	if username != "" && s.telegram == nil {
+		s.sendJSONError(w, "Telegram sign-in is not available on this server", http.StatusServiceUnavailable)
 		return
 	}
 
 	// Generic success message to prevent user enumeration
 	const genericSuccessMsg = "If an account exists with these credentials, a verification code has been sent"
 
-	user, exists, err := s.repositories.Users.GetByEmail(email)
+	var user model.User
+	var exists bool
+	var err error
+	if email != "" {
+		user, exists, err = s.repositories.Users.GetByEmail(email)
+	} else {
+		user, exists, err = s.repositories.Users.GetByUsername(username)
+		// Only accounts from the old bot have a Telegram chat (positive id).
+		exists = exists && user.TgID > 0
+	}
 
 	// Add consistent delay to prevent timing attacks
 	defer time.Sleep(100 * time.Millisecond)
@@ -112,12 +133,17 @@ func (s *Server) handleAuthRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send code via email
-	subject := "Your Pago Login Code"
-	textContent := fmt.Sprintf("🔐 Your Pago login code is:\n\n%s\n\nThis code will expire in 5 minutes.", authToken.Token)
-	err = s.emailService.SendTransacEmail(email, subject, textContent)
-	if err != nil {
-		s.logger.Errorf("Failed to send auth code via email: %v", err)
+	if email != "" {
+		subject := "Your Pago Login Code"
+		textContent := fmt.Sprintf("🔐 Your Pago login code is:\n\n%s\n\nThis code will expire in 5 minutes.", authToken.Token)
+		if err := s.emailService.SendTransacEmail(email, subject, textContent); err != nil {
+			s.logger.Errorf("Failed to send auth code via email: %v", err)
+		}
+	} else {
+		message := fmt.Sprintf("🔐 Your Pago login code is:\n\n<code>%s</code>\n\nThis code will expire in 5 minutes.", authToken.Token)
+		if err := s.telegram.SendHTML(user.TgID, message); err != nil {
+			s.logger.Errorf("Failed to send auth code via Telegram: %v", err)
+		}
 	}
 
 	// Always return generic success message

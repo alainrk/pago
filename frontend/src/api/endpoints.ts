@@ -45,6 +45,9 @@ export const auth = {
   // Legacy email code, old address only.
   requestCode: (email: string) =>
     request<MessageResponse>("/auth/request", { method: "POST", body: { email } }),
+  // Legacy Telegram code, old address only, until the bot is switched off.
+  requestTelegramCode: (username: string) =>
+    request<MessageResponse>("/auth/request", { method: "POST", body: { username } }),
   verifyCode: (code: string) =>
     request<MessageResponse & { redirect?: string }>("/auth/verify", { method: "POST", body: { code } }),
   logout: () => request<MessageResponse>("/logout", { method: "POST" }),
@@ -76,6 +79,9 @@ export const account = {
   passkeyDelete: (credentialId: string) =>
     request<MessageResponse>("/api/passkey/delete", { method: "POST", body: { credentialId } }),
   exportCsv: () => requestBlob("/api/transactions/export"),
+  // Quick entry (DeepSeek) choice, kept on the server.
+  setQuickEntry: (accept: boolean) =>
+    request<{ quickEntry: string; policyVersion: string; decidedAt: string }>("/api/ai-consent", { method: "POST", body: { accept } }),
   // One-time token that moves this account to the new address (old address).
   handoff: () => request<{ token: string; expiresAt: string }>("/api/auth/handoff", { method: "POST", body: {} }),
 };

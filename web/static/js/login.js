@@ -10,7 +10,7 @@ const passkeyEmailInput = document.getElementById("passkeyEmail");
 const emailInput = document.getElementById("email");
 const submitBtn = document.getElementById("submitBtn");
 
-let activeLoginMethod = "email"; // Track which login method is active
+let activeLoginMethod = "telegram"; // Track which login method is active
 let passkeySupported = false;
 
 function showMessage(text, type) {
@@ -37,9 +37,8 @@ function loadPersistedCredentials() {
   const savedEmail = sessionStorage.getItem("pago_email");
   const savedPasskeyEmail = sessionStorage.getItem("pago_passkey_email");
 
-  const usernameInput = document.getElementById("username");
-  if (savedUsername && usernameInput) {
-    usernameInput.value = savedUsername;
+  if (savedUsername) {
+    document.getElementById("username").value = savedUsername;
   }
   if (savedEmail) {
     emailInput.value = savedEmail;

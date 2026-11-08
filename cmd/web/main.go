@@ -111,7 +111,18 @@ func main() {
 	}()
 
 	// Initialize web server
-	webServer := web.NewServer(logger, repositories, llm, emailService)
+	// Legacy Telegram login code, only on hosts without Google (the old
+	// address) and only while TELEGRAM_BOT_API_TOKEN is set. Remove the token
+	// when the bot is switched off.
+	telegram, err := web.NewTelegramSender(os.Getenv("TELEGRAM_BOT_API_TOKEN"))
+	if err != nil {
+		logger.Fatalf("Failed to set up the Telegram sender: %s\n", err.Error())
+	}
+	if telegram == nil {
+		logger.Infoln("TELEGRAM_BOT_API_TOKEN is empty: Telegram login codes are off")
+	}
+
+	webServer := web.NewServer(logger, repositories, llm, emailService, telegram)
 
 	// Background jobs: monthly recurring transactions (this used to run in
 	// the Telegram bot).

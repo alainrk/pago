@@ -33,9 +33,11 @@ type Server struct {
 	loginLimiterMu sync.Mutex
 	emailService   *email.EmailService
 	google         googleConfig
+	// telegram sends the legacy Telegram login code (old address only), or nil.
+	telegram TelegramSender
 }
 
-func NewServer(logger *logrus.Logger, repos Repositories, llm ai.LLM, emailService *email.EmailService) *Server {
+func NewServer(logger *logrus.Logger, repos Repositories, llm ai.LLM, emailService *email.EmailService, telegram TelegramSender) *Server {
 	google, err := loadGoogleConfig()
 	if err != nil {
 		logger.Errorf("Google sign-in is off: %v", err)
@@ -52,6 +54,7 @@ func NewServer(logger *logrus.Logger, repos Repositories, llm ai.LLM, emailServi
 		loginLimiterMu: sync.Mutex{},
 		emailService:   emailService,
 		google:         google,
+		telegram:       telegram,
 	}
 }
 

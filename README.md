@@ -61,8 +61,13 @@ app.)
 - **Sign-in**:
   - Google sign-in. It is also the only way to create an account.
   - Passkeys (WebAuthn), discoverable: "Sign in with a passkey" needs nothing else.
-  - The old email code only works on API hosts without a Google client
-    (during a domain move, the old address). It will be removed.
+  - The old email and Telegram codes only work on API hosts without a
+    Google client (during a domain move, the old address). They will be
+    removed.
+- **Quick entry consent**: the AI quick entry sends the typed text to
+  DeepSeek (China). The app asks before the first use and stores the choice
+  on the server with the privacy policy version; the server refuses
+  `/web/api/transactions/parse` without it. Settings has a switch.
 - **Transaction Management**:
   - Add new transactions directly from the web interface, with auto-save on creation.
   - Edit and delete existing transactions inline.
@@ -374,7 +379,8 @@ LLM_MODEL='gpt-4'
   link from the old address.
 - **Passkeys**: create one in Settings (or right after the first Google
   sign-in). "Sign in with a passkey" then needs nothing else.
-- **Email code** (legacy): only on an API host without a Google client.
+- **Email or Telegram code** (legacy): only on an API host without a Google
+  client, and Telegram only while `TELEGRAM_BOT_API_TOKEN` is set.
 
 ### App Features
 

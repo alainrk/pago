@@ -11,6 +11,9 @@ What changes for people, in short:
 - On the new address you sign in with **Google** or a **passkey**.
 - Your account and all your data stay the same, including everything you
   added with the bot.
+- Quick entry (type "pizza 12" and Pago fills the form) now asks you first,
+  because it uses DeepSeek, an AI company in China. You can say no and use
+  the form.
 
 ---
 
@@ -56,9 +59,10 @@ account, so Google finds it even if your Google email is a different one.
 >
 > What to do (2 minutes):
 >
-> 1. Open the old address, https://pago.alaindichiappari.dev, and press
->    **"Open the new address"** in the banner at the top. (This links your
->    account. If you cannot sign in there, skip this step.)
+> 1. Open the old address, https://pago.alaindichiappari.dev, sign in as
+>    usual (Telegram code, email code or passkey) and press **"Open the new
+>    address"** in the banner at the top. This links your account.
+>    (Do it soon: the Telegram code stops when the bot is switched off.)
 > 2. On https://pago.faccio.app tap **Continue with Google**.
 > 3. Create a **passkey** when Pago asks. Next time you sign in with Face ID,
 >    Touch ID or your device PIN.
@@ -111,8 +115,9 @@ Reminder, one week before:
 
 **1. Start on the old address (recommended)**
 
-Open https://pago.alaindichiappari.dev. If you are signed in, tap **"Open
-the new address"** in the banner. This takes your account with you, even
+Open https://pago.alaindichiappari.dev and sign in as usual (Telegram
+code, email code or passkey). Tap **"Open the new address"** in the
+banner. This takes your account with you, even
 if your Google email is not the one you used in Pago.
 
 **2. Sign in with Google**
@@ -151,13 +156,19 @@ Android (Chrome):
 3. Press and hold the old Pago icon and drag it to "Remove" (or tap
    "Uninstall").
 
-**6. Telegram**
+**6. Quick entry**
+
+The first time you use quick entry, Pago asks whether your text may go to
+DeepSeek (an AI company in China). "Use quick entry" or "Use the form",
+both are fine. You can change it in Settings, "Quick entry (AI)".
+
+**7. Telegram**
 
 The bot is switched off. You can delete the chat with it. Add transactions
 on https://pago.faccio.app instead (type them in plain words, like in the
 bot).
 
-**7. Small things to set again**
+**8. Small things to set again**
 
 "Hide amounts" (the eye icon) starts off on the new address. Turn it on
 again if you use it.

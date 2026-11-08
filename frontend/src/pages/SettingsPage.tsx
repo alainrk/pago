@@ -19,10 +19,29 @@ import { registerPasskey, suggestPasskeyName, isPasskeySupported, PasskeyCancell
 import { currencySymbol, formatDateFull, formatMoney, formatRelativeDay, parseAmount } from "../lib/format";
 import styles from "./SettingsPage.module.css";
 import { BrandLinks } from "../components/BrandLinks";
+import { Toggle } from "../components/Toggle";
+import { QuickEntryText } from "../components/QuickEntryConsent";
 
 export function SettingsPage() {
   const user = useUser();
-  const { signOut } = useAuth();
+  const { signOut, refresh } = useAuth();
+  const [quickEntrySaving, setQuickEntrySaving] = useState(false);
+
+  // The switch shows the stored choice. Turning it on here is informed: the
+  // same text as the first-use sheet is right next to it.
+  async function handleQuickEntry(on: boolean) {
+    setQuickEntrySaving(true);
+    try {
+      await account.setQuickEntry(on);
+      await refresh();
+      toast(on ? "Quick entry is on" : "Quick entry is off");
+    } catch (err) {
+      if (guard(err)) return;
+      toast("Could not save your choice", "error");
+    } finally {
+      setQuickEntrySaving(false);
+    }
+  }
   const navigate = useNavigate();
   const { toast } = useToast();
   const guard = useSessionGuard();
@@ -223,6 +242,17 @@ export function SettingsPage() {
     </Card>
   );
 
+  const quickEntryCard = (
+    <Card radius={isMobile ? "lg" : "md"} gap="12px">
+      <CardTitle>Quick entry (AI)</CardTitle>
+      <div className={styles.text} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <QuickEntryText />
+      </div>
+      <Toggle id="quick-entry" label="Use quick entry" checked={user.quickEntry === "accepted"} disabled={quickEntrySaving} onChange={(on) => void handleQuickEntry(on)} />
+      {user.quickEntry === "" && <div className={styles.note}>Not chosen yet. Pago asks before your first quick entry.</div>}
+    </Card>
+  );
+
   const dataText = <div className={styles.text}>Download every transaction on your account as a CSV file. All years, all categories.</div>;
   const exportButton = (
     <Button variant="outline" icon="download" loading={exporting} onClick={handleExport} style={{ alignSelf: "flex-start" }}>
@@ -323,6 +353,7 @@ export function SettingsPage() {
             </Card>
             {budgetCard}
             {recurringCard}
+            {quickEntryCard}
             {passkeysCard}
             <Card radius="lg" gap="12px">
               <CardTitle>Data</CardTitle>
@@ -368,6 +399,7 @@ export function SettingsPage() {
             </div>
             <div className={styles.col}>
               {passkeysCard}
+              {quickEntryCard}
               <Card radius="md" gap="14px">
                 <CardTitle>Session</CardTitle>
                 <div className={styles.text}>Signed in on this device. Sessions expire after 30 days.</div>

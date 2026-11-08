@@ -78,6 +78,12 @@ func (s *Server) handleAPIParseTransaction(w http.ResponseWriter, r *http.Reques
 		s.sendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	// The text goes to DeepSeek in China: only with the person's consent for
+	// the current policy version (see handleAIConsent).
+	if user.QuickEntryChoice() != model.AIConsentAccepted {
+		s.sendJSONError(w, "Quick entry needs your consent first. Turn it on in Settings.", http.StatusForbidden)
+		return
+	}
 	if s.llm.APIKey == "" || s.llm.Model == "" {
 		s.sendJSONError(w, "AI parsing is not configured on this server", http.StatusServiceUnavailable)
 		return

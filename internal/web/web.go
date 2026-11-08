@@ -58,6 +58,7 @@ func Router(s *Server) http.Handler {
 	mux.HandleFunc(basePath+"/api/analytics/year-categories", s.requireAuth(s.handleAPIAnalyticsYearCategories))
 	mux.HandleFunc(basePath+"/api/me", s.requireAuth(s.handleAPIMe))
 	mux.HandleFunc(basePath+"/api/transactions/parse", s.requireAuth(s.handleAPIParseTransaction))
+	mux.HandleFunc(basePath+"/api/ai-consent", s.requireAuth(s.handleAIConsent))
 	mux.HandleFunc(basePath+"/api/transactions/duplicates", s.requireAuth(s.handleAPIDuplicateCheck))
 
 	// WebAuthn/Passkey management (protected)

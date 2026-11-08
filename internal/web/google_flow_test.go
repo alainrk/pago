@@ -148,3 +148,108 @@ type gormDB = gorm.DB
 func migrationConn(url string) (*gorm.DB, error) {
 	return gorm.Open(postgres.Open(url), &gorm.Config{})
 }
+
+type fakeTelegram struct {
+	chats []int64
+}
+
+func (f *fakeTelegram) SendHTML(chatID int64, _ string) error {
+	f.chats = append(f.chats, chatID)
+	return nil
+}
+
+func dbServer(t *testing.T) (*Server, *db.DB) {
+	t.Helper()
+	dbURL := os.Getenv("TEST_DATABASE_URL")
+	if dbURL == "" {
+		t.Skip("TEST_DATABASE_URL not set")
+	}
+	m, err := migrationConn(dbURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := migrations.NewMigrator(m).MigrateUp(); err != nil {
+		t.Fatal(err)
+	}
+	database, err := db.NewDB(dbURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	s := testGoogleServer(t)
+	repo := repository.Repository{DB: database, Logger: s.logger}
+	s.repositories = Repositories{Users: repository.Users{Repository: repo}, Auth: repository.Auth{Repository: repo}}
+	return s, database
+}
+
+func TestLegacyTelegramCodeOldHostOnly(t *testing.T) {
+	s, database := dbServer(t)
+	tg := &fakeTelegram{}
+	s.telegram = tg
+
+	id := time.Now().UnixNano()
+	username := fmt.Sprintf("tguser%d", id)
+	_ = database.Transaction(func(tx *gormDB) error {
+		return tx.Exec(`INSERT INTO users (tg_id, tg_username, session) VALUES (?, ?, '{}')`, id, username).Error
+	})
+	t.Cleanup(func() {
+		_ = database.Transaction(func(tx *gormDB) error {
+			tx.Exec(`DELETE FROM auth_tokens WHERE tg_id = ?`, id)
+			return tx.Exec(`DELETE FROM users WHERE tg_id = ?`, id).Error
+		})
+	})
+
+	send := func(host string) int {
+		r := httptest.NewRequest(http.MethodPost, "/web/auth/request", strings.NewReader(`{"username":"@`+username+`"}`))
+		r.Host = host
+		w := httptest.NewRecorder()
+		s.handleAuthRequest(w, r)
+		return w.Code
+	}
+	if code := send("api.new.example"); code != http.StatusGone || len(tg.chats) != 0 {
+		t.Fatalf("new host: %d, sent %v", code, tg.chats)
+	}
+	if code := send("api.old.example"); code != http.StatusOK || len(tg.chats) != 1 || tg.chats[0] != id {
+		t.Fatalf("old host: %d, sent %v", code, tg.chats)
+	}
+
+	// Methods on the old host now list Telegram.
+	r := httptest.NewRequest(http.MethodGet, "/web/auth/methods", nil)
+	r.Host = "api.old.example"
+	w := httptest.NewRecorder()
+	s.handleAuthMethods(w, r)
+	var m AuthMethodsResponse
+	_ = json.NewDecoder(w.Body).Decode(&m)
+	if !m.Telegram || m.Google {
+		t.Fatalf("methods: %+v", m)
+	}
+}
+
+func TestAIConsentStored(t *testing.T) {
+	s, database := dbServer(t)
+	id := time.Now().UnixNano()
+	_ = database.Transaction(func(tx *gormDB) error {
+		return tx.Exec(`INSERT INTO users (tg_id, session) VALUES (?, '{}')`, id).Error
+	})
+	t.Cleanup(func() {
+		_ = database.Transaction(func(tx *gormDB) error {
+			return tx.Exec(`DELETE FROM users WHERE tg_id = ?`, id).Error
+		})
+	})
+
+	for _, c := range []struct {
+		body string
+		want string
+	}{{`{"accept":true}`, model.AIConsentAccepted}, {`{"accept":false}`, model.AIConsentDeclined}} {
+		r := withUser(httptest.NewRequest(http.MethodPost, "/web/api/ai-consent", strings.NewReader(c.body)), &model.User{TgID: id})
+		w := httptest.NewRecorder()
+		s.handleAIConsent(w, r)
+		if w.Code != http.StatusOK {
+			t.Fatalf("consent %s: %d", c.body, w.Code)
+		}
+		u, err := s.repositories.Users.GetByTgID(id)
+		if err != nil || u.QuickEntryChoice() != c.want || u.AIConsentAt == nil || *u.AIConsentVersion != model.AIPolicyVersion {
+			t.Fatalf("stored %s: %+v %v", c.body, u, err)
+		}
+	}
+}

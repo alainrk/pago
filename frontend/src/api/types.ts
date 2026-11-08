@@ -159,11 +159,15 @@ export interface MeResponse {
   hasEmail: boolean;
   currency: string;
   googleConnected: boolean;
+  // Quick entry (AI, DeepSeek) choice. "" means: ask before the first use.
+  quickEntry: "accepted" | "declined" | "";
+  quickEntryPolicyVersion: string;
 }
 
 export interface AuthMethods {
   google: boolean;
   email: boolean;
+  telegram: boolean;
   passkey: boolean;
 }
 

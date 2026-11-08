@@ -27,6 +27,9 @@ export function LoginPage() {
   const [methods, setMethods] = useState<AuthMethods | null>(null);
   const [step, setStep] = useState<Step>("start");
   const [codeEmail, setCodeEmail] = useState("");
+  // Legacy code channel on the old address: Telegram username or email.
+  const [codeVia, setCodeVia] = useState<"telegram" | "email">("telegram");
+  const [tgUsername, setTgUsername] = useState("");
   const [code, setCode] = useState("");
   const [passkeyEmail, setPasskeyEmail] = useState("");
   const [askEmail, setAskEmail] = useState(false);
@@ -49,7 +52,7 @@ export function LoginPage() {
       })
       .catch(() => {
         // Older server without this endpoint: show passkeys only.
-        if (!cancelled) setMethods({ google: false, email: false, passkey: true });
+        if (!cancelled) setMethods({ google: false, email: false, telegram: false, passkey: true });
       });
     return () => {
       cancelled = true;
@@ -100,18 +103,20 @@ export function LoginPage() {
 
   async function onSendCode(e: FormEvent) {
     e.preventDefault();
-    const clean = codeEmail.trim().toLowerCase();
-    if (!clean || !clean.includes("@")) {
-      setError("Enter the email of your Pago account.");
+    const viaTelegram = codeVia === "telegram";
+    const clean = viaTelegram ? tgUsername.trim().replace(/^@/, "") : codeEmail.trim().toLowerCase();
+    if (!clean || (!viaTelegram && !clean.includes("@"))) {
+      setError(viaTelegram ? "Enter your Telegram username." : "Enter the email of your Pago account.");
       return;
     }
     setError(null);
     setNotice(null);
     setBusy("code");
     try {
-      await auth.requestCode(clean);
+      if (viaTelegram) await auth.requestTelegramCode(clean);
+      else await auth.requestCode(clean);
       setStep("code");
-      setNotice("If that email has a Pago account, a code is on its way.");
+      setNotice(viaTelegram ? "If that username has a Pago account, a code is on its way on Telegram." : "If that email has a Pago account, a code is on its way.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not send the code. Try again.");
     } finally {
@@ -189,35 +194,74 @@ export function LoginPage() {
               </>
             )}
 
-            {methods?.email && (
+            {(methods?.email || methods?.telegram) && (
               <>
                 {passkeyOk && <div className={styles.or}>or</div>}
                 {step === "start" ? (
                   <form className={styles.tg} onSubmit={onSendCode}>
-                    <label className={styles.tgLabel} htmlFor="code-email">
-                      Get a code by email
-                    </label>
-                    <div className={styles.row}>
-                      <input
-                        id="code-email"
-                        className={`input ${styles.input}`}
-                        type="email"
-                        placeholder="you@example.com"
-                        autoComplete="email"
-                        autoCapitalize="none"
-                        value={codeEmail}
-                        onChange={(e) => setCodeEmail(e.target.value)}
-                      />
-                      <Button type="submit" variant="secondary" size="xl" loading={busy === "code"} style={{ height: 44, fontSize: 13.5 }}>
-                        Send code
-                      </Button>
-                    </div>
-                    <div className={styles.hint}>We'll email you a 6-character code.</div>
+                    {methods?.email && methods?.telegram && (
+                      <div className={styles.hint}>
+                        Get a code by{" "}
+                        <button type="button" className={styles.linkBtn} onClick={() => setCodeVia(codeVia === "telegram" ? "email" : "telegram")}>
+                          {codeVia === "telegram" ? "email instead" : "Telegram instead"}
+                        </button>
+                      </div>
+                    )}
+                    {(codeVia === "telegram" && methods?.telegram) || !methods?.email ? (
+                      <>
+                        <label className={styles.tgLabel} htmlFor="tg-username">
+                          Get a code on Telegram
+                        </label>
+                        <div className={styles.row}>
+                          <input
+                            id="tg-username"
+                            className={`input ${styles.input}`}
+                            placeholder="@username"
+                            autoComplete="username"
+                            autoCapitalize="none"
+                            value={tgUsername}
+                            onChange={(e) => {
+                              setCodeVia("telegram");
+                              setTgUsername(e.target.value);
+                            }}
+                          />
+                          <Button type="submit" variant="secondary" size="xl" loading={busy === "code"} style={{ height: 44, fontSize: 13.5 }}>
+                            Send code
+                          </Button>
+                        </div>
+                        <div className={styles.hint}>We'll message you a 6-character code on Telegram.</div>
+                      </>
+                    ) : (
+                      <>
+                        <label className={styles.tgLabel} htmlFor="code-email">
+                          Get a code by email
+                        </label>
+                        <div className={styles.row}>
+                          <input
+                            id="code-email"
+                            className={`input ${styles.input}`}
+                            type="email"
+                            placeholder="you@example.com"
+                            autoComplete="email"
+                            autoCapitalize="none"
+                            value={codeEmail}
+                            onChange={(e) => {
+                              setCodeVia("email");
+                              setCodeEmail(e.target.value);
+                            }}
+                          />
+                          <Button type="submit" variant="secondary" size="xl" loading={busy === "code"} style={{ height: 44, fontSize: 13.5 }}>
+                            Send code
+                          </Button>
+                        </div>
+                        <div className={styles.hint}>We'll email you a 6-character code.</div>
+                      </>
+                    )}
                   </form>
                 ) : (
                   <form className={styles.tg} onSubmit={onVerify}>
                     <label className={styles.tgLabel} htmlFor="email-code">
-                      Enter the code we sent to {codeEmail.trim()}
+                      Enter the code we sent to {codeVia === "telegram" ? `@${tgUsername.trim().replace(/^@/, "")}` : codeEmail.trim()}
                     </label>
                     <div className={styles.row}>
                       <input
@@ -247,7 +291,7 @@ export function LoginPage() {
                           setNotice(null);
                         }}
                       >
-                        Use another email
+                        Start again
                       </button>
                     </div>
                   </form>

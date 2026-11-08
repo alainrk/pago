@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import styles from "./AddTransactionPage.module.css";
 import { Page } from "../layout/AppShell";
 import { MobileHeader } from "../layout/MobileHeader";
@@ -11,7 +11,9 @@ import { Select } from "../components/Select";
 import { Callout } from "../components/Callout";
 import { Toggle } from "../components/Toggle";
 import { useToast } from "../components/Toast";
-import { useUser, useSessionGuard } from "../auth/AuthContext";
+import { useAuth, useUser, useSessionGuard } from "../auth/AuthContext";
+import { QuickEntryConsent } from "../components/QuickEntryConsent";
+import { account } from "../api/endpoints";
 import { useIsMobile } from "../lib/useMediaQuery";
 import { useDebounce } from "../lib/useDebounce";
 import { useKeyboard } from "../lib/useKeyboardOffset";
@@ -73,7 +75,13 @@ export function AddTransactionPage() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const user = useUser();
+  const { refresh } = useAuth();
   const guard = useSessionGuard();
+  // Quick entry sends the text to DeepSeek (China): ask before the first use.
+  const quickEntry = user.quickEntry;
+  const [consentOpen, setConsentOpen] = useState(false);
+  const [consentBusy, setConsentBusy] = useState<"" | "accept" | "decline">("");
+  const pendingTextRef = useRef("");
   const keyboard = useKeyboard();
   useEffect(() => {
     if (!isMobile || !keyboard.open) return;
@@ -157,11 +165,51 @@ export function AddTransactionPage() {
     }
   }
 
+  // requestParse runs quick entry only with consent. Without a choice yet it
+  // opens the consent sheet first; after "Use the form" it does nothing.
+  function requestParse(text: string) {
+    if (!text.trim()) return;
+    if (quickEntry === "accepted") {
+      void runParse(text);
+      return;
+    }
+    if (quickEntry === "") {
+      pendingTextRef.current = text;
+      setConsentOpen(true);
+    }
+  }
+
+  async function chooseQuickEntry(accept: boolean) {
+    setConsentBusy(accept ? "accept" : "decline");
+    try {
+      await account.setQuickEntry(accept);
+      await refresh();
+      setConsentOpen(false);
+      const text = pendingTextRef.current;
+      pendingTextRef.current = "";
+      if (accept) {
+        void runParse(text);
+      } else {
+        // Keep what they typed: it becomes the description in the form.
+        setForm((f) => (f.description.trim() ? f : { ...f, description: text.trim() }));
+        setInputText("");
+      }
+    } catch (err) {
+      if (guard(err)) return;
+      toast(err instanceof Error ? err.message : "Could not save your choice", "error");
+    } finally {
+      setConsentBusy("");
+    }
+  }
+
   // Auto-parse once when the page loads with ?text= in the URL.
   useEffect(() => {
     if (autoParsedRef.current) return;
     autoParsedRef.current = true;
-    if (initialText.trim()) void runParse(initialText);
+    if (initialText.trim()) {
+      if (quickEntry === "declined") setForm((f) => ({ ...f, description: initialText.trim() }));
+      else requestParse(initialText);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -243,7 +291,7 @@ export function AddTransactionPage() {
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          void runParse(inputText);
+          requestParse(inputText);
         }
       }}
     />
@@ -349,6 +397,28 @@ export function AddTransactionPage() {
     </Card>
   );
 
+  const consentSheet = (
+    <QuickEntryConsent
+      open={consentOpen}
+      busy={consentBusy}
+      onAccept={() => void chooseQuickEntry(true)}
+      onDecline={() => void chooseQuickEntry(false)}
+      onClose={() => {
+        if (!consentBusy) setConsentOpen(false);
+      }}
+    />
+  );
+
+  const quickEntryOffNote = (
+    <div style={{ fontSize: 13, color: "var(--text-3)" }}>
+      Quick entry is off. You can turn it on in{" "}
+      <Link to="/settings" style={{ color: "var(--brand-dark)", textDecoration: "underline" }}>
+        Settings
+      </Link>
+      .
+    </div>
+  );
+
   if (isMobile) {
     // The composer is pinned to the bottom of the screen. When the keyboard
     // opens the bottom nav hides (see the data-keyboard rule in AppShell.css)
@@ -359,6 +429,7 @@ export function AddTransactionPage() {
       <>
         <MobileHeader brand />
         <Page className={styles.mobilePage}>
+          {quickEntry === "declined" && quickEntryOffNote}
           {formCard}
           <div className={styles.mobileFooter}>
             <Button variant="primary" size="lg" style={{ "--h": "50px" } as never} icon="check" loading={saving} disabled={parsing} full onClick={() => void handleSave()}>
@@ -369,12 +440,15 @@ export function AddTransactionPage() {
             </Button>
           </div>
         </Page>
-        <div className={styles.composer} style={{ bottom: composerBottom }}>
-          {messageInput}
-          <Button variant="secondary" full icon="sparks" style={{ "--h": "46px" } as never} loading={parsing} disabled={!inputText.trim()} onClick={() => void runParse(inputText)}>
-            Parse with AI
-          </Button>
-        </div>
+        {quickEntry !== "declined" && (
+          <div className={styles.composer} style={{ bottom: composerBottom }}>
+            {messageInput}
+            <Button variant="secondary" full icon="sparks" style={{ "--h": "46px" } as never} loading={parsing} disabled={!inputText.trim()} onClick={() => requestParse(inputText)}>
+              Parse with AI
+            </Button>
+          </div>
+        )}
+        {consentSheet}
       </>
     );
   }
@@ -383,14 +457,19 @@ export function AddTransactionPage() {
     <Page>
       <div className={styles.column}>
         <h1 className={styles.title}>Add transaction</h1>
-        <div className={styles.topRow}>
-          {messageInput}
-          <Button variant="primary" size="lg" icon="sparks" loading={parsing} disabled={!inputText.trim()} onClick={() => void runParse(inputText)}>
-            Parse
-          </Button>
-        </div>
+        {quickEntry !== "declined" ? (
+          <div className={styles.topRow}>
+            {messageInput}
+            <Button variant="primary" size="lg" icon="sparks" loading={parsing} disabled={!inputText.trim()} onClick={() => requestParse(inputText)}>
+              Parse
+            </Button>
+          </div>
+        ) : (
+          quickEntryOffNote
+        )}
         {formCard}
       </div>
+      {consentSheet}
     </Page>
   );
 }

@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 // privacy, terms and the contact address.
 const LINKS = [
   { href: "https://faccio.app/pago", label: "About Pago" },
-  { href: "https://faccio.app/privacy", label: "Privacy" },
+  { href: "https://faccio.app/pago/privacy", label: "Privacy" },
   { href: "https://faccio.app/terms", label: "Terms" },
   { href: "mailto:info@faccio.app", label: "info@faccio.app" },
 ];

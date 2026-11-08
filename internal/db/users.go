@@ -1,6 +1,10 @@
 package db
 
-import "pago/internal/model"
+import (
+	"time"
+
+	"pago/internal/model"
+)
 
 // GetUser retrieves a user by their Telegram ID
 func (db *DB) GetUser(tgID int64) (*model.User, error) {
@@ -34,10 +38,11 @@ func (db *DB) GetUserByEmail(email string) (*model.User, error) {
 
 // SetUser creates or updates a user. google_sub is left out: a caller saving
 // a row it loaded a while ago must not undo a Google link made in the
-// meantime. It changes only through GoogleSignIn.
+// meantime. It changes only through GoogleSignIn. The quick entry consent
+// is left out for the same reason (see SetAIConsent).
 func (db *DB) SetUser(user *model.User) error {
 	// Use upsert functionality (create if not exists, update if exists)
-	result := db.conn.Omit("google_sub").Save(user)
+	result := db.conn.Omit("google_sub", "ai_consent", "ai_consent_at", "ai_consent_version").Save(user)
 	return result.Error
 }
 
@@ -48,4 +53,14 @@ func (db *DB) ListTelegramUsers() ([]model.User, error) {
 	var users []model.User
 	err := db.conn.Where("tg_id > 0").Order("tg_id").Find(&users).Error
 	return users, err
+}
+
+// SetAIConsent stores the quick entry (DeepSeek) choice with its time and the
+// policy version the person saw.
+func (db *DB) SetAIConsent(tgID int64, choice, version string, at time.Time) error {
+	return db.conn.Model(&model.User{}).Where("tg_id = ?", tgID).Updates(map[string]any{
+		"ai_consent":         choice,
+		"ai_consent_at":      at,
+		"ai_consent_version": version,
+	}).Error
 }

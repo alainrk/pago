@@ -65,10 +65,15 @@ type User struct {
 	Name        string  `gorm:"column:name"`
 	Email       *string `gorm:"column:email;uniqueIndex:idx_users_email,where:email IS NOT NULL"`
 	// GoogleSub is Google's stable account id ("sub"), or nil.
-	GoogleSub *string     `gorm:"column:google_sub"`
-	Session   UserSession `gorm:"column:session;type:jsonb"`
-	CreatedAt time.Time   `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt time.Time   `gorm:"column:updated_at;autoUpdateTime"`
+	GoogleSub *string `gorm:"column:google_sub"`
+	// Quick entry (DeepSeek) choice: AIConsentAccepted, AIConsentDeclined or
+	// nil (not asked yet), when, and the privacy policy version shown.
+	AIConsent        *string     `gorm:"column:ai_consent"`
+	AIConsentAt      *time.Time  `gorm:"column:ai_consent_at"`
+	AIConsentVersion *string     `gorm:"column:ai_consent_version"`
+	Session          UserSession `gorm:"column:session;type:jsonb"`
+	CreatedAt        time.Time   `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt        time.Time   `gorm:"column:updated_at;autoUpdateTime"`
 
 	// WebAuthn credentials (loaded via preload)
 	// Note: Foreign key constraints are handled in migration files
@@ -124,6 +129,29 @@ func (j *JSONData) Scan(value any) error {
 	}
 
 	return json.Unmarshal(bytes, j)
+}
+
+// Quick entry consent values.
+const (
+	AIConsentAccepted = "accepted"
+	AIConsentDeclined = "declined"
+	// AIPolicyVersion is the privacy policy version (its "last updated" date,
+	// https://faccio.app/pago/privacy) the quick entry sheet describes. Change
+	// it when the DeepSeek part of the policy changes: everyone is asked again.
+	AIPolicyVersion = "2026-11-08"
+)
+
+// QuickEntryChoice is the person's choice for the current policy version:
+// AIConsentAccepted, AIConsentDeclined, or "" when they must be asked.
+func (u *User) QuickEntryChoice() string {
+	if u.AIConsent == nil || u.AIConsentVersion == nil || *u.AIConsentVersion != AIPolicyVersion {
+		return ""
+	}
+	switch *u.AIConsent {
+	case AIConsentAccepted, AIConsentDeclined:
+		return *u.AIConsent
+	}
+	return ""
 }
 
 // TableName overrides the table name

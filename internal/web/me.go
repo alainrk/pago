@@ -20,6 +20,11 @@ type MeResponse struct {
 	Currency string `json:"currency"`
 	// GoogleConnected tells whether the account has a Google sign-in.
 	GoogleConnected bool `json:"googleConnected"`
+	// QuickEntry is the quick entry (DeepSeek) choice: "accepted",
+	// "declined", or "" when the app must ask before the first use.
+	QuickEntry string `json:"quickEntry"`
+	// QuickEntryPolicyVersion is the privacy policy version the choice is for.
+	QuickEntryPolicyVersion string `json:"quickEntryPolicyVersion"`
 }
 
 // handleAPIMe returns the signed-in user's profile.
@@ -57,8 +62,10 @@ func buildMeResponse(user *model.User) MeResponse {
 		Initials: initials(name, user.TgUsername),
 		HasEmail: email != "",
 		// Transactions are stored in EUR today; exposed so the client does not hardcode it.
-		Currency:        string(model.CurrencyEUR),
-		GoogleConnected: user.GoogleSub != nil && *user.GoogleSub != "",
+		Currency:                string(model.CurrencyEUR),
+		GoogleConnected:         user.GoogleSub != nil && *user.GoogleSub != "",
+		QuickEntry:              user.QuickEntryChoice(),
+		QuickEntryPolicyVersion: model.AIPolicyVersion,
 	}
 }
 
