@@ -111,9 +111,12 @@ func TestGoogleSignInHandoff(t *testing.T) {
 
 	// The Google email matches nothing: the hand-off token decides.
 	h := newHandoff(t, d, a, 10*time.Minute)
-	u, match, err := d.GoogleSignIn(GoogleIdentity{Sub: sub, Email: email, EmailVerified: true}, &h, nil)
+	u, match, err := d.GoogleSignIn(GoogleIdentity{Sub: sub, Email: email, EmailVerified: true, Name: "Google Name"}, &h, nil)
 	if err != nil || match != GoogleMatchHandoff || u.TgID != a {
 		t.Fatalf("handoff: match=%s err=%v", match, err)
+	}
+	if stored, _ := d.GetUser(a); stored == nil || stored.Name != "Google Name" {
+		t.Fatalf("the Google name should replace the Telegram one: %+v", stored)
 	}
 	if u.Email == nil || *u.Email != email {
 		t.Fatalf("verified email should be stored on an account without one: %v", u.Email)

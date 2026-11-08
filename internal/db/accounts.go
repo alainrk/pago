@@ -141,7 +141,7 @@ func (db *DB) GoogleSignIn(id GoogleIdentity, handoffHash *string, allowSignup f
 
 // linkGoogle stores the sub on the account, plus the verified email when the
 // account has none and nobody else uses it (passkeys show it as the account
-// name).
+// name), and the Google name as display name.
 func linkGoogle(tx *gorm.DB, u *model.User, id GoogleIdentity) error {
 	updates := map[string]any{"google_sub": id.Sub}
 	if (u.Email == nil || *u.Email == "") && id.EmailVerified && id.Email != "" {
@@ -154,6 +154,12 @@ func linkGoogle(tx *gorm.DB, u *model.User, id GoogleIdentity) error {
 			updates["email"] = email
 			u.Email = &email
 		}
+	}
+	// The display name of old accounts came from Telegram. Use the Google
+	// name instead, so the Telegram names can be cleared later.
+	if name := strings.TrimSpace(id.Name); name != "" {
+		updates["name"] = name
+		u.Name = name
 	}
 	if err := tx.Model(&model.User{}).Where("tg_id = ?", u.TgID).Updates(updates).Error; err != nil {
 		return err
