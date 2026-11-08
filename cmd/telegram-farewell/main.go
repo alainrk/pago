@@ -6,6 +6,7 @@
 // would message and the text.
 //
 //	go run ./cmd/telegram-farewell -env .prod-migration.env -url https://pago.faccio.app
+//	go run ./cmd/telegram-farewell -env .prod-migration.env -url https://pago.faccio.app -only 123 -send
 //	go run ./cmd/telegram-farewell -env .prod-migration.env -url https://pago.faccio.app -send
 //	go run ./cmd/telegram-farewell -env .prod-migration.env -delete-webhook -send
 //
@@ -21,6 +22,7 @@ import (
 	"time"
 
 	"pago/internal/db"
+	"pago/internal/model"
 
 	gotgbot "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/joho/godotenv"
@@ -41,11 +43,13 @@ func main() {
 		url           string
 		send          bool
 		deleteWebhook bool
+		only          int64
 	)
 	flag.StringVar(&envFile, "env", ".env", "env file with DATABASE_URL and TELEGRAM_BOT_API_TOKEN")
 	flag.StringVar(&url, "url", "", "new address to tell people, for example https://pago.faccio.app")
 	flag.BoolVar(&send, "send", false, "really send (without it, this is a dry run)")
 	flag.BoolVar(&deleteWebhook, "delete-webhook", false, "remove the bot webhook instead of sending messages")
+	flag.Int64Var(&only, "only", 0, "send only to this Telegram id (a test on yourself)")
 	flag.Parse()
 
 	if err := godotenv.Load(envFile); err != nil {
@@ -92,6 +96,19 @@ func main() {
 	users, err := database.ListTelegramUsers()
 	if err != nil {
 		log.Fatalf("Could not list users: %v", err)
+	}
+
+	if only != 0 {
+		var picked []model.User
+		for _, u := range users {
+			if u.TgID == only {
+				picked = append(picked, u)
+			}
+		}
+		if len(picked) == 0 {
+			log.Fatalf("No Telegram user with id %d", only)
+		}
+		users = picked
 	}
 
 	text := message(url)
