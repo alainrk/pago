@@ -65,8 +65,8 @@ func TestClientForPicksByHost(t *testing.T) {
 func TestAuthMethodsByHost(t *testing.T) {
 	s := testGoogleServer(t)
 	for host, want := range map[string]AuthMethodsResponse{
-		"api.new.example": {Google: true, Email: false, Passkey: true},
-		"api.old.example": {Google: false, Email: false, Passkey: true}, // no email service in this test
+		"api.new.example": {Google: true, Passkey: true},
+		"api.old.example": {Google: false, Passkey: true},
 	} {
 		r := httptest.NewRequest(http.MethodGet, "/web/auth/methods", nil)
 		r.Host = host
@@ -79,21 +79,35 @@ func TestAuthMethodsByHost(t *testing.T) {
 	}
 }
 
-func TestLegacyCodeLoginOnlyOnOldHost(t *testing.T) {
-	s := testGoogleServer(t)
-	r := httptest.NewRequest(http.MethodPost, "/web/auth/request", strings.NewReader(`{"email":"a@b.c"}`))
-	r.Host = "api.new.example"
-	w := httptest.NewRecorder()
-	s.handleAuthRequest(w, r)
-	if w.Code != http.StatusGone {
-		t.Fatalf("new host request: %d", w.Code)
+// The old email and Telegram code routes and the hand-off are gone: they
+// fall through to the /web/ catch-all, which sends people to /web/login.
+func TestLegacySignInRoutesGone(t *testing.T) {
+	h := Router(testGoogleServer(t))
+	for _, path := range []string{"/web/auth/request", "/web/auth/verify", "/web/api/auth/handoff"} {
+		r := httptest.NewRequest(http.MethodPost, path, strings.NewReader(`{"email":"a@b.c"}`))
+		r.Host = "api.new.example"
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code == http.StatusOK {
+			t.Errorf("%s still answers 200", path)
+		}
 	}
-	r = httptest.NewRequest(http.MethodPost, "/web/auth/verify", strings.NewReader(`{"code":"ABCDEF"}`))
-	r.Host = "api.new.example"
+}
+
+func TestDashboardLoginSendsToWebApp(t *testing.T) {
+	t.Setenv("WEB_CORS_ORIGINS", "https://app.new.example/, http://localhost:5174")
+	s := testGoogleServer(t)
+	w := httptest.NewRecorder()
+	s.handleLogin(w, httptest.NewRequest(http.MethodGet, "/web/login", nil))
+	if w.Code != http.StatusSeeOther || w.Header().Get("Location") != "https://app.new.example/login" {
+		t.Fatalf("got %d %s", w.Code, w.Header().Get("Location"))
+	}
+
+	t.Setenv("WEB_CORS_ORIGINS", "")
 	w = httptest.NewRecorder()
-	s.handleAuthVerify(w, r)
-	if w.Code != http.StatusGone {
-		t.Fatalf("new host verify: %d", w.Code)
+	s.handleLogin(w, httptest.NewRequest(http.MethodGet, "/web/login", nil))
+	if w.Code != http.StatusOK || !strings.Contains(w.Body.String(), "web app") {
+		t.Fatalf("no app origin: %d %s", w.Code, w.Body.String())
 	}
 }
 
@@ -117,16 +131,6 @@ func TestGoogleStartRejects(t *testing.T) {
 		if w.Code != c.want {
 			t.Errorf("%s: got %d, want %d", c.name, w.Code, c.want)
 		}
-	}
-
-	r := httptest.NewRequest(http.MethodPost, "/web/auth/google/start", strings.NewReader(`{"handoff":"../not-a-token"}`))
-	r.Host = "api.new.example"
-	r.Header.Set("Origin", "https://app.new.example")
-	r.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	s.handleGoogleStart(w, r)
-	if w.Code != http.StatusBadRequest {
-		t.Errorf("bad handoff: got %d", w.Code)
 	}
 }
 

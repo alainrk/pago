@@ -1,63 +1,8 @@
 package model
 
 import (
-	"database/sql/driver"
-	"errors"
 	"time"
 )
-
-// AuthStatus represents the status of an auth token
-type AuthStatus string
-
-const (
-	AuthStatusPending  AuthStatus = "pending"
-	AuthStatusVerified AuthStatus = "verified"
-	AuthStatusExpired  AuthStatus = "expired"
-)
-
-// Value implements the driver.Valuer interface for AuthStatus
-func (s AuthStatus) Value() (driver.Value, error) {
-	return string(s), nil
-}
-
-// Scan implements the sql.Scanner interface for AuthStatus
-func (s *AuthStatus) Scan(value any) error {
-	if value == nil {
-		return errors.New("auth status cannot be null")
-	}
-
-	strVal, ok := value.(string)
-	if !ok {
-		return errors.New("invalid auth status")
-	}
-
-	*s = AuthStatus(strVal)
-	return nil
-}
-
-// AuthToken represents the auth_tokens table structure
-type AuthToken struct {
-	ID        int64      `gorm:"column:id;primaryKey;autoIncrement"`
-	TgID      int64      `gorm:"column:tg_id;not null;index"`
-	Token     string     `gorm:"column:token;not null;unique;index"`
-	Status    AuthStatus `gorm:"column:status;not null;type:auth_status;default:'pending';index"`
-	ExpiresAt time.Time  `gorm:"column:expires_at;not null;index"`
-	CreatedAt time.Time  `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt time.Time  `gorm:"column:updated_at;autoUpdateTime"`
-
-	// Association to User (optional)
-	User *User `gorm:"foreignKey:TgID;references:TgID"`
-}
-
-// TableName overrides the table name
-func (AuthToken) TableName() string {
-	return "auth_tokens"
-}
-
-// IsValid checks if the token is still valid
-func (a *AuthToken) IsValid() bool {
-	return a.Status == AuthStatusPending && time.Now().UTC().Before(a.ExpiresAt)
-}
 
 // WebSession represents a web session
 type WebSession struct {
@@ -108,43 +53,17 @@ func (t *APIToken) IsValid() bool {
 	return time.Now().UTC().Before(*t.ExpiresAt)
 }
 
-// Link token purposes.
-const (
-	// LinkPurposeHandoff moves a signed-in user from the old address to the
-	// new one, where they sign in with Google and the Google account is
-	// linked to them.
-	LinkPurposeHandoff = "handoff"
-)
-
-// LinkToken is a one-time token tied to a user. Only the sha256 of the token
-// is stored.
-type LinkToken struct {
-	ID        int64      `gorm:"column:id;primaryKey;autoIncrement"`
-	TgID      int64      `gorm:"column:tg_id;not null"`
-	Purpose   string     `gorm:"column:purpose;not null"`
-	TokenHash string     `gorm:"column:token_hash;not null;unique"`
-	ExpiresAt time.Time  `gorm:"column:expires_at;not null"`
-	UsedAt    *time.Time `gorm:"column:used_at"`
-	CreatedAt time.Time  `gorm:"column:created_at;autoCreateTime"`
-}
-
-func (LinkToken) TableName() string {
-	return "link_tokens"
-}
-
 // OAuthState is the server side of one Google sign-in, from the start to the
 // callback. It is used once.
 type OAuthState struct {
-	StateHash    string `gorm:"column:state_hash;primaryKey"`
-	Nonce        string `gorm:"column:nonce;not null"`
-	CodeVerifier string `gorm:"column:code_verifier;not null"`
-	RedirectURL  string `gorm:"column:redirect_url;not null"`
-	ReturnOrigin string `gorm:"column:return_origin;not null"`
-	ReturnPath   string `gorm:"column:return_path;not null"`
-	// HandoffHash is the sha256 of a hand-off token from the old address.
-	HandoffHash *string   `gorm:"column:handoff_hash"`
-	ExpiresAt   time.Time `gorm:"column:expires_at;not null"`
-	CreatedAt   time.Time `gorm:"column:created_at;autoCreateTime"`
+	StateHash    string    `gorm:"column:state_hash;primaryKey"`
+	Nonce        string    `gorm:"column:nonce;not null"`
+	CodeVerifier string    `gorm:"column:code_verifier;not null"`
+	RedirectURL  string    `gorm:"column:redirect_url;not null"`
+	ReturnOrigin string    `gorm:"column:return_origin;not null"`
+	ReturnPath   string    `gorm:"column:return_path;not null"`
+	ExpiresAt    time.Time `gorm:"column:expires_at;not null"`
+	CreatedAt    time.Time `gorm:"column:created_at;autoCreateTime"`
 }
 
 func (OAuthState) TableName() string {

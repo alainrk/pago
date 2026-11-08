@@ -5,26 +5,6 @@ import (
 	"time"
 )
 
-// CreateAuthToken creates a new auth token
-func (db *DB) CreateAuthToken(token *model.AuthToken) error {
-	return db.conn.Create(token).Error
-}
-
-// GetAuthToken retrieves an auth token by token string
-func (db *DB) GetAuthToken(token string) (*model.AuthToken, error) {
-	var authToken model.AuthToken
-	result := db.conn.Where("token = ?", token).First(&authToken)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &authToken, nil
-}
-
-// UpdateAuthToken updates an auth token
-func (db *DB) UpdateAuthToken(token *model.AuthToken) error {
-	return db.conn.Save(token).Error
-}
-
 // CreateWebSession creates a new web session
 func (db *DB) CreateWebSession(session *model.WebSession) error {
 	return db.conn.Create(session).Error
@@ -70,24 +50,16 @@ func (db *DB) TouchAPITokenLastUsed(id int64) error {
 	return db.conn.Model(&model.APIToken{}).Where("id = ?", id).Update("last_used_at", now).Error
 }
 
-// CleanupExpiredAuthData removes expired auth tokens and sessions
+// CleanupExpiredAuthData removes expired sessions and Google sign-in states.
 func (db *DB) CleanupExpiredAuthData() error {
 	now := time.Now().UTC()
-
-	// Delete expired auth tokens
-	if err := db.conn.Where("expires_at < ?", now).Delete(&model.AuthToken{}).Error; err != nil {
-		return err
-	}
 
 	// Delete expired web sessions
 	if err := db.conn.Where("expires_at < ?", now).Delete(&model.WebSession{}).Error; err != nil {
 		return err
 	}
 
-	// Delete expired one-time link tokens and Google sign-in states
-	if err := db.conn.Where("expires_at < ?", now).Delete(&model.LinkToken{}).Error; err != nil {
-		return err
-	}
+	// Delete expired Google sign-in states
 	if err := db.conn.Where("expires_at < ?", now).Delete(&model.OAuthState{}).Error; err != nil {
 		return err
 	}

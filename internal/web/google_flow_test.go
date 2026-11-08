@@ -117,29 +117,18 @@ func TestGoogleFlowEndToEnd(t *testing.T) {
 	t.Cleanup(func() {
 		_ = database.Transaction(func(tx *gormDB) error {
 			tx.Exec(`DELETE FROM web_sessions WHERE tg_id = ?`, u.TgID)
-			tx.Exec(`DELETE FROM link_tokens WHERE tg_id = ?`, u.TgID)
 			return tx.Exec(`DELETE FROM users WHERE tg_id = ?`, u.TgID).Error
 		})
 	})
 
-	// A hand-off for another account with the same Google account is refused.
-	other := time.Now().UnixNano()
-	_ = database.Transaction(func(tx *gormDB) error {
-		return tx.Exec(`INSERT INTO users (tg_id, session) VALUES (?, '{}')`, other).Error
-	})
-	t.Cleanup(func() {
-		_ = database.Transaction(func(tx *gormDB) error {
-			tx.Exec(`DELETE FROM link_tokens WHERE tg_id = ?`, other)
-			return tx.Exec(`DELETE FROM users WHERE tg_id = ?`, other).Error
-		})
-	})
-	tok, _, err := s.newLinkToken(other, model.LinkPurposeHandoff)
-	if err != nil {
-		t.Fatal(err)
+	// The second sign-in finds the same account by its Google sub.
+	w = run(`{"returnTo":"/"}`)
+	if w.Code != http.StatusSeeOther || w.Header().Get("Location") != "https://app.new.example/" {
+		t.Fatalf("second sign-in: %d %s", w.Code, w.Header().Get("Location"))
 	}
-	w = run(`{"handoff":"` + tok + `"}`)
-	if loc := w.Header().Get("Location"); w.Code != http.StatusSeeOther || loc != "https://app.new.example/welcome?error=google_taken" {
-		t.Fatalf("taken: %d %s", w.Code, loc)
+	again, _, err := s.repositories.Users.GetByEmail(email)
+	if err != nil || again.TgID != u.TgID {
+		t.Fatalf("second sign-in made another account: %d vs %d (%v)", again.TgID, u.TgID, err)
 	}
 }
 
@@ -147,15 +136,6 @@ type gormDB = gorm.DB
 
 func migrationConn(url string) (*gorm.DB, error) {
 	return gorm.Open(postgres.Open(url), &gorm.Config{})
-}
-
-type fakeTelegram struct {
-	chats []int64
-}
-
-func (f *fakeTelegram) SendHTML(chatID int64, _ string) error {
-	f.chats = append(f.chats, chatID)
-	return nil
 }
 
 func dbServer(t *testing.T) (*Server, *db.DB) {
@@ -180,49 +160,6 @@ func dbServer(t *testing.T) (*Server, *db.DB) {
 	repo := repository.Repository{DB: database, Logger: s.logger}
 	s.repositories = Repositories{Users: repository.Users{Repository: repo}, Auth: repository.Auth{Repository: repo}}
 	return s, database
-}
-
-func TestLegacyTelegramCodeOldHostOnly(t *testing.T) {
-	s, database := dbServer(t)
-	tg := &fakeTelegram{}
-	s.telegram = tg
-
-	id := time.Now().UnixNano()
-	username := fmt.Sprintf("tguser%d", id)
-	_ = database.Transaction(func(tx *gormDB) error {
-		return tx.Exec(`INSERT INTO users (tg_id, tg_username, session) VALUES (?, ?, '{}')`, id, username).Error
-	})
-	t.Cleanup(func() {
-		_ = database.Transaction(func(tx *gormDB) error {
-			tx.Exec(`DELETE FROM auth_tokens WHERE tg_id = ?`, id)
-			return tx.Exec(`DELETE FROM users WHERE tg_id = ?`, id).Error
-		})
-	})
-
-	send := func(host string) int {
-		r := httptest.NewRequest(http.MethodPost, "/web/auth/request", strings.NewReader(`{"username":"@`+username+`"}`))
-		r.Host = host
-		w := httptest.NewRecorder()
-		s.handleAuthRequest(w, r)
-		return w.Code
-	}
-	if code := send("api.new.example"); code != http.StatusGone || len(tg.chats) != 0 {
-		t.Fatalf("new host: %d, sent %v", code, tg.chats)
-	}
-	if code := send("api.old.example"); code != http.StatusOK || len(tg.chats) != 1 || tg.chats[0] != id {
-		t.Fatalf("old host: %d, sent %v", code, tg.chats)
-	}
-
-	// Methods on the old host now list Telegram.
-	r := httptest.NewRequest(http.MethodGet, "/web/auth/methods", nil)
-	r.Host = "api.old.example"
-	w := httptest.NewRecorder()
-	s.handleAuthMethods(w, r)
-	var m AuthMethodsResponse
-	_ = json.NewDecoder(w.Body).Decode(&m)
-	if !m.Telegram || m.Google {
-		t.Fatalf("methods: %+v", m)
-	}
 }
 
 func TestAIConsentStored(t *testing.T) {

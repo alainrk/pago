@@ -20,7 +20,6 @@ import (
 
 	"pago/internal/ai"
 	"pago/internal/db"
-	"pago/internal/email"
 	"pago/internal/logging"
 	"pago/internal/repository"
 	"pago/internal/scheduler"
@@ -36,18 +35,6 @@ func main() {
 	}
 
 	logger := logging.GetLogger(os.Getenv("LOG_LEVEL"))
-
-	// Initialize email service (optional: without BREVO_API_KEY the email
-	// login method is disabled and everything else keeps working).
-	var emailService *email.EmailService
-	if key := os.Getenv("BREVO_API_KEY"); key != "" {
-		emailService, err = email.NewEmailService(key, os.Getenv("EMAIL_FROM_NAME"), os.Getenv("EMAIL_FROM_ADDRESS"))
-		if err != nil {
-			logger.Fatalf("Failed to initialize email service: %s\n", err.Error())
-		}
-	} else {
-		logger.Warnln("BREVO_API_KEY is empty: email login is disabled")
-	}
 
 	// OpenAI API Compatible LLM Setup (if needed for dashboard features)
 	llm := ai.LLM{
@@ -105,24 +92,13 @@ func main() {
 				logger.Debugf("Successfully cleaned up expired WebAuthn sessions")
 			}
 			if err := repositories.Auth.CleanupExpiredTokens(); err != nil {
-				logger.Errorf("Failed to cleanup expired auth data: %v", err)
+				logger.Errorf("Failed to cleanup expired sessions: %v", err)
 			}
 		}
 	}()
 
 	// Initialize web server
-	// Legacy Telegram login code, only on hosts without Google (the old
-	// address) and only while TELEGRAM_BOT_API_TOKEN is set. Remove the token
-	// when the bot is switched off.
-	telegram, err := web.NewTelegramSender(os.Getenv("TELEGRAM_BOT_API_TOKEN"))
-	if err != nil {
-		logger.Fatalf("Failed to set up the Telegram sender: %s\n", err.Error())
-	}
-	if telegram == nil {
-		logger.Infoln("TELEGRAM_BOT_API_TOKEN is empty: Telegram login codes are off")
-	}
-
-	webServer := web.NewServer(logger, repositories, llm, emailService, telegram)
+	webServer := web.NewServer(logger, repositories, llm)
 
 	// Background jobs: monthly recurring transactions (this used to run in
 	// the Telegram bot).

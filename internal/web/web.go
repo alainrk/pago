@@ -19,11 +19,9 @@ func Router(s *Server) http.Handler {
 	staticFS := noDirFileSystem{http.Dir("./web/static")}
 	mux.Handle(basePath+"/static/", http.StripPrefix(basePath+"/static/", http.FileServer(staticFS)))
 
-	// Auth routes
+	// Old dashboard and sign-out
 	mux.HandleFunc(basePath+"/", s.handleHome)
 	mux.HandleFunc(basePath+"/login", s.handleLogin)
-	mux.HandleFunc(basePath+"/auth/request", s.handleAuthRequest)
-	mux.HandleFunc(basePath+"/auth/verify", s.rateLimit(s.handleAuthVerify))
 	mux.HandleFunc(basePath+"/logout", s.handleLogout)
 
 	// Google sign-in (the only way to create a new account)
@@ -66,9 +64,6 @@ func Router(s *Server) http.Handler {
 	mux.HandleFunc(basePath+"/api/passkey/finish-register", s.requireAuth(s.handlePasskeyFinishRegister))
 	mux.HandleFunc(basePath+"/api/passkey/list", s.requireAuth(s.handlePasskeyList))
 	mux.HandleFunc(basePath+"/api/passkey/delete", s.requireAuth(s.handlePasskeyDelete))
-
-	// Hand-off from the old address to the new one (protected)
-	mux.HandleFunc(basePath+"/api/auth/handoff", s.requireAuth(s.handleHandoff))
 
 	// CORS runs first so preflight requests are answered before anything else.
 	return s.corsMiddleware(s.securityHeadersMiddleware(s.loggingMiddleware(mux)))

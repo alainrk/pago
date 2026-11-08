@@ -166,8 +166,6 @@ export interface MeResponse {
 
 export interface AuthMethods {
   google: boolean;
-  email: boolean;
-  telegram: boolean;
   passkey: boolean;
 }
 

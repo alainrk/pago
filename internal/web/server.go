@@ -8,7 +8,6 @@ import (
 
 	"pago/internal/ai"
 	"pago/internal/client"
-	"pago/internal/email"
 	"pago/internal/model"
 	"pago/internal/repository"
 
@@ -31,13 +30,10 @@ type Server struct {
 	llm            ai.LLM
 	loginLimiter   map[string]*rate.Limiter
 	loginLimiterMu sync.Mutex
-	emailService   *email.EmailService
 	google         googleConfig
-	// telegram sends the legacy Telegram login code (old address only), or nil.
-	telegram TelegramSender
 }
 
-func NewServer(logger *logrus.Logger, repos Repositories, llm ai.LLM, emailService *email.EmailService, telegram TelegramSender) *Server {
+func NewServer(logger *logrus.Logger, repos Repositories, llm ai.LLM) *Server {
 	google, err := loadGoogleConfig()
 	if err != nil {
 		logger.Errorf("Google sign-in is off: %v", err)
@@ -52,9 +48,7 @@ func NewServer(logger *logrus.Logger, repos Repositories, llm ai.LLM, emailServi
 		llm:            llm,
 		loginLimiter:   make(map[string]*rate.Limiter),
 		loginLimiterMu: sync.Mutex{},
-		emailService:   emailService,
 		google:         google,
-		telegram:       telegram,
 	}
 }
 

@@ -61,9 +61,7 @@ app.)
 - **Sign-in**:
   - Google sign-in. It is also the only way to create an account.
   - Passkeys (WebAuthn), discoverable: "Sign in with a passkey" needs nothing else.
-  - The old email and Telegram codes only work on API hosts without a
-    Google client (during a domain move, the old address). They will be
-    removed.
+  - Nothing else: the old email and Telegram login codes were removed.
 - **Quick entry consent**: the AI quick entry sends the typed text to
   DeepSeek (China). The app asks before the first use and stores the choice
   on the server with the privacy policy version; the server refuses
@@ -311,27 +309,7 @@ config for Cloudflare Workers static assets (`frontend/wrangler.jsonc`).
    `WEB_COOKIE_SAMESITE=none` (HTTPS only).
 
 The build also writes a `_headers` file with a Content-Security-Policy that
-only allows API calls to the `VITE_API_URL` origin (plus any
-`VITE_API_URL_BY_HOST` origins, see below).
-
-#### Moving to a new domain
-
-One build and one server can run on an old and a new domain at the same time,
-so people can move at their own pace:
-
-- Attach both hostnames to the `pago-web` worker.
-- In `frontend/.env.production.local` set `VITE_API_URL` to the new API and
-  `VITE_API_URL_BY_HOST=app.old.example=https://api.old.example` so the old
-  app keeps using the old API host (the cookie needs a shared parent domain).
-  Add `VITE_MOVED_FROM_HOSTS` and `VITE_MOVED_TO_URL` to show a "we moved"
-  banner on the old host. See `frontend/.env.example`.
-- On the server list both app origins in `WEB_CORS_ORIGINS`, and give
-  `WEBAUTHN_RP_ID` and `WEBAUTHN_RP_ORIGIN` one entry per domain, in the same
-  order. Passkeys are bound to a domain, so people add a new passkey on the
-  new one after signing in with Google.
-- Give only the new API host a Google client (`GOOGLE_*`). The old host then
-  keeps the old email code, and its "we moved" banner gives signed-in people a
-  one-time hand-off link that links their Google account on the new host.
+only allows API calls to the `VITE_API_URL` origin.
 
 ### Manual Deployment
 
@@ -375,18 +353,18 @@ LLM_MODEL='gpt-4'
 ### Authentication Options
 
 - **Google**: the only way to create an account. Existing accounts are found
-  by Google account id, then by verified email, or linked with the hand-off
-  link from the old address.
+  by Google account id, then by verified email.
 - **Passkeys**: create one in Settings (or right after the first Google
   sign-in). "Sign in with a passkey" then needs nothing else.
-- **Email or Telegram code** (legacy): only on an API host without a Google
-  client, and Telegram only while `TELEGRAM_BOT_API_TOKEN` is set.
 
 ### App Features
 
 1. **Access**: Open `http://localhost:5174` in development (`make fe/dev`) or the
    domain where you deployed `frontend/`. The older server-rendered dashboard is
    still available from the Go web server at `http://localhost:8091/web/dashboard`.
+   It has no sign-in page of its own: `/web/login` sends you to the web app
+   (the first `WEB_CORS_ORIGINS` entry), and the session from there works on
+   the dashboard too.
 2. **Login**: Choose your preferred authentication method.
 3. **Dashboard**: View your financial data with month navigation.
 4. **Statistics**: See real-time balance, income, expenses, and transaction counts.

@@ -3,7 +3,6 @@ import { AuthProvider } from "./auth/AuthContext";
 import { PublicOnly, RequireAuth } from "./auth/RequireAuth";
 import { AppShell } from "./layout/AppShell";
 import { ToastProvider } from "./components/Toast";
-import { MovedBanner } from "./components/MovedBanner";
 import { LoginPage } from "./pages/LoginPage";
 import { AddTransactionPage } from "./pages/AddTransactionPage";
 import { TransactionsPage } from "./pages/TransactionsPage";
@@ -19,7 +18,6 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <MovedBanner />
         <ToastProvider>
           <Routes>
             <Route path="/welcome" element={<WelcomePage />} />

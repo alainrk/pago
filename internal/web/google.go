@@ -179,20 +179,10 @@ func sha256Hex(s string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-// legacyLoginAllowed tells whether the old sign-in methods (email and
-// Telegram codes) work on this host. They only work where there is no Google
-// sign-in, which during the move is the old address. On the new address the
-// only ways in are Google and passkeys.
-func (s *Server) legacyLoginAllowed(r *http.Request) bool {
-	return s.google.clientFor(r) == nil
-}
-
 // AuthMethodsResponse tells the login page which buttons to show.
 type AuthMethodsResponse struct {
-	Google   bool `json:"google"`
-	Email    bool `json:"email"`
-	Telegram bool `json:"telegram"`
-	Passkey  bool `json:"passkey"`
+	Google  bool `json:"google"`
+	Passkey bool `json:"passkey"`
 }
 
 // handleAuthMethods lists the sign-in methods on this host.
@@ -201,18 +191,14 @@ func (s *Server) handleAuthMethods(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	legacy := s.legacyLoginAllowed(r)
 	s.sendJSONSuccess(w, AuthMethodsResponse{
-		Google:   !legacy,
-		Email:    legacy && s.emailService != nil,
-		Telegram: legacy && s.telegram != nil,
-		Passkey:  true,
+		Google:  s.google.clientFor(r) != nil,
+		Passkey: true,
 	})
 }
 
 // handleGoogleStart creates the state of a Google sign-in and returns the
-// Google URL to open. "handoff" is an optional hand-off token from the old
-// address: after Google, that account is linked to the Google account.
+// Google URL to open.
 func (s *Server) handleGoogleStart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -236,21 +222,10 @@ func (s *Server) handleGoogleStart(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		ReturnTo string `json:"returnTo"`
-		Handoff  string `json:"handoff"`
 	}
 	if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&req); err != nil && !errors.Is(err, io.EOF) {
 		s.sendJSONError(w, "Invalid request", http.StatusBadRequest)
 		return
-	}
-
-	var handoffHash *string
-	if h := strings.TrimSpace(req.Handoff); h != "" {
-		if !linkTokenPattern.MatchString(h) {
-			s.sendJSONError(w, "This move link is not valid. Open the old address and press the button again.", http.StatusBadRequest)
-			return
-		}
-		hash := sha256Hex(h)
-		handoffHash = &hash
 	}
 
 	state, err1 := randomToken(32)
@@ -269,7 +244,6 @@ func (s *Server) handleGoogleStart(w http.ResponseWriter, r *http.Request) {
 		RedirectURL:  gc.RedirectURL,
 		ReturnOrigin: origin,
 		ReturnPath:   safeReturnPath(req.ReturnTo),
-		HandoffHash:  handoffHash,
 		ExpiresAt:    time.Now().UTC().Add(googleStateMaxAge * time.Second),
 	}
 	if err := s.repositories.Auth.DB.CreateOAuthState(st); err != nil {
@@ -318,11 +292,7 @@ func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fail := func(code string) {
-		target := st.ReturnOrigin + "/login?error=" + url.QueryEscape(code)
-		if st.HandoffHash != nil {
-			target = st.ReturnOrigin + "/welcome?error=" + url.QueryEscape(code)
-		}
-		http.Redirect(w, r, target, http.StatusSeeOther)
+		http.Redirect(w, r, st.ReturnOrigin+"/login?error="+url.QueryEscape(code), http.StatusSeeOther)
 	}
 
 	gc := s.google.clientFor(r)
@@ -348,7 +318,7 @@ func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, match, err := s.repositories.Auth.DB.GoogleSignIn(*id, st.HandoffHash, s.google.signupAllowed)
+	user, match, err := s.repositories.Auth.DB.GoogleSignIn(*id, s.google.signupAllowed)
 	if err != nil {
 		switch {
 		case errors.Is(err, db.ErrGoogleTaken):
@@ -361,8 +331,6 @@ func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 			fail("not_allowed")
 		case errors.Is(err, db.ErrUnverifiedEmail):
 			fail("unverified")
-		case errors.Is(err, db.ErrLinkTokenInvalid):
-			fail("handoff_invalid")
 		default:
 			s.logger.Errorf("Google sign-in database error: %v", err)
 			fail("google_failed")
@@ -375,8 +343,6 @@ func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		s.logger.Infof("Google sign-in: account %d matched by verified email, Google sub stored", user.TgID)
 	case db.GoogleMatchSignup:
 		s.logger.Infof("Google sign-in: new account %d", user.TgID)
-	case db.GoogleMatchHandoff:
-		s.logger.Infof("Google sign-in: account %d linked through the hand-off from the old address", user.TgID)
 	}
 
 	session, err := s.repositories.Auth.CreateWebSession(user.TgID)

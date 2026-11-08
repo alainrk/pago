@@ -6,20 +6,10 @@ import (
 	"pago/internal/model"
 )
 
-// GetUser retrieves a user by their Telegram ID
+// GetUser retrieves a user by their account id (tg_id)
 func (db *DB) GetUser(tgID int64) (*model.User, error) {
 	var user model.User
 	result := db.conn.Where("tg_id = ?", tgID).First(&user)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &user, nil
-}
-
-// GetUserByUsername retrieves a user by their Telegram username
-func (db *DB) GetUserByUsername(username string) (*model.User, error) {
-	var user model.User
-	result := db.conn.Where("tg_username = ?", username).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -44,15 +34,6 @@ func (db *DB) SetUser(user *model.User) error {
 	// Use upsert functionality (create if not exists, update if exists)
 	result := db.conn.Omit("google_sub", "ai_consent", "ai_consent_at", "ai_consent_version").Save(user)
 	return result.Error
-}
-
-// ListTelegramUsers returns the accounts made by the old Telegram bot
-// (positive tg_id, which is their Telegram chat id). Used once, to tell them
-// that the bot is going away.
-func (db *DB) ListTelegramUsers() ([]model.User, error) {
-	var users []model.User
-	err := db.conn.Where("tg_id > 0").Order("tg_id").Find(&users).Error
-	return users, err
 }
 
 // SetAIConsent stores the quick entry (DeepSeek) choice with its time and the

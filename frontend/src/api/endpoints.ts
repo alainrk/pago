@@ -35,21 +35,10 @@ function qs(params: Record<string, string | number | undefined>): string {
 
 // Auth (public)
 export const auth = {
-  // Which sign-in methods this address offers. On the new address: Google and
-  // passkeys. On the old one, during the move: email codes and passkeys.
+  // Which sign-in methods this server offers: Google and passkeys.
   methods: () => request<AuthMethods>("/auth/methods"),
-  // Starts Google sign-in and returns the Google URL to open. handoff is the
-  // one-time token from the old address, if the person came from there.
-  googleStart: (returnTo: string, handoff?: string) =>
-    request<{ url: string }>("/auth/google/start", { method: "POST", body: { returnTo, handoff: handoff ?? "" } }),
-  // Legacy email code, old address only.
-  requestCode: (email: string) =>
-    request<MessageResponse>("/auth/request", { method: "POST", body: { email } }),
-  // Legacy Telegram code, old address only, until the bot is switched off.
-  requestTelegramCode: (username: string) =>
-    request<MessageResponse>("/auth/request", { method: "POST", body: { username } }),
-  verifyCode: (code: string) =>
-    request<MessageResponse & { redirect?: string }>("/auth/verify", { method: "POST", body: { code } }),
+  // Starts Google sign-in and returns the Google URL to open.
+  googleStart: (returnTo: string) => request<{ url: string }>("/auth/google/start", { method: "POST", body: { returnTo } }),
   logout: () => request<MessageResponse>("/logout", { method: "POST" }),
   passkeyBeginLogin: (email?: string, signal?: AbortSignal) =>
     request<{ options: { publicKey: Record<string, unknown> } }>("/auth/passkey/begin-login", {
@@ -82,8 +71,6 @@ export const account = {
   // Quick entry (DeepSeek) choice, kept on the server.
   setQuickEntry: (accept: boolean) =>
     request<{ quickEntry: string; policyVersion: string; decidedAt: string }>("/api/ai-consent", { method: "POST", body: { accept } }),
-  // One-time token that moves this account to the new address (old address).
-  handoff: () => request<{ token: string; expiresAt: string }>("/api/auth/handoff", { method: "POST", body: {} }),
 };
 
 // Transactions

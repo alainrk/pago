@@ -28,8 +28,8 @@ var (
 	// ErrUnverifiedEmail: Google did not verify the email, so it cannot be
 	// used to find or create an account.
 	ErrUnverifiedEmail = errors.New("the Google email is not verified")
-	// ErrLinkTokenInvalid: unknown, used or expired one-time token.
-	ErrLinkTokenInvalid = errors.New("invalid or expired link")
+	// ErrStateInvalid: unknown, used or expired Google sign-in state.
+	ErrStateInvalid = errors.New("invalid or expired sign-in state")
 )
 
 // GoogleIdentity is what Google told us about the person signing in.
@@ -42,26 +42,21 @@ type GoogleIdentity struct {
 
 // How a Google sign-in found its account.
 const (
-	GoogleMatchSub     = "sub"
-	GoogleMatchEmail   = "email"
-	GoogleMatchHandoff = "handoff"
-	GoogleMatchSignup  = "signup"
+	GoogleMatchSub    = "sub"
+	GoogleMatchEmail  = "email"
+	GoogleMatchSignup = "signup"
 )
 
 // GoogleSignIn finds or creates the account for a Google identity, in one
 // database transaction:
 //
-//  1. handoffHash set (the user came from the old address with a hand-off
-//     token): use the token once and link Google to the token's account,
-//     even if the Google email differs. If this Google account already
-//     belongs to another account, refuse (never merge) and keep the token.
-//  2. An account with this sub.
-//  3. An account with this verified email and no sub yet: store the sub.
-//  4. Otherwise a new account, if allowSignup says yes. Only verified emails
+//  1. An account with this sub.
+//  2. An account with this verified email and no sub yet: store the sub.
+//  3. Otherwise a new account, if allowSignup says yes. Only verified emails
 //     can sign up.
 //
 // An unverified email is never used to find or create an account.
-func (db *DB) GoogleSignIn(id GoogleIdentity, handoffHash *string, allowSignup func(email string) bool) (*model.User, string, error) {
+func (db *DB) GoogleSignIn(id GoogleIdentity, allowSignup func(email string) bool) (*model.User, string, error) {
 	var user model.User
 	var match string
 	err := db.conn.Transaction(func(tx *gorm.DB) error {
@@ -71,32 +66,6 @@ func (db *DB) GoogleSignIn(id GoogleIdentity, handoffHash *string, allowSignup f
 			return found.Error
 		}
 		hasSub := found.RowsAffected > 0
-
-		if handoffHash != nil {
-			accountID, err := useLinkToken(tx, *handoffHash, model.LinkPurposeHandoff)
-			if err != nil {
-				return err
-			}
-			if hasSub {
-				if bySub.TgID != accountID {
-					return ErrGoogleTaken
-				}
-				user, match = bySub, GoogleMatchHandoff
-				return nil
-			}
-			var target model.User
-			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("tg_id = ?", accountID).First(&target).Error; err != nil {
-				return err
-			}
-			if target.GoogleSub != nil && *target.GoogleSub != id.Sub {
-				return ErrOtherGoogleLinked
-			}
-			if err := linkGoogle(tx, &target, id); err != nil {
-				return err
-			}
-			user, match = target, GoogleMatchHandoff
-			return nil
-		}
 
 		if hasSub {
 			user, match = bySub, GoogleMatchSub
@@ -139,22 +108,10 @@ func (db *DB) GoogleSignIn(id GoogleIdentity, handoffHash *string, allowSignup f
 	return &user, match, nil
 }
 
-// linkGoogle stores the sub on the account, plus the verified email when the
-// account has none and nobody else uses it (passkeys show it as the account
-// name), and the Google name as display name.
+// linkGoogle stores the sub on the account (found by its email) and the
+// Google name as display name.
 func linkGoogle(tx *gorm.DB, u *model.User, id GoogleIdentity) error {
 	updates := map[string]any{"google_sub": id.Sub}
-	if (u.Email == nil || *u.Email == "") && id.EmailVerified && id.Email != "" {
-		var n int64
-		if err := tx.Model(&model.User{}).Where("lower(email) = ? AND tg_id <> ?", id.Email, u.TgID).Count(&n).Error; err != nil {
-			return err
-		}
-		if n == 0 {
-			email := id.Email
-			updates["email"] = email
-			u.Email = &email
-		}
-	}
 	// The display name of old accounts came from Telegram. Use the Google
 	// name instead, so the Telegram names can be cleared later.
 	if name := strings.TrimSpace(id.Name); name != "" {
@@ -194,27 +151,6 @@ func createGoogleUser(tx *gorm.DB, id GoogleIdentity) (*model.User, error) {
 	return u, nil
 }
 
-// CreateLinkToken stores a one-time token (by its hash) for a user.
-func (db *DB) CreateLinkToken(t *model.LinkToken) error {
-	return db.conn.Create(t).Error
-}
-
-// useLinkToken marks a valid one-time token as used and returns its user.
-// Inside a transaction: if the caller fails later, the token stays unused.
-func useLinkToken(tx *gorm.DB, tokenHash, purpose string) (int64, error) {
-	var rows []struct{ TgID int64 }
-	now := time.Now().UTC()
-	if err := tx.Raw(`UPDATE link_tokens SET used_at = ?
-		WHERE token_hash = ? AND purpose = ? AND used_at IS NULL AND expires_at > ?
-		RETURNING tg_id`, now, tokenHash, purpose, now).Scan(&rows).Error; err != nil {
-		return 0, err
-	}
-	if len(rows) == 0 {
-		return 0, ErrLinkTokenInvalid
-	}
-	return rows[0].TgID, nil
-}
-
 // CreateOAuthState stores the state of a Google sign-in.
 func (db *DB) CreateOAuthState(s *model.OAuthState) error {
 	return db.conn.Create(s).Error
@@ -229,7 +165,7 @@ func (db *DB) TakeOAuthState(stateHash string) (*model.OAuthState, error) {
 		return nil, err
 	}
 	if len(rows) == 0 {
-		return nil, ErrLinkTokenInvalid
+		return nil, ErrStateInvalid
 	}
 	return &rows[0], nil
 }
