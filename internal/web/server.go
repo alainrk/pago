@@ -1,6 +1,7 @@
 package web
 
 import (
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -28,8 +29,9 @@ type Server struct {
 	logger         *logrus.Logger
 	repositories   Repositories
 	llm            ai.LLM
-	loginLimiter   map[string]*rate.Limiter
+	loginLimiter   map[string]*limiterEntry
 	loginLimiterMu sync.Mutex
+	limitersPruned time.Time
 	google         googleConfig
 }
 
@@ -46,7 +48,7 @@ func NewServer(logger *logrus.Logger, repos Repositories, llm ai.LLM) *Server {
 		logger:         logger,
 		repositories:   repos,
 		llm:            llm,
-		loginLimiter:   make(map[string]*rate.Limiter),
+		loginLimiter:   make(map[string]*limiterEntry),
 		loginLimiterMu: sync.Mutex{},
 		google:         google,
 	}
@@ -56,33 +58,63 @@ func (s *Server) Router() http.Handler {
 	return Router(s)
 }
 
+// limiterIdle is how long a limiter can go unused before it is dropped. All
+// our limiters refill completely well within this time, so dropping one is
+// the same as keeping a full one.
+const limiterIdle = 10 * time.Minute
+
+type limiterEntry struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
 func (s *Server) getLimiter(key string) *rate.Limiter {
-	s.loginLimiterMu.Lock()
-	defer s.loginLimiterMu.Unlock()
-
-	limiter, exists := s.loginLimiter[key]
-	if !exists {
-		limiter = rate.NewLimiter(rate.Every(time.Minute), 5) // 5 requests per minute
-		s.loginLimiter[key] = limiter
-	}
-
-	return limiter
+	return s.getLimiterWithRate(key, time.Minute, 5) // 5 requests per minute
 }
 
 // getLimiterWithRate is like getLimiter but with a caller-chosen rate. Keys
 // should be prefixed (for example "parse:<user>") so they never collide with
-// the login limiter, which is keyed by remote address.
+// the login limiter, which is keyed by client IP.
 func (s *Server) getLimiterWithRate(key string, every time.Duration, burst int) *rate.Limiter {
 	s.loginLimiterMu.Lock()
 	defer s.loginLimiterMu.Unlock()
 
-	limiter, exists := s.loginLimiter[key]
-	if !exists {
-		limiter = rate.NewLimiter(rate.Every(every), burst)
-		s.loginLimiter[key] = limiter
+	now := time.Now()
+	if now.Sub(s.limitersPruned) > time.Minute {
+		for k, e := range s.loginLimiter {
+			if now.Sub(e.lastSeen) > limiterIdle {
+				delete(s.loginLimiter, k)
+			}
+		}
+		s.limitersPruned = now
 	}
 
-	return limiter
+	e, exists := s.loginLimiter[key]
+	if !exists {
+		e = &limiterEntry{limiter: rate.NewLimiter(rate.Every(every), burst)}
+		s.loginLimiter[key] = e
+	}
+	e.lastSeen = now
+
+	return e.limiter
+}
+
+// clientIP returns the IP of the person making the request. The server only
+// runs behind Caddy, on a private Docker network, and Caddy sets X-Real-IP to
+// the real visitor. The header is trusted only when the request comes from a
+// private address, so a direct caller cannot pick its own IP.
+func clientIP(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	peer := net.ParseIP(host)
+	if peer != nil && (peer.IsPrivate() || peer.IsLoopback()) {
+		if real := net.ParseIP(strings.TrimSpace(r.Header.Get("X-Real-IP"))); real != nil {
+			return real.String()
+		}
+	}
+	return host
 }
 
 // Middleware to log requests. The host and the bearer flag show which
@@ -90,7 +122,7 @@ func (s *Server) getLimiterWithRate(key string, every time.Duration, burst int) 
 func (s *Server) loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, bearer := extractBearerToken(r)
-		s.logger.Infof("%s %s %s %s bearer=%v", r.RemoteAddr, r.Host, r.Method, r.URL.Path, bearer)
+		s.logger.Infof("%s %s %s %s bearer=%v", clientIP(r), r.Host, r.Method, r.URL.Path, bearer)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -123,7 +155,7 @@ func (s *Server) securityHeadersMiddleware(next http.Handler) http.Handler {
 
 func (s *Server) rateLimit(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		limiter := s.getLimiter(r.RemoteAddr)
+		limiter := s.getLimiter("ip:" + clientIP(r))
 		if !limiter.Allow() {
 			s.sendJSONError(w, "Too many requests", http.StatusTooManyRequests)
 			return
