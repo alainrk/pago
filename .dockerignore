@@ -21,4 +21,3 @@ go.work
 # Not needed inside the Go images.
 frontend
 deploy-runbook.md
-sdks.bak

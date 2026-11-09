@@ -1,12 +1,12 @@
 package main
 
 import (
-	"pago/internal/db"
 	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"pago/internal/db"
 	"strconv"
 
 	"github.com/joho/godotenv"

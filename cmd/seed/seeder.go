@@ -1,10 +1,10 @@
 package main
 
 import (
-	"pago/internal/db"
-	"pago/internal/model"
 	"fmt"
 	"math/rand"
+	"pago/internal/db"
+	"pago/internal/model"
 	"time"
 
 	gofakeit "github.com/brianvoe/gofakeit/v6"

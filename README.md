@@ -375,7 +375,7 @@ LLM_MODEL='gpt-4'
 6. **Settings**: Set the monthly budget, register and delete passkeys, export
    your data as CSV.
 
-## HTTP API & SDKs
+## HTTP API
 
 The dashboard endpoints under `/web/api/*` also accept programmatic clients via
 `Authorization: Bearer <token>` in addition to the existing browser session cookie.
@@ -406,117 +406,14 @@ curl -H "Authorization: Bearer $TOKEN" \
      "http://localhost:8091/web/api/stats?month=2026-05"
 ```
 
-### OpenAPI spec & generated SDKs
+### OpenAPI spec
 
 The spec lives at `api/swagger.{yaml,json}` and is generated from `swaggo/swag`
-annotations on the handlers. SDKs are committed under `sdks/{python,go,typescript}/`.
+annotations on the handlers.
 
 ```bash
 make openapi        # regenerate the spec
-make sdks           # regenerate spec + all three SDKs
-make sdk-python     # individual languages
-make sdk-go
-make sdk-ts
 ```
-
-SDK generation uses the `@openapitools/openapi-generator-cli` npm wrapper and
-requires `npx` and Java 11+ on PATH.
-
-### Consuming the TypeScript SDK (npm / pnpm / yarn)
-
-The TypeScript SDK is generated and committed under `sdks/typescript/`, but a
-proper consumer install path is **on standby** until there's a concrete need.
-
-Unlike pip and Go, npm has no first-class way to install a package from a
-subdirectory of a git repo, so shipping this SDK to external consumers requires
-extra work: either publishing to npm under a real scope, or distributing
-packed tarballs. That will be wired up when the first consumer needs it; for
-now the generated code sits in the repo as a starting point and is kept in
-sync with the OpenAPI spec by `make sdk-ts`.
-
-### Consuming the Python SDK (uv / pip)
-
-The Python SDK is a standard PEP 621 package rooted at `sdks/python/`. uv and
-pip can install it directly from this repo using the `subdirectory` fragment:
-
-```bash
-# Add it to a uv-managed project
-uv add "git+https://github.com/alainrk/pago.git#subdirectory=sdks/python"
-
-# Or one-off into the current environment
-uv pip install "git+https://github.com/alainrk/pago.git#subdirectory=sdks/python"
-
-# Plain pip works too
-pip install "git+https://github.com/alainrk/pago.git#subdirectory=sdks/python"
-```
-
-To pin to a specific commit or tag, append `@<ref>` before the `#`:
-
-```bash
-uv add "git+https://github.com/alainrk/pago.git@v0.1.0#subdirectory=sdks/python"
-```
-
-Usage:
-
-```python
-import pago_sdk
-from pago_sdk.api.transactions_api import TransactionsApi
-
-cfg = pago_sdk.Configuration(
-    host="http://localhost:8091/web",
-    access_token="pago_...",
-)
-with pago_sdk.ApiClient(cfg) as client:
-    stats = TransactionsApi(client).api_stats_get(month="2026-05")
-    print(stats)
-```
-
-### Consuming the Go SDK
-
-The Go SDK is a Go submodule rooted at `sdks/go/`. Its module path matches its
-on-disk location, so it is `go get`-able directly from this repo:
-
-```bash
-go get github.com/alainrk/pago/sdks/go@latest
-```
-
-```go
-import (
-    "context"
-    pago "github.com/alainrk/pago/sdks/go"
-)
-
-func main() {
-    cfg := pago.NewConfiguration()
-    cfg.Servers = pago.ServerConfigurations{{URL: "http://localhost:8091/web"}}
-    cfg.DefaultHeader["Authorization"] = "Bearer pago_..."
-    client := pago.NewAPIClient(cfg)
-
-    stats, _, err := client.TransactionsAPI.
-        ApiStatsGet(context.Background()).
-        Month("2026-05").
-        Execute()
-    _ = stats; _ = err
-}
-```
-
-**Versioning.** Because the SDK lives in a subdirectory, Go expects git tags to
-be **prefixed with the subdirectory path** when you cut releases:
-
-```bash
-git tag sdks/go/v0.1.0
-git push origin sdks/go/v0.1.0
-```
-
-Consumers then pin via:
-
-```bash
-go get github.com/alainrk/pago/sdks/go@v0.1.0
-```
-
-Until a `sdks/go/vX.Y.Z` tag exists, `@latest` resolves to a pseudo-version
-synthesized from the commit (`v0.0.0-<timestamp>-<sha>`). That works for early
-adopters but isn't a stable release.
 
 ## Testing
 

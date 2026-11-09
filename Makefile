@@ -147,20 +147,10 @@ db/seed: db/seed/build
 
 
 # ==================================================================================== #
-# OPENAPI + SDKS
+# OPENAPI
 # ==================================================================================== #
 
 SWAG_VERSION       := v1.16.6
-OPENAPI_WRAPPER    := @openapitools/openapi-generator-cli@2.20.5
-OPENAPI_GEN_JAR    := 7.10.0
-# Use the npm wrapper around openapi-generator. It downloads the matching JAR
-# and runs it via local Java. Requires `npx` and Java 11+ on PATH.
-OPENAPI_GEN := OPENAPI_GENERATOR_VERSION=$(OPENAPI_GEN_JAR) npx --yes $(OPENAPI_WRAPPER)
-
-# Module identity used by the Go SDK so it resolves under `go get`.
-# Must match the actual GitHub owner/repo.
-SDK_GIT_USER := alainrk
-SDK_GIT_REPO := pago
 
 ## openapi: generate api/swagger.{yaml,json} from swag annotations
 .PHONY: openapi
@@ -170,46 +160,6 @@ openapi:
 	  --output api \
 	  --parseDependency --parseInternal \
 	  --outputTypes yaml,json
-
-## sdk-python: generate the Python SDK into sdks/python
-.PHONY: sdk-python
-sdk-python:
-	$(OPENAPI_GEN) generate \
-	  -i api/swagger.yaml -g python \
-	  -o sdks/python \
-	  --git-user-id=$(SDK_GIT_USER) --git-repo-id=$(SDK_GIT_REPO) \
-	  --additional-properties=packageName=pago_sdk,projectName=pago-sdk
-	# The generator emits `license = "NoLicense"`, a bare string that setuptools
-	# validates as an SPDX expression and rejects (it is not valid SPDX), breaking
-	# `pip`/`uv` installs. Rewrite it to the table form, which installs cleanly.
-	@sed -i.bak 's|^license = "NoLicense"$$|license = { text = "NoLicense" }|' sdks/python/pyproject.toml
-	@rm -f sdks/python/pyproject.toml.bak
-
-## sdk-go: generate the Go SDK into sdks/go
-.PHONY: sdk-go
-sdk-go:
-	$(OPENAPI_GEN) generate \
-	  -i api/swagger.yaml -g go \
-	  -o sdks/go \
-	  --git-user-id=$(SDK_GIT_USER) --git-repo-id=$(SDK_GIT_REPO) \
-	  --additional-properties=packageName=pago,isGoSubmodule=true
-	# The Go generator hard-codes the module path to {gitUserId}/{gitRepoId}/{packageName}
-	# which does not match our on-disk layout (sdks/go). Rewrite the module path so
-	# `go get github.com/$(SDK_GIT_USER)/$(SDK_GIT_REPO)/sdks/go` resolves correctly.
-	@sed -i.bak 's|^module .*|module github.com/$(SDK_GIT_USER)/$(SDK_GIT_REPO)/sdks/go|' sdks/go/go.mod && rm sdks/go/go.mod.bak
-
-## sdk-ts: generate the TypeScript (fetch) SDK into sdks/typescript
-.PHONY: sdk-ts
-sdk-ts:
-	$(OPENAPI_GEN) generate \
-	  -i api/swagger.yaml -g typescript-fetch \
-	  -o sdks/typescript \
-	  --git-user-id=$(SDK_GIT_USER) --git-repo-id=$(SDK_GIT_REPO) \
-	  --additional-properties=npmName=@pago/sdk,npmVersion=1.0.0,supportsES6=true
-
-## sdks: regenerate the OpenAPI spec and all SDKs
-.PHONY: sdks
-sdks: openapi sdk-python sdk-go sdk-ts
 
 # ==================================================================================== #
 # FRONTEND (frontend/, Vite + React SPA)

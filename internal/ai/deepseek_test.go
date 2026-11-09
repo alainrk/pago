@@ -1,8 +1,8 @@
 package ai
 
 import (
-	"pago/internal/model"
 	"encoding/json"
+	"pago/internal/model"
 	"testing"
 	"time"
 )

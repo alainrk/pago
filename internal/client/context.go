@@ -1,8 +1,8 @@
 package client
 
 import (
-	"pago/internal/model"
 	"context"
+	"pago/internal/model"
 )
 
 type contextKey string
