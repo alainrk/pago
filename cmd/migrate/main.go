@@ -1,11 +1,11 @@
 package main
 
 import (
-	"pago/internal/migrations"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"pago/internal/migrations"
 
 	_ "pago/internal/migrations/versions" // Import all migrations
 

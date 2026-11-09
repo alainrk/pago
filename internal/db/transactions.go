@@ -1,8 +1,8 @@
 package db
 
 import (
-	"pago/internal/model"
 	"fmt"
+	"pago/internal/model"
 	"time"
 )
 
