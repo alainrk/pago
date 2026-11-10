@@ -1,0 +1,22 @@
+.wrap {
+  padding: 16px 48px 0;
+  max-width: calc(var(--content-max) + 96px);
+  width: 100%;
+}
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 10px 10px 14px;
+  border-radius: 10px;
+  background: var(--brand-soft);
+  border: 1px solid var(--brand-border);
+  color: var(--brand-darker);
+  font-size: 13px;
+}
+@media (max-width: 767px) {
+  .wrap {
+    padding: 12px 20px 0;
+  }
+}

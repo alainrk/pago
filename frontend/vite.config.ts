@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vitest/config";
 import { loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { execSync } from "node:child_process";
 
 // Emits a Cloudflare `_headers` file into dist/ so the deployed SPA ships a
 // Content-Security-Policy that only allows API calls to the configured API
@@ -26,6 +27,10 @@ function cloudflareHeaders(apiOrigins: string[]): Plugin {
     "  X-Frame-Options: DENY",
     "  Referrer-Policy: strict-origin-when-cross-origin",
     "  Permissions-Policy: geolocation=(), microphone=(), camera=()",
+    // The app checks this file to know when a new version is out, so it
+    // must never come from a cache.
+    "/version.json",
+    "  Cache-Control: no-store",
     "",
   ].join("\n");
   return {
@@ -33,6 +38,30 @@ function cloudflareHeaders(apiOrigins: string[]): Plugin {
     apply: "build",
     generateBundle() {
       this.emitFile({ type: "asset", fileName: "_headers", source: headers });
+    },
+  };
+}
+
+// The build id: the short git SHA plus the build time, so every build is
+// different, even two from the same commit. It is baked into the app
+// (__BUILD_ID__) and written to dist/version.json. The app compares the
+// two to show the "new version" banner (src/lib/version.ts).
+function makeBuildId(): string {
+  let sha = "nogit";
+  try {
+    sha = execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    // Not a git checkout: the time alone still makes the id unique.
+  }
+  return `${sha}-${Date.now()}`;
+}
+
+function versionFile(buildId: string): Plugin {
+  return {
+    name: "pago-version-file",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ build: buildId }) + "\n" });
     },
   };
 }
@@ -48,8 +77,10 @@ function apiOrigins(raw: string | undefined): string[] {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_");
+  const buildId = makeBuildId();
   return {
-    plugins: [react(), cloudflareHeaders(apiOrigins(env.VITE_API_URL))],
+    plugins: [react(), cloudflareHeaders(apiOrigins(env.VITE_API_URL)), versionFile(buildId)],
+    define: { __BUILD_ID__: JSON.stringify(buildId) },
     server: {
       port: 5174,
       host: true,

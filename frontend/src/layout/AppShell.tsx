@@ -4,6 +4,7 @@ import styles from "./AppShell.module.css";
 import { Icon } from "../components/Icon";
 import { Logo } from "../components/Logo";
 import { Avatar } from "../components/Avatar";
+import { UpdateBanner } from "../components/UpdateBanner";
 import { useUser } from "../auth/AuthContext";
 import { ADD_TEXT_INPUT_ID } from "../pages/AddTransactionPage";
 import type { IconName } from "../components/icons";
@@ -81,6 +82,7 @@ export function AppShell() {
         </Link>
       </aside>
       <div className={styles.main}>
+        <UpdateBanner />
         <Outlet />
       </div>
       <nav ref={bottomNavRef} className={styles.bottomNav} aria-label="Main navigation">
